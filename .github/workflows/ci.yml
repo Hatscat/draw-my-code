@@ -32,3 +32,95 @@ jobs:
       - run: deno task check
       # Scheduled runs fail when fewer than 7 days of puzzles remain, so GitHub emails the owner.
       - run: deno task levels:check ${{ github.event_name == 'schedule' && '--strict' || '' }}
+
+  build:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      pages: read
+    outputs:
+      site-url: ${{ steps.site.outputs.url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.7
+          cache: true
+      - run: deno install --frozen
+      # The base path and site URL come from the Pages configuration: a custom domain needs no
+      # code change.
+      - id: pages
+        uses: actions/configure-pages@v6
+      - id: site
+        run: echo "url=${BASE_URL%/}/" >> "$GITHUB_OUTPUT"
+        env:
+          BASE_URL: ${{ steps.pages.outputs.base_url }}
+      - run: deno task build
+        env:
+          VITE_SITE_URL: ${{ steps.site.outputs.url }}
+          VITE_UMAMI_WEBSITE_ID: ${{ vars.VITE_UMAMI_WEBSITE_ID }}
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  e2e:
+    needs: build
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.7
+          cache: true
+      - run: deno install --frozen
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+      - run: npm ci
+        working-directory: e2e
+      # Browsers are installed fresh: Playwright advises against caching them, since their system
+      # dependencies must be installed anyway. The full Chromium, not the headless shell.
+      - run: npx playwright install --with-deps --no-shell chromium webkit
+        working-directory: e2e
+      # The exact files that deploy will publish.
+      - uses: actions/download-artifact@v8
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/pages
+      - run: mkdir -p dist && tar -xf "$RUNNER_TEMP/pages/artifact.tar" -C dist
+      - run: deno task e2e:run
+        env:
+          VITE_SITE_URL: ${{ needs.build.outputs.site-url }}
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 14
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [check, e2e]
+    runs-on: ubuntu-26.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # One deploy at a time, and never cancel one halfway.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
