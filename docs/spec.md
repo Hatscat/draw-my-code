@@ -104,7 +104,8 @@ distribution are derived from them.
 - Current streak: let h be the highest finished puzzle number. If h ≥ today − 1, it is the run of
   consecutive solved numbers ending at h, otherwise 0. So an unplayed today doesn't show 0 all
   morning; a failed or missed puzzle resets it.
-- Max streak: the longest run over all results.
+- Max streak: the longest run over all results. Results numbered after today (the device clock moved
+  back) count for played and max streak, not for the current streak.
 - A day without a level (schedule ran out) counts as missed; the CI reminder exists to prevent it.
 
 ## Dates
@@ -132,7 +133,9 @@ distribution are derived from them.
 - Every action re-reads storage before writing, and other tabs re-render on `storage` events, so two
   tabs can't multiply attempts.
 - If a stored in-progress solution differs from the bundle's (a level was edited), that play state
-  is dropped; finished results are kept.
+  is dropped. A finished puzzle keeps its play and its own solution, so its result and share text
+  stay true. Finished plays are kept for today and yesterday, unfinished ones for a week (one may be
+  open in another tab).
 - localStorage unavailable: the game still works, in memory.
 - Known limits, accepted: an installed iOS app doesn't share storage with Safari, and Safari clears
   site data after 7 days without a visit. Installed apps call `navigator.storage.persist()`.

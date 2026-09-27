@@ -1,0 +1,84 @@
+/**
+ * Daily actions on the saved player state. Each is pure: the UI applies it to freshly loaded
+ * storage and saves the result, so two tabs can't multiply attempts.
+ */
+
+import { ATTEMPTS } from "./config.ts";
+import { paint, type Play, startPlay, status, submit } from "./game.ts";
+import { type Color, type Grid, sameGrid } from "./grid.ts";
+import type { PlayerState } from "./storage.ts";
+
+/**
+ * Puzzle #n's play: the stored one, unless its level changed since, then a fresh one. A finished
+ * puzzle keeps the play it was judged on, with its own solution, so its result and share text
+ * stay true even if the level was edited later.
+ */
+export function dailyPlay(state: PlayerState, n: number, solution: Grid): Play {
+  const stored = state.plays[n];
+  if (stored && (isFinished(state, n) || sameGrid(stored.solution, solution))) {
+    return { ...stored, attempts: ATTEMPTS };
+  }
+  return startPlay(solution, ATTEMPTS);
+}
+
+/**
+ * Whether puzzle #n was never touched: nothing painted, nothing submitted. At midnight such a
+ * puzzle can make way for the new one, while one in progress stays until it is finished.
+ */
+export function isUntouched(state: PlayerState, n: number): boolean {
+  const play = state.plays[n];
+  return !isFinished(state, n) &&
+    (!play || (play.submissions.length === 0 && play.drawing.every((cell) => cell === 0)));
+}
+
+export function setShowDigits(state: PlayerState, on: boolean): PlayerState {
+  return state.showDigits === on ? state : { ...state, showDigits: on };
+}
+
+/** Whether puzzle #n is over. Its result, once recorded, never changes. */
+export function isFinished(state: PlayerState, n: number): boolean {
+  return state.results[n] !== undefined;
+}
+
+export function paintDaily(
+  state: PlayerState,
+  n: number,
+  solution: Grid,
+  index: number,
+  color: Color,
+): PlayerState {
+  if (isFinished(state, n)) return state;
+  const before = dailyPlay(state, n, solution);
+  const after = paint(before, index, color);
+  return after === before ? state : withPlay(state, n, after);
+}
+
+/** Submits the drawing, and records the result when this submit ends the puzzle. */
+export function submitDaily(state: PlayerState, n: number, solution: Grid): PlayerState {
+  if (isFinished(state, n)) return state;
+  const before = dailyPlay(state, n, solution);
+  const after = submit(before);
+  if (after === before) return state;
+  const next = withPlay(state, n, after);
+  const outcome = status(after);
+  if (outcome === "playing") return next;
+  const result = outcome === "solved" ? after.submissions.length : "X";
+  return { ...next, results: { ...next.results, [n]: result } };
+}
+
+/**
+ * Saves puzzle #n's play and drops the ones no longer needed: finished plays older than
+ * yesterday's (after midnight, yesterday's may still be shared), and unfinished plays after a week
+ * (one may still be open in another tab, which must not get fresh attempts).
+ */
+function withPlay(state: PlayerState, n: number, play: Play): PlayerState {
+  const kept = Object.entries(state.plays).filter(([key]) => {
+    const k = Number(key);
+    return k >= n - 1 || (!isFinished(state, k) && k >= n - 7);
+  });
+  const { solution, drawing, submissions } = play;
+  return {
+    ...state,
+    plays: { ...Object.fromEntries(kept), [n]: { solution, drawing, submissions } },
+  };
+}

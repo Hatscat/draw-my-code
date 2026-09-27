@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
+import type { Level } from "../levels/types.ts";
 import type { CalendarDate } from "./date.ts";
-import { puzzleDate, puzzleNumber } from "./schedule.ts";
+import { dailyFor, levelFor, puzzleDate, puzzleNumber } from "./schedule.ts";
 
 const date = (y: number, m: number, d: number): CalendarDate => ({ y, m, d });
 const LAUNCH = date(2026, 11, 1);
+const level = (id: number): Level => ({ id, code: "", solution: [] });
+const DAILY = [level(1), level(2), level(3)];
 
 Deno.test("puzzleNumber is 1 on the launch date and counts calendar days", () => {
   assert.equal(puzzleNumber(LAUNCH, date(2026, 11, 1)), 1);
@@ -34,4 +37,28 @@ Deno.test("puzzleDate is the inverse of puzzleNumber", () => {
   for (let n = -5; n <= 800; n++) {
     assert.equal(puzzleNumber(LAUNCH, puzzleDate(LAUNCH, n)), n);
   }
+});
+
+Deno.test("dailyFor: before launch, then a puzzle, then no puzzle once the schedule runs out", () => {
+  assert.deepEqual(dailyFor(LAUNCH, date(2026, 10, 31), DAILY), {
+    kind: "before-launch",
+    launch: LAUNCH,
+  });
+  assert.deepEqual(dailyFor(LAUNCH, date(2026, 11, 1), DAILY), {
+    kind: "puzzle",
+    number: 1,
+    level: DAILY[0],
+  });
+  assert.deepEqual(dailyFor(LAUNCH, date(2026, 11, 3), DAILY), {
+    kind: "puzzle",
+    number: 3,
+    level: DAILY[2],
+  });
+  assert.deepEqual(dailyFor(LAUNCH, date(2026, 11, 4), DAILY), { kind: "no-puzzle", number: 4 });
+});
+
+Deno.test("levelFor finds a daily by puzzle number", () => {
+  assert.equal(levelFor(DAILY, 2), DAILY[1]);
+  assert.equal(levelFor(DAILY, 4), undefined);
+  assert.equal(levelFor(DAILY, 0), undefined);
 });
