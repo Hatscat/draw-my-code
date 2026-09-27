@@ -25,6 +25,11 @@ export const test = base.extend<{ consoleErrors: string[]; tutorialDone: boolean
   },
   consoleErrors: [async ({ page }, use) => {
     const errors: string[] = [];
+    // Local and CI runs never talk to the analytics hosts.
+    page.on("request", (request) => {
+      const host = new URL(request.url()).hostname;
+      if (host === "umami.is" || host.endsWith(".umami.is")) errors.push(`request to ${host}`);
+    });
     page.on("console", (message) => {
       if (message.type() === "error") errors.push(message.text());
     });

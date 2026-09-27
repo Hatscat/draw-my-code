@@ -7,8 +7,10 @@ import {
   status,
   submit,
 } from "../core/game.ts";
+import { isTracking, track } from "../analytics.ts";
 import { gridFromRows } from "../core/grid.ts";
 import { setShowDigits } from "../core/player.ts";
+import { recordTutorialComplete } from "../core/sent.ts";
 import { skipTutorial, tutorialSolved } from "../core/tutorial.ts";
 import type { Level } from "../levels/types.ts";
 import { el } from "./dom.ts";
@@ -71,6 +73,7 @@ export function showTutorial(
         if (status(play) === "solved" && !options.replay) {
           store.write(tutorialSolved(store.read(), number, levels.length));
         }
+        if (status(play) === "solved" && number === levels.length) countCompletion();
         render();
         levelView.focusSubmit();
       },
@@ -104,6 +107,16 @@ export function showTutorial(
 
     render();
     return levelView;
+  }
+
+  /** tutorial_complete: the first time the last level is solved, never on Skip. */
+  function countCompletion() {
+    if (!isTracking()) return;
+    const state = store.read();
+    const next = recordTutorialComplete(state);
+    if (next === state) return;
+    store.write(next);
+    track("tutorial_complete");
   }
 
   function next() {

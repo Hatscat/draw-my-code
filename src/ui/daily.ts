@@ -1,9 +1,11 @@
+import { completionEvent, isTracking, track } from "../analytics.ts";
 import { ATTEMPTS, LAUNCH_DATE } from "../core/config.ts";
 import type { CalendarDate } from "../core/date.ts";
 import { canSubmit, lastWrongCount, nextAttempt } from "../core/game.ts";
 import { gridFromRows } from "../core/grid.ts";
 import { dailyPlay, isFinished, paintDaily, setShowDigits, submitDaily } from "../core/player.ts";
 import { puzzleNumber } from "../core/schedule.ts";
+import { recordShare } from "../core/sent.ts";
 import { shareText } from "../core/share.ts";
 import { computeStats } from "../core/stats.ts";
 import type { PlayerState } from "../core/storage.ts";
@@ -47,9 +49,11 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
       const before = store.read();
       const after = submitDaily(before, n, solution);
       save(after);
-      if (isFinished(before, n) || !isFinished(after, n)) return;
+      const outcome = after.results[n];
+      if (isFinished(before, n) || outcome === undefined) return;
       updateNext(new Date());
       result.focus();
+      track(completionEvent(outcome));
     },
     onShowDigits: (on) => save(setShowDigits(store.read(), on)),
   });
@@ -61,6 +65,7 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
       shareResult(text).then((outcome) => {
         if (outcome === "copied") toast.show("Copied");
         else if (outcome === "failed") result.showManualCopy(text);
+        if (outcome === "shared" || outcome === "copied") countShare();
       });
     },
     onShow(value) {
@@ -69,6 +74,16 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
     },
     onPlayNext: () => location.reload(),
   });
+
+  /** One share event per puzzle, however many times the player shares. */
+  function countShare() {
+    if (!isTracking()) return;
+    const state = store.read();
+    const next = recordShare(state, n);
+    if (next === state) return;
+    store.write(next);
+    track("share");
+  }
 
   function save(state: PlayerState) {
     store.write(state);

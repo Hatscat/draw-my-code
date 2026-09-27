@@ -1,14 +1,16 @@
+import { isTracking, track } from "../analytics.ts";
 import { LAUNCH_DATE } from "../core/config.ts";
-import type { CalendarDate } from "../core/date.ts";
+import { type CalendarDate, formatIsoDate } from "../core/date.ts";
 import { canMoveOn } from "../core/player.ts";
 import { type Daily, dailyFor, levelFor } from "../core/schedule.ts";
+import { recordPageview } from "../core/sent.ts";
 import { tutorialLevelToShow } from "../core/tutorial.ts";
 import { daily, tutorial } from "../levels/generated.ts";
 import { dateOverride, localDate } from "./clock.ts";
 import { showDaily } from "./daily.ts";
 import { showNotice } from "./notice.ts";
 import type { Screen } from "./screen.ts";
-import { openStore } from "./storage.ts";
+import { openStore, type Store } from "./storage.ts";
 import { createToast } from "./toast.ts";
 import { showTutorial } from "./tutorial.ts";
 
@@ -20,6 +22,7 @@ export function startApp(root: HTMLElement): void {
   document.body.append(toast.element);
 
   const shown = dailyFor(LAUNCH_DATE, today(), daily);
+  countPageview(store, today());
   let screen: Screen | undefined;
 
   function show(next: () => Screen) {
@@ -78,6 +81,16 @@ export function startApp(root: HTMLElement): void {
   });
   addEventListener("pageshow", check);
   store.onExternalChange(() => screen?.refresh());
+}
+
+/** One pageview per local date, however many times the page loads. */
+function countPageview(store: Store, date: CalendarDate) {
+  if (!isTracking()) return;
+  const state = store.read();
+  const next = recordPageview(state, formatIsoDate(date));
+  if (next === state) return;
+  store.write(next);
+  track("pageview");
 }
 
 function changed(before: Daily, now: Daily): boolean {
