@@ -10,18 +10,21 @@ No ads, no accounts, no backend. English only.
 1. Every day at local midnight a new puzzle #N unlocks: same puzzle for everyone on a given local
    date, like Wordle. Puzzle #1 is `LAUNCH_DATE`.
 2. The player reads `int f(int x, int y)`, picks colors and paints the 8×8 grid.
-3. Submit is enabled only once all 64 cells are painted. Wrong cells get marked. 3 attempts.
+3. The grid starts filled with 0, so Submit is always available: a sparse level can be solved in a
+   single tap. Wrong cells get marked. 3 attempts.
 4. Solved or out of attempts: the puzzle is over, the result panel appears, the player shares.
 
 ## Rules
 
 - Grid 8×8. Origin top-left, x grows right, y grows down, x and y in [0, 7].
-- Palette: 0 white, 1 black, 2 red, 3 orange, 4 yellow, 5 green, 6 blue, 7 purple.
+- Palette: 0 black, 1 white, 2 red, 3 orange, 4 yellow, 5 green, 6 blue, 7 purple. With 0 black and
+  1 white, C booleans draw white on black, like a 1-bit screen.
+- No empty state: every cell always holds a value in [0, 7], starting at 0.
 - 3 attempts per daily puzzle (`ATTEMPTS` in config). After a wrong submit, wrong cells are marked
   (× and inner outline, as in `design/`) and a line above Submit shows `N wrong · attempt 2/3`.
   Painting a cell clears the marks.
 - A finished puzzle can't be replayed. Reloading restores both in-progress and finished states.
-- Level titles stay hidden until the puzzle is over: a title like "Circle" gives the answer away.
+- Levels have no title: the puzzle number is their only name.
 
 Config lives in `src/core/config.ts`: `LAUNCH_DATE` (placeholder, I'll set it), `ATTEMPTS`,
 `FOLLOW_URL` (optional).
@@ -35,7 +38,7 @@ Config lives in `src/core/config.ts`: `LAUNCH_DATE` (placeholder, I'll set it), 
 
 - Solved: "Solved in N/3". Failed: "X/3", plus a toggle between the player's last drawing and the
   solution.
-- Level title, stats (played, win %, current streak, max streak, distribution 1/2/3/X).
+- Stats (played, win %, current streak, max streak, distribution 1/2/3/X).
 - Share button, countdown to the next puzzle, optional follow link (hidden when `FOLLOW_URL` is
   empty).
 
@@ -77,8 +80,8 @@ Follow `design/`. What was designed:
 - Single centered column: header, code panel, instruction "Draw the output in each cell", 8 numbered
   swatches, 8×8 grid with axis labels 0–7, Submit button.
 - Selected swatch: light outline, slightly larger, bold number.
-- Empty cells: dark grey with a small dot, clearly different from white (0). The screenshot's empty
-  cells are too close to white: use the dark treatment.
+- The screenshot predates two changes: 0 is now black and 1 white, and there is no empty-cell state.
+  Black cells must stay clearly visible against the dark page: keep crisp grid lines.
 - Keys 0–7 select a color. On desktop, hovering a cell shows `f(x, y)` for it and highlights both
   axis labels.
 - On short screens the grid shrinks to fit one screen, never below 250 px wide.
@@ -101,10 +104,10 @@ Sources:
 - `levels/tutorial/01-return-x.c` … `05-*.c`
 - `levels/daily/0001.c`, `0002.c`, … contiguous; puzzle #N is `daily/NNNN.c`.
 
-Format: a `//` header with at least a title, then the function, 2-space indentation, nothing else.
+Format: the file is exactly what players see, byte for byte: the function, 2-space indentation.
+Comments are allowed and shown to players, so they can serve as hints.
 
 ```c
-// title: Circle
 int f(int x, int y) {
   int dx = x - 4, dy = y - 4;
   return dx*dx + dy*dy < 9 ? 2 : 0;
@@ -113,12 +116,12 @@ int f(int x, int y) {
 
 Generator `tools/levels.ts` (`deno task levels`):
 
-1. Strip the header, compile `tools/harness.c` with the level using
+1. Compile `tools/harness.c` with the level using
    `gcc -std=c11 -O1 -Wall -Wextra -Werror -Wno-unused-parameter -fsanitize=undefined -fno-sanitize-recover=all -include tools/prelude.h`.
    The harness prints the 64 values, row by row.
 2. Reject with a clear message: compile error or warning, UB at runtime, value outside [0, 7],
-   numbering gap, missing title, more than 12 lines or 36 columns (the code must fit a 320 px screen).
-3. Write `src/levels/generated.ts`, deterministic and `deno fmt`-clean: `id`, `title`, `code`, and
+   numbering gap, more than 12 lines or 36 columns (the code must fit a 320 px screen).
+3. Write `src/levels/generated.ts`, deterministic and `deno fmt`-clean: `id`, `code`, and
    `solution` as 8 strings of 8 digits, one per row, so the drawing is readable in diffs.
 4. Print every new or changed level: its code next to an ANSI truecolor preview of the grid, then
    `Daily puzzles scheduled until YYYY-MM-DD (N days left)`.
@@ -127,10 +130,10 @@ Generator `tools/levels.ts` (`deno task levels`):
 
 Seed content:
 
-- Tutorial, in this order: `return x;` · `return y;` · `return x / 2;` · `return (x + y) % 2;` ·
-  `return x > y ? x : y;`
+- Tutorial, in this order: `return x == 3 && y == 4;` (one tap: teaches the axes, and that C
+  booleans are 0/1) · `return x;` · `return x / 2;` · `return (x + y) % 2;` · `return x > y ? x : y;`
 - Daily samples, which I will curate and replace:
-  - 0001: Circle (above)
+  - 0001: the circle above
   - 0002: `return (x & y) == 0 ? 1 : 0;`
   - 0003: `return x ^ y;`
   - 0004–0007: yours, increasing difficulty, varied techniques (distance, modulo, bitwise,
@@ -167,7 +170,7 @@ Unit (`deno test`):
 - core: puzzle number (month and year boundaries, leap years, DST dates), grid diff, attempt state
   machine, share text (exact), stats and streaks (missed day, failed day), storage load, migration and
   corrupted data.
-- tools: header parsing and every rejection case with fixtures (out of range, UB overflow, compile
+- tools: every rejection case with fixtures (out of range, UB overflow, compile
   error, numbering gap, line too long); deterministic output.
 - highlighter tokenizer.
 
@@ -209,8 +212,8 @@ form, i18n, light theme, sound.
 
 1. Skeleton: `deno.json` tasks, Vite 8 run by Deno (with `server.forwardConsole`), strict TS, fmt and
    lint config, CI `check` job.
-2. Level pipeline, seed levels, tests, README (setup including gcc and UBSan on Fedora, how to add a
-   level).
+2. Level pipeline, seed levels, tests, README (setup on Kubuntu/Ubuntu, where
+   `sudo apt install build-essential` brings gcc and the UBSan runtime; how to add a level).
 3. Core logic and tests.
 4. UI from `design/`: rendering, palette, grid, painting, keyboard.
 5. Daily flow: submit, attempts, result panel, stats, share, persistence, dates.

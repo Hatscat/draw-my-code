@@ -54,6 +54,8 @@ docs/spec.md      Product spec
 - `src/core/` never touches the DOM, `window`, `localStorage`, `Date.now()` or randomness, and never
   imports from `src/ui/`. Time enters core as calendar dates `{ y, m, d }`, never as timestamps.
 - `src/ui/` holds no rules: it calls core and renders the result.
+- Every grid cell always holds a value in [0, 7] and starts at 0 (black). There is no empty state:
+  no `null`, no `undefined`, no sentinel.
 - Small modules with explicit names. Functions over classes. No abstraction without a second use
   case.
 - Comments explain why, not what.
@@ -64,7 +66,7 @@ docs/spec.md      Product spec
 - Never edit `src/levels/generated.ts`: change `levels/` or `tools/`, then run `deno task levels`.
 - Every level returns a value in [0, 7] for all 64 cells, has no undefined behavior (UBSan), and uses
   nothing but `abs`, `min`, `max` from `tools/prelude.h`. The generator enforces all of this.
-- Players see the level file minus its `//` header, byte for byte.
+- Players see the level file byte for byte, comments included. Levels have no title, only a number.
 
 ### Player data and privacy
 
