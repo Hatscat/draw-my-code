@@ -36,7 +36,7 @@
     "dev": "vite --configLoader native",
     "build": "vite build --configLoader native",
     "preview": "vite preview --configLoader native --host 127.0.0.1 --port 4173 --strictPort",
-    "test": "deno test --allow-read --allow-write --allow-run",
+    "test": "deno test --allow-read --allow-write --allow-run --allow-env=TZ",
     "check": "deno fmt --check && deno lint && deno check && deno task test",
     "levels": "deno run --allow-read --allow-write --allow-run --allow-env=GITHUB_ACTIONS tools/levels.ts",
     "levels:check": "deno run --allow-read --allow-write --allow-run --allow-env=GITHUB_ACTIONS tools/levels.ts --check",

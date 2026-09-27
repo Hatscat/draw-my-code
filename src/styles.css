@@ -1,0 +1,431 @@
+/*
+ * JetBrains Mono (SIL OFL 1.1, see fonts/OFL.txt), a variable subset downloaded once from
+ * https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400..800 with `text=` set to
+ * printable ASCII plus · × – ∈ …, and self-hosted.
+ */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("./fonts/jetbrains-mono.woff2") format("woff2");
+  font-weight: 400 800;
+  font-display: swap;
+}
+
+/* Colors and sizes measured from design/. Palette colors come from src/ui/palette.ts. */
+:root {
+  color-scheme: dark;
+  --font: "JetBrains Mono", ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --bg: #0c0d0f;
+  --glow: #15171b;
+  --panel: #121418;
+  --panel-border: #23262d;
+  --panel-divider: #1e2127;
+  --ink: #f3f2ec;
+  --ink-dark: #0a0a0a;
+  --muted: #a7abb4;
+  /* Axis and domain labels: lighter than the design's #5d626c and #6b707a, for WCAG AA. */
+  --faint: #7a808b;
+  --line-number: #3d424c;
+  --help-border: #3a3f48;
+  /* Inner grid lines: the design's border color, so they reach 3:1 against black cells. */
+  --grid-line: #545a66;
+  --button: #ecebe4;
+  --error: #ff7a7a;
+  --focus: #8fb4ff;
+  --tok-text: #d6d9e0;
+  --tok-operator: #8a93a3;
+  --tok-type: #7fd3d0;
+  --tok-keyword: #c99bf0;
+  --tok-function: #8fb4ff;
+  --tok-number: #f2a36b;
+  --tok-comment: #7a808b;
+  /*
+   * Spacing shrinks smoothly from the design's values at 800 px of viewport height to compact ones
+   * at 700 px, so the grid keeps as much room as it can without a jump at a breakpoint.
+   */
+  --gap: clamp(10px, 100svh * 0.08 - 46px, 18px);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  background: var(--bg);
+}
+
+body {
+  background: radial-gradient(900px 310px at 50% 0, var(--glow), var(--bg)) no-repeat, var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-variant-ligatures: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* One column that fills the screen, so the board can take whatever height is left. */
+main {
+  width: min(448px, 100% - 32px);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: clamp(12px, 100svh * 0.1 - 58px, 22px) 0 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  height: 32px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+h1 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.help {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 1px solid var(--help-border);
+  border-radius: 50%;
+  background: transparent;
+  color: #d9dbe0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.help[aria-expanded="true"] {
+  border-color: #d9dbe0;
+}
+
+.panel {
+  margin-top: calc(var(--gap) - 2px);
+  flex: none;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+}
+
+.panel-head {
+  height: 27px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--panel-divider);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.code-domain {
+  color: var(--faint);
+}
+
+.code-domain.active {
+  color: var(--ink);
+}
+
+.code-panel {
+  container-type: inline-size;
+}
+
+/*
+ * The font shrinks so the longest line fits: --chars is its length plus the line-number digits,
+ * 1.5 is the gap after the numbers, 0.6em is the font's advance. Never below 11px, never above
+ * the design's 14px.
+ */
+.code {
+  padding: clamp(6px, 100svh * 0.048 - 27.6px, 10.8px) 12px;
+  font-family: inherit;
+  font-size: clamp(11px, (100cqi - 24px) / ((var(--chars) + 1.5) * 0.6), 14px);
+  line-height: 1.6667;
+  color: var(--tok-text);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.code-number {
+  display: inline-block;
+  width: var(--number-width);
+  margin-right: 1.5ch;
+  text-align: right;
+  color: var(--line-number);
+  user-select: none;
+}
+
+.tok-type {
+  color: var(--tok-type);
+}
+.tok-keyword {
+  color: var(--tok-keyword);
+}
+.tok-function {
+  color: var(--tok-function);
+}
+.tok-number {
+  color: var(--tok-number);
+}
+.tok-operator {
+  color: var(--tok-operator);
+}
+.tok-comment {
+  color: var(--tok-comment);
+}
+
+.info-panel {
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.info-actions {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.switch {
+  padding: 4px 10px;
+  border: 1px solid var(--help-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.instruction {
+  margin-top: var(--gap);
+  flex: none;
+  text-align: center;
+  font-size: 13px;
+  line-height: 17px;
+  color: var(--muted);
+}
+
+.notice {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.swatches {
+  margin-top: var(--gap);
+  padding: 0 2px;
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  column-gap: clamp(4px, 2%, 9px);
+}
+
+.swatch {
+  aspect-ratio: 1;
+  padding: 0 0 4px 6px;
+  display: flex;
+  align-items: flex-end;
+  border: 0;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.24);
+  color: var(--ink-dark);
+  font-size: clamp(11px, 3.2vw, 14px);
+  line-height: 1;
+  transition: transform 0.12s ease;
+}
+
+.swatch[data-value="0"] {
+  color: var(--ink);
+}
+
+/* Selected: ring, larger and bold, never color alone. */
+.swatch[aria-checked="true"] {
+  position: relative;
+  z-index: 1;
+  transform: scale(1.1);
+  font-weight: 700;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.24),
+    0 0 0 3px #0a0b0d,
+    0 0 0 5px var(--ink),
+    0 6px 16px rgb(0 0 0 / 0.5);
+}
+
+.swatch:focus-visible {
+  outline-offset: 7px;
+}
+
+/*
+ * Takes the height left over, so the grid fits one screen when it can. A zero flex basis matters:
+ * with `auto`, Chromium resolves the container units below against the pre-flex height.
+ */
+.board {
+  margin-top: var(--gap);
+  flex: 1 1 0;
+  /* 250 px of grid plus the axis labels, or the size it was frozen at. */
+  min-height: calc(var(--frozen-side, 250px) + 20px);
+  container-type: size;
+}
+
+.board-inner {
+  --side: var(--frozen-side, clamp(250px, min(100cqw - 22px, 100cqh - 20px), 426px));
+  width: calc(var(--side) + 22px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 22px var(--side);
+  grid-template-rows: 20px var(--side);
+}
+
+.axis {
+  display: grid;
+  gap: 2px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--faint);
+}
+
+.axis-x {
+  grid-column: 2;
+  grid-template-columns: repeat(8, 1fr);
+  padding: 0 3px;
+  align-items: center;
+  text-align: center;
+}
+
+.axis-y {
+  grid-row: 2;
+  grid-template-rows: repeat(8, 1fr);
+  padding: 3px 6px 3px 0;
+  align-items: center;
+  text-align: right;
+}
+
+.axis .on {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.grid {
+  grid-row: 2;
+  grid-column: 2;
+  display: grid;
+  grid-template-rows: repeat(8, 1fr);
+  gap: 2px;
+  padding: 2px;
+  background: var(--grid-line);
+  border: 1px solid var(--grid-line);
+  border-radius: 2px;
+  /* Painting gestures never scroll, zoom or select. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.grid-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+
+.cell {
+  position: relative;
+  padding: 0 0 2px 4px;
+  display: flex;
+  align-items: flex-end;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--ink-dark);
+}
+
+.cell[data-value="0"] {
+  color: var(--ink);
+}
+
+.cell:focus-visible {
+  z-index: 1;
+  outline-offset: 1px;
+}
+
+.status {
+  min-height: clamp(32px, 100svh * 0.16 - 80px, 48px);
+  padding-top: clamp(8px, 100svh * 0.08 - 48px, 16px);
+  flex: none;
+  font-size: 11px;
+  line-height: 16px;
+  text-align: right;
+  color: var(--error);
+}
+
+.submit {
+  width: 100%;
+  height: clamp(44px, 100svh * 0.08 - 12px, 52px);
+  flex: none;
+  border: 0;
+  border-radius: 5px;
+  background: var(--button);
+  color: var(--bg);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.submit:focus-visible {
+  outline-offset: 3px;
+}
+
+@media (max-width: 360px) {
+  .code {
+    padding-inline: 10px;
+    font-size: clamp(11px, (100cqi - 20px) / ((var(--chars) + 1.5) * 0.6), 14px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* One sentence per line, as in the design. */
+.info-line {
+  display: block;
+}

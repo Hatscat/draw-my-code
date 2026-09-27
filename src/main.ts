@@ -1,6 +1,5 @@
-const app = document.querySelector("#app");
-if (app) {
-  const title = document.createElement("h1");
-  title.textContent = "Draw my code";
-  app.replaceChildren(title);
-}
+import "./styles.css";
+import { startApp } from "./ui/app.ts";
+
+const root = document.querySelector("#app");
+if (root instanceof HTMLElement) startApp(root);

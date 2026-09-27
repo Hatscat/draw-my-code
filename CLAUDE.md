@@ -23,7 +23,9 @@ accounts, no cookies.
 | `deno task e2e:run`      | Run Playwright against the existing `dist/` (what CI does)              |
 
 One unit test file: `deno task test <file>` (plain `deno test` lacks the permissions). One e2e spec:
-`deno task e2e <spec>`. `check`, `test` and `levels` need gcc and the UBSan runtime.
+`deno task e2e <spec>`. `check`, `test` and `levels` need gcc and the UBSan runtime. Format with a
+bare `deno fmt` from the root: given a path under `e2e/`, it picks up `e2e/package.json` instead of
+`deno.json` and formats at 80 columns.
 
 ## Layout
 
