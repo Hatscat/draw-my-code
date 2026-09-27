@@ -193,19 +193,24 @@ int f(int x, int y) {
 - Printable ASCII and LF only; no tabs, no trailing whitespace; exactly one final newline, which
   isn't displayed.
 - At most 12 lines, counting the signature and the closing brace, of at most 36 characters.
-- One function, exactly `int f(int x, int y)`. Integers only (no `float`, `double` or `char`), no
-  preprocessor, no identifier starting with `_`, no calls except `abs`, `min`, `max` and `f`. Loops
-  and recursion are allowed.
+- One function, exactly `int f(int x, int y)`. Integers only (no `float`, `double` or `char`, no
+  string or character literals), no preprocessor, trigraphs or line continuations, no identifier
+  starting with `_`, no calls except `abs`, `min`, `max` and `f`, no static or global variables, no
+  variable-length arrays. Loops and recursion are allowed.
 
 Generator `tools/levels.ts` (`deno task levels`):
 
-1. Compile `tools/harness.c` with the level twice, using
-   `gcc -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -fsanitize=undefined -fno-sanitize-recover=all -include tools/prelude.h`
-   plus `-O1`, then plus `-O0 -ftrivial-auto-var-init=pattern` (catches UB that -O1 folds away, and
-   uninitialized variables). Both runs must print the same 64 values, row by row.
+1. Compile `tools/harness.c` with the level three times, using
+   `gcc -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -fsanitize=undefined -fno-sanitize-recover=all -fno-builtin -include tools/prelude.h`
+   plus `-O1`; `-O0 -ftrivial-auto-var-init=pattern -fanalyzer`; and
+   `-O0 -ftrivial-auto-var-init=zero`. The -O0 builds catch UB that -O1 folds away; the two fills
+   and the analyzer catch uninitialized variables in the usual cases; `-fno-builtin` keeps calls to
+   library builtins visible. All three runs must print the same 64 values, row by row.
 2. Reject with a clear message: file format, forbidden construct (token check, and `nm`: only `f`
-   defined, only UBSan handlers undefined), compile error or warning, UB at runtime, timeout (2 s),
-   crash (any signal), value outside [0, 7], all-0 solution, numbering gap.
+   and the prelude's helpers defined, only UBSan handlers and the stack protector undefined),
+   compile error or warning, UB at runtime, timeout (2 s), crash (any signal), value outside [0, 7],
+   all-0 solution, numbering gap. The harness is not dumpable, so a crashing level leaves no core
+   dump.
 3. Write `src/levels/generated.ts`, deterministic and `deno fmt`-clean: `tutorial` and `daily` lists
    of `id`, `code`, and `solution` as 8 strings of 8 digits, one per row, so the drawing is readable
    in diffs.
@@ -214,9 +219,9 @@ Generator `tools/levels.ts` (`deno task levels`):
    time zone to reach a date). Past 50 days left, it reminds that GitHub disables scheduled
    workflows after 60 days without a commit.
 
-`--check` regenerates in memory and fails if the file differs, or if a daily whose date has come
-changed (unless `--allow-published-edit`). With fewer than 7 days left it warns (a GitHub annotation
-in CI), and fails with `--strict`.
+`deno task levels` refuses to change or remove a daily whose date has come, unless run with
+`--allow-published-edit`. `--check` regenerates in memory and fails if the file differs. With fewer
+than 7 days left it warns (a GitHub annotation in CI), and fails with `--strict`.
 
 Seed content:
 
