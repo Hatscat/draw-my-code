@@ -42,7 +42,8 @@ const TOKEN = new RegExp(
     String.raw`(?<space>\s+)`,
     String.raw`(?<number>\.?\d(?:[eEpP][+-]|[\w.])*)`,
     String.raw`(?<word>[A-Za-z_]\w*)`,
-    String.raw`(?<operator>[-+*/%=<>!&|^~?:]+)`,
+    // An operator run stops where a comment starts: in `x+// hint` the comment is still a comment.
+    String.raw`(?<operator>(?:(?!\/[\/*])[-+*/%=<>!&|^~?:])+)`,
     String.raw`(?<punctuation>[\s\S])`,
   ].join("|"),
   "y",

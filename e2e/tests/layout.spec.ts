@@ -43,9 +43,25 @@ test.describe("at 320 px wide", () => {
 
     const grid = await page.getByRole("grid").boundingBox();
     expect(grid?.width).toBeGreaterThanOrEqual(250);
-    const submit = page.getByRole("button", { name: "Submit" });
-    await submit.scrollIntoViewIfNeeded();
-    await expect(submit).toBeInViewport();
+    // Every control can be brought into view.
+    const controls = [
+      page.getByRole("button", { name: "How to play and settings" }),
+      ...(await page.getByRole("radio").all()),
+      page.getByRole("gridcell").first(),
+      page.getByRole("gridcell").last(),
+      page.getByRole("button", { name: "Submit" }),
+    ];
+    for (const control of controls) {
+      await control.scrollIntoViewIfNeeded();
+      await expect(control).toBeInViewport();
+    }
+    await page.getByRole("button", { name: "How to play and settings" }).click();
+    const digits = page.getByRole("switch", { name: "Show digits" });
+    await digits.scrollIntoViewIfNeeded();
+    await expect(digits).toBeInViewport();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      320,
+    );
   });
 });
 

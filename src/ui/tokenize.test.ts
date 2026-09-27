@@ -103,3 +103,14 @@ Deno.test("tokenLines splits tokens at line breaks", () => {
 Deno.test("tokenLines keeps empty lines", () => {
   assert.deepEqual(tokenLines("a\n\nb").map((line) => line.length), [1, 0, 1]);
 });
+
+Deno.test("tokenize ends an operator where a comment starts", () => {
+  assert.deepEqual(kinds("x+// hint"), ["identifier:x", "operator:+", "comment:// hint"]);
+  assert.deepEqual(kinds("x*/* c */2"), [
+    "identifier:x",
+    "operator:*",
+    "comment:/* c */",
+    "number:2",
+  ]);
+  assert.deepEqual(kinds("x / y"), ["identifier:x", "operator:/", "identifier:y"]);
+});

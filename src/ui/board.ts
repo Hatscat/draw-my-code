@@ -92,7 +92,8 @@ export function createBoard(handlers: BoardHandlers): Board {
 
   grid.addEventListener("pointermove", (event) => {
     const index = cellAt(event.clientX, event.clientY);
-    if (event.pointerType === "mouse") handlers.onPoint(index ?? focusedInside());
+    // Mice and pens hover; a finger only touches.
+    if (event.pointerType !== "touch") handlers.onPoint(index ?? focusedInside());
     if (!stroke || event.pointerId !== stroke.id || index === stroke.last) return;
     if (index === undefined) {
       // Left the grid: coming back elsewhere must not draw a line through cells never crossed.
@@ -112,7 +113,7 @@ export function createBoard(handlers: BoardHandlers): Board {
   grid.addEventListener("pointercancel", endStroke);
   grid.addEventListener("lostpointercapture", endStroke);
   grid.addEventListener("pointerleave", (event) => {
-    if (event.pointerType === "mouse") handlers.onPoint(focusedInside());
+    if (event.pointerType !== "touch") handlers.onPoint(focusedInside());
   });
 
   // When the mouse leaves, the readout goes back to the keyboard-focused cell, if any.

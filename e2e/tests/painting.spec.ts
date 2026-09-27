@@ -1,3 +1,4 @@
+import { daily } from "../../src/levels/generated.ts";
 import { cell, cellCenter, expect, openPuzzle, test } from "./fixtures.ts";
 
 test.beforeEach(async ({ page }) => {
@@ -12,6 +13,30 @@ test("the grid starts black with white selected", async ({ page }) => {
     "aria-checked",
     "true",
   );
+});
+
+test("the screen shows the day's puzzle: number, file name and code, byte for byte", async ({ page }) => {
+  await expect(page.locator(".header-label")).toHaveText("#1");
+  await expect(page.getByText("daily_0001.c")).toBeVisible();
+  const shown = await page.locator(".code").evaluate((pre) =>
+    [...pre.querySelectorAll(".code-line")].map((line) =>
+      [...line.childNodes]
+        .filter((node) => !(node instanceof HTMLElement && node.classList.contains("code-number")))
+        .map((node) => node.textContent)
+        .join("")
+    ).join("\n")
+  );
+  expect(shown).toBe(daily[0]?.code);
+});
+
+test("painted cells take the palette's colors", async ({ page }) => {
+  await expect(cell(page, 0, 0)).toHaveCSS("background-color", "rgb(0, 0, 0)");
+  await page.keyboard.press("2");
+  await cell(page, 1, 1).click();
+  await expect(cell(page, 1, 1)).toHaveCSS("background-color", "rgb(255, 59, 59)");
+  await page.keyboard.press("6");
+  await cell(page, 2, 1).click();
+  await expect(cell(page, 2, 1)).toHaveCSS("background-color", "rgb(47, 123, 255)");
 });
 
 test("a tap paints one cell with the selected color", async ({ page, isMobile }) => {
