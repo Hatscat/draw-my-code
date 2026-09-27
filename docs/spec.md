@@ -73,7 +73,8 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
 - Stats (played, win %, current streak, max streak, distribution 1/2/3/X). Distribution bars show
   their counts; today's bar is highlighted by more than color.
 - Share button, `Next puzzle in HH:MM:SS` (or `New puzzles are on the way` when the bundle has no
-  next level), optional `Follow for new games` link (hidden when `FOLLOW_URL` is empty).
+  next level; or a `Play #N` button when the puzzle was finished after midnight and today's level
+  exists), optional `Follow for new games` link (hidden when `FOLLOW_URL` is empty).
 
 ## Share
 
@@ -120,7 +121,8 @@ distribution are derived from them.
 - No level for today (schedule ran out): friendly "No puzzle today. New puzzles are on the way."
   state, with stats if any. When online, it checks once per date for a new version of the site.
 - Before `LAUNCH_DATE`: tutorial on the first visit, then "First puzzle on <Month D, YYYY>" (e.g.
-  "First puzzle on October 1, 2026") and a countdown. On both screens the header shows only "?".
+  "First puzzle on October 1, 2026") and a countdown: `Starts in N days`, then `Starts in HH:MM:SS`
+  on the last day. On both screens the header shows only "?".
 - Dev builds only: `?date=YYYY-MM-DD` overrides today.
 - Known limits, accepted: changing the device clock opens past puzzles, and the bundle contains
   every future solution.

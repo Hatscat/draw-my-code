@@ -150,3 +150,45 @@ test("a finished puzzle can't be painted any more", async ({ page }) => {
   await expect(cell(page, 0, 0)).toHaveAttribute("aria-label", before ?? "");
   await expect(page.getByRole("radio", { name: "1 white" })).toBeHidden();
 });
+
+test("when the share sheet fails, the result is copied instead", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the share sheet is only used on touch devices");
+  await stubShare(page, "NotAllowedError");
+  await openPuzzle(page, 1);
+  await paintRows(page, SOLUTION);
+  await page.getByRole("button", { name: "Submit" }).click();
+  await page.getByRole("button", { name: "Share" }).click();
+  await expect(page.locator(".toast")).toHaveText("Copied");
+  expect((await sharedTexts(page)).copied).toHaveLength(1);
+});
+
+test("when sharing and copying both fail, the result is shown to copy by hand", async ({ page }) => {
+  await stubShare(page, "NotAllowedError", { clipboardFails: true });
+  await openPuzzle(page, 1);
+  await paintRows(page, SOLUTION);
+  await page.getByRole("button", { name: "Submit" }).click();
+  await page.getByRole("button", { name: "Share" }).click();
+  const field = page.getByRole("textbox", { name: "Your result, to copy" });
+  await expect(field).toBeVisible();
+  await expect(field).toHaveValue(new RegExp(`^Draw my code #1 1/3\n[^]*\n${SITE_URL}$`));
+  await expect(page.locator(".toast")).not.toHaveText("Copied");
+});
+
+test.describe("on a phone-sized screen", () => {
+  test.use({ viewport: { width: 320, height: 568 } });
+
+  test("a finished puzzle's page scrolls from a swipe on the grid, and fits 320 px", async ({ page }) => {
+    await openPuzzle(page, 1);
+    await paintRows(page, SOLUTION);
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(page.getByRole("grid")).toHaveAttribute("aria-readonly", "true");
+    expect(await page.getByRole("grid").evaluate((grid) => getComputedStyle(grid).touchAction))
+      .not.toBe("none");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      320,
+    );
+    const share = page.getByRole("button", { name: "Share" });
+    await share.scrollIntoViewIfNeeded();
+    await expect(share).toBeInViewport();
+  });
+});

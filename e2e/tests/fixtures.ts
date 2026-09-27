@@ -92,8 +92,12 @@ export const SITE_URL = siteUrl(process.env.VITE_SITE_URL).href;
  * Replaces the Web Share API and the clipboard with recorders, before the page loads.
  * `shareError` makes navigator.share reject, as when the player cancels the share sheet.
  */
-export async function stubShare(page: Page, shareError?: string): Promise<void> {
-  await page.addInitScript((errorName) => {
+export async function stubShare(
+  page: Page,
+  shareError?: string,
+  { clipboardFails = false } = {},
+): Promise<void> {
+  await page.addInitScript(([errorName, clipboardBroken]) => {
     const record = window as unknown as { shared: string[]; copied: string[]; attempts: number };
     record.shared = [];
     record.copied = [];
@@ -111,12 +115,13 @@ export async function stubShare(page: Page, shareError?: string): Promise<void> 
       configurable: true,
       value: {
         writeText: (text: string) => {
+          if (clipboardBroken) return Promise.reject(new DOMException("denied", "NotAllowedError"));
           record.copied.push(text);
           return Promise.resolve();
         },
       },
     });
-  }, shareError);
+  }, [shareError, clipboardFails] as const);
 }
 
 export function sharedTexts(page: Page) {

@@ -156,3 +156,29 @@ test("production builds ignore the ?date= override", async ({ page }) => {
   await page.goto("./?date=2026-11-05");
   await expect(page.locator(".header-label")).toHaveText("#1");
 });
+
+test("the no-puzzle screen still shows the player's stats", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "draw-my-code",
+      JSON.stringify({ v: 1, tutorial: { done: true, next: 1 }, results: { 1: 1, 2: 2, 3: "X" } }),
+    );
+  });
+  await page.clock.install({ time: dayOf(daily.length + 1) });
+  await page.goto("./");
+  await expect(page.getByRole("heading", { name: "No puzzle today" })).toBeVisible();
+  await expect(page.locator(".stat", { hasText: "Played" }).locator("dd")).toHaveText("3");
+});
+
+test("the day before launch counts down, then the first puzzle opens at midnight", async ({ page }) => {
+  await page.clock.install({ time: dayOf(0) });
+  await page.goto("./");
+  await expect(page.getByText(/^Starts in \d\d:\d\d:\d\d$/)).toBeVisible();
+  const untilMidnight = await page.evaluate(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime();
+  });
+  await page.clock.fastForward(untilMidnight - 5_000);
+  await page.clock.runFor(10_000);
+  await expect(page.locator(".header-label")).toHaveText("#1");
+});

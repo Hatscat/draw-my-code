@@ -361,6 +361,11 @@ h1 {
   -webkit-touch-callout: none;
 }
 
+/* Once the puzzle is over nothing paints: a swipe on the grid scrolls the page again. */
+.grid[aria-readonly="true"] {
+  touch-action: pan-x pan-y pinch-zoom;
+}
+
 .grid-row {
   display: grid;
   grid-template-columns: repeat(8, 1fr);

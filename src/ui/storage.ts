@@ -18,8 +18,8 @@ export interface Store {
  * The player's state in localStorage. Falls back to memory, and the game goes on, when storage is
  * blocked or full, or when it holds data from a newer version that must not be overwritten.
  */
-export function openStore(): Store {
-  const storage = localStorageOrUndefined();
+/** `storage`: null when the browser blocks site data (the default reads localStorage). */
+export function openStore(storage: Storage | null = localStorageOrNull()): Store {
   let memory: PlayerState | undefined = storage ? undefined : INITIAL_STATE;
   // The last state read or written: if a newer version takes over storage mid-game, play goes
   // on from here rather than from a blank state.
@@ -61,11 +61,11 @@ export function openStore(): Store {
   };
 }
 
-function localStorageOrUndefined(): Storage | undefined {
+function localStorageOrNull(): Storage | null {
   try {
     // Merely reading the property throws when site data is blocked.
-    return globalThis.localStorage;
+    return globalThis.localStorage ?? null;
   } catch {
-    return undefined;
+    return null;
   }
 }
