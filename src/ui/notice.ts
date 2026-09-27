@@ -9,6 +9,7 @@ import type { Screen } from "./screen.ts";
 import { el } from "./dom.ts";
 import { createHeader } from "./header.ts";
 import { createInfoPanel } from "./info-panel.ts";
+import { checkForNewVersion } from "./pwa.ts";
 import { createStatsView } from "./stats-view.ts";
 import type { Store } from "./storage.ts";
 
@@ -52,6 +53,8 @@ export function showNotice(
   }
 
   root.replaceChildren(header.element, info.element, heading, line, statsSection);
+  // Maybe only this copy of the site is out of puzzles.
+  if (kind === "no-puzzle") checkForNewVersion();
   let lastDate: CalendarDate | undefined;
   return {
     tick(now, today) {

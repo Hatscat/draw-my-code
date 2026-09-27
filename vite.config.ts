@@ -1,6 +1,7 @@
 import process from "node:process";
 import { defineConfig } from "vite";
 import { siteUrl } from "./tools/site-url.ts";
+import { serviceWorker } from "./tools/vite-sw-plugin.ts";
 
 export default defineConfig(({ command, isPreview }) => {
   const site = siteUrl(process.env.VITE_SITE_URL);
@@ -13,6 +14,7 @@ export default defineConfig(({ command, isPreview }) => {
     // Unknown paths get a 404, like GitHub Pages, instead of index.html.
     appType: "mpa",
     define: { "import.meta.env.VITE_SITE_URL": JSON.stringify(site.href) },
+    plugins: [serviceWorker("src/sw.ts")],
     server: {
       // `true` would forward only warnings and errors.
       forwardConsole: { unhandledErrors: true, logLevels: ["error", "warn", "info", "log"] },

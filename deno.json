@@ -13,11 +13,12 @@
     // Listed so tests and single-file checks see import.meta.env too, not just a bare deno check.
     "types": ["./src/env.d.ts"]
   },
-  "exclude": ["dist/", "e2e/"],
+  "exclude": ["dist/", "e2e/", "src/sw.ts"],
   "fmt": {
     "lineWidth": 100,
     "exclude": [
       "!e2e/",
+      "!src/sw.ts",
       "e2e/node_modules/",
       "e2e/package-lock.json",
       "e2e/playwright-report/",
@@ -25,7 +26,13 @@
     ]
   },
   "lint": {
-    "exclude": ["!e2e/", "e2e/node_modules/", "e2e/playwright-report/", "e2e/test-results/"],
+    "exclude": [
+      "!e2e/",
+      "!src/sw.ts",
+      "e2e/node_modules/",
+      "e2e/playwright-report/",
+      "e2e/test-results/"
+    ],
     "plugins": ["./tools/lint-plugin.ts"],
     "rules": {
       "tags": ["recommended"],
@@ -37,9 +44,10 @@
     "build": "vite build --configLoader native",
     "preview": "vite preview --configLoader native --host 127.0.0.1 --port 4173 --strictPort",
     "test": "deno test --allow-read --allow-write --allow-run --allow-env=TZ",
-    "check": "deno fmt --check && deno lint && deno check && deno task test",
+    "check": "deno fmt --check && deno lint && deno check && deno check --config tools/sw.deno.json src/sw.ts && deno task test",
     "levels": "deno run --allow-read --allow-write --allow-run --allow-env=GITHUB_ACTIONS tools/levels.ts",
     "levels:check": "deno run --allow-read --allow-write --allow-run --allow-env=GITHUB_ACTIONS tools/levels.ts --check",
+    "icons": "deno run --allow-write=public/icons tools/icons.ts",
     "e2e": "deno task build && deno task e2e:run",
     "e2e:run": "cd e2e && ./node_modules/.bin/tsc -p . && ./node_modules/.bin/playwright test"
   }
