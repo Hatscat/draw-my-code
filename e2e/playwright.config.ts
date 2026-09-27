@@ -4,8 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { siteUrl } from "../tools/site-url.ts";
 
 // Same site URL as the build under test, served locally by `vite preview` under its path.
-const baseURL = new URL(siteUrl(process.env.VITE_SITE_URL).pathname, "http://127.0.0.1:4173")
-  .href;
+const baseURL = new URL(siteUrl(process.env.VITE_SITE_URL).pathname, "http://127.0.0.1:4173").href;
 
 // The VS Code snap leaks GIO_MODULE_DIR, which makes WebKit's network process load the snap's
 // libraries and fail every navigation.
@@ -36,14 +35,8 @@ export default defineConfig({
   projects: [
     // The full Chromium build: the default headless shell rounds glyph widths to whole pixels,
     // so text metrics wouldn't match real devices.
-    {
-      name: "desktop-chrome",
-      use: { ...devices["Desktop Chrome"], channel: "chromium" },
-    },
+    { name: "desktop-chrome", use: { ...devices["Desktop Chrome"], channel: "chromium" } },
     { name: "pixel-7", use: { ...devices["Pixel 7"], channel: "chromium" } },
-    {
-      name: "iphone-14",
-      use: { ...devices["iPhone 14"], launchOptions: { env: webkitEnv } },
-    },
+    { name: "iphone-14", use: { ...devices["iPhone 14"], launchOptions: { env: webkitEnv } } },
   ],
 });
