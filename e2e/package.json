@@ -1,0 +1,9 @@
+{
+  "name": "draw-my-code-e2e",
+  "private": true,
+  "description": "Playwright end-to-end tests. Run from the repo root with deno task e2e.",
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "typescript": "7.0.2"
+  }
+}

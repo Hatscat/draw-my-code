@@ -53,10 +53,12 @@ docs/spec.md      Product spec
 
 ### Code
 
-- TypeScript strict. No `any`, no `@ts-ignore`, no `!` without a comment proving it is safe.
-- `src/core/` never touches the DOM, `window`, `localStorage`, `Date.now()` or randomness, and never
-  imports from `src/ui/`. Time enters core as calendar dates `{ y, m, d }`, never as timestamps. Its
-  lib config (no DOM) and the lint plugin in `tools/` enforce this.
+- TypeScript strict. No `any`; no `@ts-ignore`, `@ts-expect-error` or `@ts-nocheck`; a `!` only
+  behind `// deno-lint-ignore no-non-null-assertion -- <why it is safe>`. `deno lint` enforces all
+  three, e2e/ included.
+- `src/core/` never touches the DOM, `window`, `localStorage`, `import.meta.env`, `Date.now()` or
+  randomness, and never imports from `src/ui/`. Time enters core as calendar dates `{ y, m, d }`,
+  never as timestamps. Its lib config (no DOM) and the lint plugin in `tools/` enforce this.
 - `src/ui/` holds no rules: it calls core and renders the result.
 - Every grid cell always holds a value in [0, 7] and starts at 0 (black). There is no empty state:
   no `null`, no `undefined`, no sentinel.
