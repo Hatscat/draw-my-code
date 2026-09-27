@@ -10,18 +10,12 @@ import type { PlayerState } from "../core/storage.ts";
 import type { Level } from "../levels/types.ts";
 import { formatCountdown, msUntilNextDay } from "./clock.ts";
 import { showPuzzleView } from "./puzzle-view.ts";
+import { replayButton } from "./replay.ts";
 import { createResultPanel, type Shown } from "./result-panel.ts";
+import type { Screen } from "./screen.ts";
 import { shareResult } from "./share.ts";
 import type { Store } from "./storage.ts";
 import type { Toast } from "./toast.ts";
-
-/** A screen the app keeps up to date. */
-export interface Screen {
-  /** Every second and whenever the app comes back to the foreground. */
-  tick(now: Date, today: CalendarDate): void;
-  /** Another tab changed the saved state. */
-  refresh(): void;
-}
 
 export interface DailyOptions {
   readonly store: Store;
@@ -31,6 +25,7 @@ export interface DailyOptions {
   hasLevel(n: number): boolean;
   readonly siteUrl: string;
   readonly toast: Toast;
+  onReplayTutorial(): void;
 }
 
 export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
@@ -45,6 +40,7 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
     fileName: `daily_${String(n).padStart(4, "0")}.c`,
     code: options.level.code,
     attempts: `You have ${ATTEMPTS} attempts.`,
+    infoActions: [replayButton(options.onReplayTutorial)],
     // Every action applies to freshly read storage: another tab may have played meanwhile.
     onPaint: (index, color) => save(paintDaily(store.read(), n, solution, index, color)),
     onSubmit() {
@@ -135,5 +131,6 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
       if (isFinished(store.read(), n)) updateNext(now);
     },
     refresh: () => render(store.read()),
+    destroy: () => view.destroy(),
   };
 }

@@ -15,6 +15,8 @@ export interface PuzzleViewOptions {
   readonly attempts: string;
   /** Extra buttons for the info panel, such as Replay tutorial. */
   readonly infoActions?: readonly HTMLElement[];
+  /** Extra buttons under Submit, such as Skip tutorial. */
+  readonly footerActions?: readonly HTMLElement[];
   onPaint(index: number, color: Color): void;
   onSubmit(): void;
   onShowDigits(on: boolean): void;
@@ -23,7 +25,8 @@ export interface PuzzleViewOptions {
 export interface PuzzleView {
   /** Draws a grid; `editable` is false once the puzzle is over. */
   render(grid: Grid, options: { readonly editable: boolean; readonly showDigits: boolean }): void;
-  setStatus(lines: readonly string[]): void;
+  /** The line above Submit: an error (the wrong count) by default, or good news. */
+  setStatus(lines: readonly string[], tone?: "error" | "success"): void;
   /** Submit's label, and whether it does anything. It stays focusable either way. */
   setSubmit(label: string, enabled: boolean): void;
   /**
@@ -79,7 +82,7 @@ export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): P
   submit.addEventListener("click", () => {
     if (submit.getAttribute("aria-disabled") !== "true") options.onSubmit();
   });
-  const footer = el("div", { class: "footer" }, status, submit);
+  const footer = el("div", { class: "footer" }, status, submit, ...(options.footerActions ?? []));
 
   function select(color: Color) {
     selected = color;
@@ -110,7 +113,8 @@ export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): P
       board.setEditable(editable);
       info.setShowDigits(showDigits);
     },
-    setStatus(lines) {
+    setStatus(lines, tone = "error") {
+      status.classList.toggle("success", tone === "success");
       // A live region: rewriting the same text on every painted cell would announce it again.
       if (status.textContent === lines.join("")) return;
       status.replaceChildren(...lines.map((line) => el("span", { class: "status-line" }, line)));

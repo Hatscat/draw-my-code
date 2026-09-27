@@ -4,7 +4,8 @@ import { setShowDigits } from "../core/player.ts";
 import { puzzleNumber } from "../core/schedule.ts";
 import { computeStats } from "../core/stats.ts";
 import { formatCountdown, formatLongDate, msUntilNextDay } from "./clock.ts";
-import type { Screen } from "./daily.ts";
+import { replayButton } from "./replay.ts";
+import type { Screen } from "./screen.ts";
 import { el } from "./dom.ts";
 import { createHeader } from "./header.ts";
 import { createInfoPanel } from "./info-panel.ts";
@@ -16,6 +17,7 @@ export function showNotice(
   root: HTMLElement,
   kind: "before-launch" | "no-puzzle",
   store: Store,
+  onReplayTutorial: () => void,
 ): Screen {
   let infoOpen = false;
   const header = createHeader(() => {
@@ -27,7 +29,7 @@ export function showNotice(
     const state = setShowDigits(store.read(), on);
     store.write(state);
     info.setShowDigits(on);
-  });
+  }, [replayButton(onReplayTutorial)]);
   const heading = el(
     "h2",
     { class: "notice-title" },
@@ -64,5 +66,6 @@ export function showNotice(
     refresh() {
       if (lastDate) render(lastDate);
     },
+    destroy() {},
   };
 }

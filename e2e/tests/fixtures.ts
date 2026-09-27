@@ -4,8 +4,25 @@ import { puzzleDate } from "../../src/core/schedule.ts";
 import { daily } from "../../src/levels/generated.ts";
 import { siteUrl } from "../../tools/site-url.ts";
 
-/** Every test fails on a console error or an uncaught exception. */
-export const test = base.extend<{ consoleErrors: string[] }>({
+/**
+ * Every test fails on a console error or an uncaught exception. Tests start with the tutorial
+ * done unless they opt out with `test.use({ tutorialDone: false })`.
+ */
+export const test = base.extend<{ consoleErrors: string[]; tutorialDone: boolean }>({
+  tutorialDone: [true, { option: true }],
+  page: async ({ page, tutorialDone }, use) => {
+    if (tutorialDone) {
+      await page.addInitScript(() => {
+        // Only on the first load: later loads must see what the test did.
+        if (localStorage.getItem("draw-my-code") !== null) return;
+        localStorage.setItem(
+          "draw-my-code",
+          JSON.stringify({ v: 1, tutorial: { done: true, next: 1 } }),
+        );
+      });
+    }
+    await use(page);
+  },
   consoleErrors: [async ({ page }, use) => {
     const errors: string[] = [];
     page.on("console", (message) => {
