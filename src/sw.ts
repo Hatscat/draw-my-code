@@ -42,14 +42,16 @@ self.addEventListener("fetch", (event) => {
 
 /** Pages: the network when it answers in time, so new levels arrive; else the cached shell. */
 async function networkFirst(request: Request): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), NAVIGATION_TIMEOUT_MS);
   try {
-    return await fetch(request, {
-      cache: "no-cache",
-      signal: AbortSignal.timeout(NAVIGATION_TIMEOUT_MS),
-    });
+    return await fetch(request, { cache: "no-cache", signal: controller.signal });
   } catch {
     // A shared link may carry a query string (?fbclid=…): the shell is the same page.
     return (await caches.match("./", { ignoreSearch: true })) ?? Response.error();
+  } finally {
+    // The timeout covers the wait for headers only: a slow body must finish, not be cut off.
+    clearTimeout(timer);
   }
 }
 

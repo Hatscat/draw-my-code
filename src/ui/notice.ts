@@ -70,5 +70,6 @@ export function showNotice(
       if (lastDate) render(lastDate);
     },
     destroy() {},
+    focus: () => header.focusHelp(),
   };
 }

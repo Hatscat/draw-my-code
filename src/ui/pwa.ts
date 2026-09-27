@@ -16,7 +16,11 @@ export function setUpPwa(): void {
  * once, and reload when it takes over.
  */
 export function checkForNewVersion(): void {
-  if (!import.meta.env.PROD || !("serviceWorker" in navigator) || !navigator.onLine) return;
+  if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return;
+  if (!navigator.onLine) {
+    addEventListener("online", checkForNewVersion, { once: true });
+    return;
+  }
   // Only a page run by an older worker can get a newer one. On a first visit, the worker taking
   // control is no news, and reloading then would only race with the player.
   if (!navigator.serviceWorker.controller) return;

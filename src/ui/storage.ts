@@ -12,6 +12,11 @@ export interface Store {
   write(state: PlayerState): void;
   /** Calls `listener` when another tab changes the saved state. */
   onExternalChange(listener: () => void): void;
+  /**
+   * False once play runs in memory (storage blocked or full, or a newer version's data): nothing
+   * survives a reload then, so the analytics dedupe can't work and nothing is sent.
+   */
+  persistent(): boolean;
 }
 
 /**
@@ -53,6 +58,7 @@ export function openStore(storage: Storage | null = localStorageOrNull()): Store
         memory = state;
       }
     },
+    persistent: () => memory === undefined,
     onExternalChange(listener) {
       addEventListener("storage", (event) => {
         if (!memory && (event.key === STORAGE_KEY || event.key === null)) listener();

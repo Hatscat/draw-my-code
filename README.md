@@ -81,9 +81,11 @@ so the reminder stops if the repository goes quiet.
 
 ## Deploying
 
-CI (`.github/workflows/ci.yml`) checks every pull request and push. On `main` it builds the site
-with the base path and URL from the Pages configuration, runs the end-to-end tests on that exact
-build, and deploys it to GitHub Pages. One-time setup:
+CI (`.github/workflows/ci.yml`) runs on pull requests, on pushes to `main` and once a day. Pull
+requests and pushes run `check`, build the site with the base path and URL from the Pages
+configuration (so Pages must be set up first), and run the end-to-end tests on that exact build.
+Pushes to `main` then deploy that build to GitHub Pages. The daily run only runs `check`. One-time
+setup:
 
 1. Make the repository public: GitHub Free serves Pages only from public repositories.
 2. Settings > Pages > Source: GitHub Actions.

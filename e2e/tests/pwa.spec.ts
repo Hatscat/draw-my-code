@@ -19,7 +19,13 @@ test("the manifest and all its icons are served", async ({ request, baseURL }) =
   const response = await request.get(manifestUrl);
   expect(response.ok()).toBe(true);
   const manifest = await response.json();
-  expect(manifest).toMatchObject({ display: "standalone", start_url: "./", scope: "./", id: "./" });
+  expect(manifest).toMatchObject({
+    display: "standalone",
+    start_url: "./",
+    scope: "./",
+    // An id resolves against the origin, not the manifest: "./" would claim the whole origin.
+    id: "draw-my-code",
+  });
   const purposes = manifest.icons.map((icon: { purpose: string }) => icon.purpose);
   expect(purposes).toContain("maskable");
   for (const icon of manifest.icons as { src: string }[]) {

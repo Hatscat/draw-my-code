@@ -4,6 +4,7 @@ export interface Header {
   readonly element: HTMLElement;
   setLabel(label: string): void;
   setHelpOpen(open: boolean): void;
+  focusHelp(): void;
 }
 
 /** Title, the puzzle's name (`#12`, `Tutorial 2/5`) and the "?" button of the info panel. */
@@ -30,6 +31,9 @@ export function createHeader(onHelp: () => void): Header {
     },
     setHelpOpen(open) {
       help.setAttribute("aria-expanded", String(open));
+    },
+    focusHelp() {
+      help.focus();
     },
   };
 }

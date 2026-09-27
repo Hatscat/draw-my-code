@@ -53,7 +53,8 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
       if (isFinished(before, n) || outcome === undefined) return;
       updateNext(new Date());
       result.focus();
-      track(completionEvent(outcome));
+      // Without persistent storage a reload could replay and count the puzzle again.
+      if (store.persistent()) track(completionEvent(outcome));
     },
     onShowDigits: (on) => save(setShowDigits(store.read(), on)),
   });
@@ -76,13 +77,13 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
   });
 
   /** One share event per puzzle, however many times the player shares. */
+  let shareQueued = false;
   function countShare() {
-    if (!isTracking()) return;
+    if (!isTracking() || !store.persistent() || shareQueued) return;
     const state = store.read();
-    const next = recordShare(state, n);
-    if (next === state) return;
-    store.write(next);
-    track("share");
+    if (recordShare(state, n) === state) return;
+    shareQueued = true;
+    track("share", () => store.write(recordShare(store.read(), n)));
   }
 
   function save(state: PlayerState) {
@@ -147,5 +148,6 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
     },
     refresh: () => render(store.read()),
     destroy: () => view.destroy(),
+    focus: () => (isFinished(store.read(), n) ? result.focus() : view.focusSubmit()),
   };
 }

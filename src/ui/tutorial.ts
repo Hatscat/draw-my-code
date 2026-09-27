@@ -110,13 +110,13 @@ export function showTutorial(
   }
 
   /** tutorial_complete: the first time the last level is solved, never on Skip. */
+  let completionQueued = false;
   function countCompletion() {
-    if (!isTracking()) return;
+    if (!isTracking() || !store.persistent() || completionQueued) return;
     const state = store.read();
-    const next = recordTutorialComplete(state);
-    if (next === state) return;
-    store.write(next);
-    track("tutorial_complete");
+    if (recordTutorialComplete(state) === state) return;
+    completionQueued = true;
+    track("tutorial_complete", () => store.write(recordTutorialComplete(store.read())));
   }
 
   function next() {
@@ -127,11 +127,14 @@ export function showTutorial(
     }
     index++;
     view = showLevel();
+    // The Next button just pressed is gone: the new level's Submit takes its place.
+    view.focusSubmit();
   }
 
   return {
     tick() {},
     refresh() {},
     destroy: () => view.destroy(),
+    focus: () => view.focusSubmit(),
   };
 }

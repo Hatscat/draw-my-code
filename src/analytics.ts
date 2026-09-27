@@ -48,8 +48,14 @@ export function analyticsEnabled(settings: AnalyticsSettings): boolean {
     settings.hostname === new URL(settings.siteUrl).hostname;
 }
 
+interface Pending {
+  readonly event: AnalyticsEvent;
+  /** Runs once Umami has the event: dedupe markers are saved only for events really sent. */
+  readonly onSent: (() => void) | undefined;
+}
+
 // Events waiting for the script to load; undefined while analytics are off.
-let pending: AnalyticsEvent[] | undefined;
+let pending: Pending[] | undefined;
 
 export function startAnalytics(): void {
   try {
@@ -68,6 +74,8 @@ export function startAnalytics(): void {
     script.dataset.domains = settings.hostname;
     // No automatic pageviews: one per day is sent by hand, to stay within the quota.
     script.dataset.autoTrack = "false";
+    // Shared links come back with click ids (fbclid, gclid…) that Umami would store.
+    script.dataset.excludeSearch = "true";
     script.addEventListener("load", flush);
     script.addEventListener("error", () => (pending = undefined));
     document.head.append(script);
@@ -81,9 +89,9 @@ export function isTracking(): boolean {
   return pending !== undefined;
 }
 
-export function track(event: AnalyticsEvent): void {
+export function track(event: AnalyticsEvent, onSent?: () => void): void {
   if (!pending) return;
-  pending.push(event);
+  pending.push({ event, onSent });
   flush();
 }
 
@@ -91,9 +99,10 @@ function flush() {
   try {
     const umami = (globalThis as unknown as { umami?: Umami }).umami;
     if (!umami || !pending) return;
-    for (const event of pending.splice(0)) {
+    for (const { event, onSent } of pending.splice(0)) {
       if (event === "pageview") umami.track();
       else umami.track(event);
+      onSent?.();
     }
   } catch {
     pending = undefined;

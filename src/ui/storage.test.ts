@@ -76,3 +76,18 @@ Deno.test("corrupted data is left alone until the next real action", () => {
   assert.equal(writes(), 1);
   assert.equal(items.get(STORAGE_KEY), serializeState(played));
 });
+
+Deno.test("persistent: false as soon as play runs in memory", () => {
+  assert.equal(openStore(fakeStorage().storage).persistent(), true);
+  assert.equal(openStore(null).persistent(), false);
+
+  const full = openStore(fakeStorage({}, { failWrites: true }).storage);
+  full.read();
+  assert.equal(full.persistent(), true);
+  full.write(played);
+  assert.equal(full.persistent(), false);
+
+  const newer = openStore(fakeStorage({ [STORAGE_KEY]: JSON.stringify({ v: 99 }) }).storage);
+  newer.read();
+  assert.equal(newer.persistent(), false);
+});

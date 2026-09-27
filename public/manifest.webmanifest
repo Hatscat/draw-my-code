@@ -2,7 +2,7 @@
   "name": "Draw my code",
   "short_name": "Draw my code",
   "description": "A daily puzzle: read a tiny C function, paint its output on an 8×8 grid.",
-  "id": "./",
+  "id": "draw-my-code",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

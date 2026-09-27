@@ -8,4 +8,6 @@ export interface Screen {
   refresh(): void;
   /** Before another screen replaces this one. */
   destroy(): void;
+  /** Moves the keyboard focus into this screen, when it replaced one that had it. */
+  focus(): void;
 }

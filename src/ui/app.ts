@@ -22,17 +22,29 @@ export function startApp(root: HTMLElement): void {
   document.body.append(toast.element);
 
   const shown = dailyFor(LAUNCH_DATE, today(), daily);
-  countPageview(store, today());
   let screen: Screen | undefined;
+  // The midnight reload waits while the tutorial is on screen: it would wipe the level in play.
+  let inTutorial = false;
+
+  // Only a page someone is looking at counts as a visit: not a tab reloaded in the background.
+  const pageview = countPageview(store);
+  const countVisit = () => {
+    if (document.visibilityState === "visible") pageview(today());
+  };
+  countVisit();
 
   function show(next: () => Screen) {
+    // Replacing the screen removes the focused control: keep keyboard users in place.
+    const hadFocus = root.contains(document.activeElement);
     screen?.destroy();
     screen = next();
     screen.tick(new Date(), today());
     scrollTo(0, 0);
+    if (hadFocus) screen.focus();
   }
 
   function showTutorialFrom(start: number, replay: boolean) {
+    inTutorial = true;
     show(() => showTutorial(root, { store, levels: tutorial, start, replay, onDone: showMain }));
   }
 
@@ -41,6 +53,12 @@ export function startApp(root: HTMLElement): void {
     const level = tutorialLevelToShow(store.read(), tutorial.length);
     if (level !== undefined) {
       showTutorialFrom(level, false);
+      return;
+    }
+    inTutorial = false;
+    // The day changed during the tutorial: start over on today's puzzle.
+    if (changed(shown, dailyFor(LAUNCH_DATE, today(), daily))) {
+      location.reload();
       return;
     }
     const replay = () => showTutorialFrom(1, true);
@@ -66,7 +84,7 @@ export function startApp(root: HTMLElement): void {
   let stayed = false;
   const check = () => {
     const date = today();
-    if (!stayed && changed(shown, dailyFor(LAUNCH_DATE, date, daily))) {
+    if (!inTutorial && !stayed && changed(shown, dailyFor(LAUNCH_DATE, date, daily))) {
       if (shown.kind !== "puzzle" || canMoveOn(store.read(), shown.number)) {
         location.reload();
         return;
@@ -77,20 +95,28 @@ export function startApp(root: HTMLElement): void {
   };
   setInterval(check, 1000);
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") check();
+    if (document.visibilityState !== "visible") return;
+    check();
+    countVisit();
   });
   addEventListener("pageshow", check);
   store.onExternalChange(() => screen?.refresh());
 }
 
-/** One pageview per local date, however many times the page loads. */
-function countPageview(store: Store, date: CalendarDate) {
-  if (!isTracking()) return;
-  const state = store.read();
-  const next = recordPageview(state, formatIsoDate(date));
-  if (next === state) return;
-  store.write(next);
-  track("pageview");
+/**
+ * One pageview per local date, however many times the page loads. Returns the function to call
+ * on each visible moment; it queues at most one pageview per date for this page.
+ */
+function countPageview(store: Store): (date: CalendarDate) => void {
+  let queued = "";
+  return (date) => {
+    const day = formatIsoDate(date);
+    if (!isTracking() || !store.persistent() || queued === day) return;
+    const state = store.read();
+    if (recordPageview(state, day) === state) return;
+    queued = day;
+    track("pageview", () => store.write(recordPageview(store.read(), day)));
+  };
 }
 
 function changed(before: Daily, now: Daily): boolean {

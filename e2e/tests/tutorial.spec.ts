@@ -86,3 +86,37 @@ test("before launch: the tutorial, then the first puzzle's date", async ({ page 
   await expect(page.getByRole("heading", { name: /^First puzzle on / }))
     .toBeVisible();
 });
+
+test("keyboard focus follows onto the next level and into the daily", async ({ page }) => {
+  await page.clock.install({ time: dayOf(1) });
+  await page.goto("./");
+  await cell(page, 3, 4).focus();
+  await page.keyboard.press(" ");
+  const submit = page.getByRole("button", { name: "Submit" });
+  await submit.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await expect(label(page)).toHaveText(`Tutorial 2/${tutorial.length}`);
+  await expect(page.getByRole("button", { name: "Submit" })).toBeFocused();
+
+  await page.getByRole("button", { name: "Skip tutorial" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(label(page)).toHaveText("#1");
+  await expect(page.getByRole("button", { name: "Submit" })).toBeFocused();
+});
+
+test("midnight doesn't interrupt the tutorial; its end leads to today's puzzle", async ({ page }) => {
+  await page.clock.install({ time: dayOf(1) });
+  await page.goto("./");
+  await cell(page, 0, 0).click();
+  const untilMidnight = await page.evaluate(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime();
+  });
+  await page.clock.fastForward(untilMidnight + 5_000);
+  await page.clock.runFor(5_000);
+  await expect(label(page)).toHaveText(`Tutorial 1/${tutorial.length}`);
+  await expect(cell(page, 0, 0)).toHaveAccessibleName("x 0, y 0: 1 white");
+  await page.getByRole("button", { name: "Skip tutorial" }).click();
+  await expect(label(page)).toHaveText("#2");
+});
