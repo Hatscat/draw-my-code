@@ -35,3 +35,10 @@ export function formatLongDate({ y, m, d }: CalendarDate): string {
     timeZone: "UTC",
   });
 }
+
+/** "05:12:33": hours, minutes and seconds left, rounded up so it never shows 00:00:00 early. */
+export function formatCountdown(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const parts = [Math.floor(total / 3600), Math.floor(total / 60) % 60, total % 60];
+  return parts.map((part) => String(part).padStart(2, "0")).join(":");
+}

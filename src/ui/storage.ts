@@ -1,0 +1,71 @@
+import {
+  INITIAL_STATE,
+  loadState,
+  type PlayerState,
+  serializeState,
+  STORAGE_KEY,
+} from "../core/storage.ts";
+
+export interface Store {
+  /** The saved state, read fresh each time so another tab's changes are seen. */
+  read(): PlayerState;
+  write(state: PlayerState): void;
+  /** Calls `listener` when another tab changes the saved state. */
+  onExternalChange(listener: () => void): void;
+}
+
+/**
+ * The player's state in localStorage. Falls back to memory, and the game goes on, when storage is
+ * blocked or full, or when it holds data from a newer version that must not be overwritten.
+ */
+export function openStore(): Store {
+  const storage = localStorageOrUndefined();
+  let memory: PlayerState | undefined = storage ? undefined : INITIAL_STATE;
+  // The last state read or written: if a newer version takes over storage mid-game, play goes
+  // on from here rather than from a blank state.
+  let last: PlayerState = INITIAL_STATE;
+
+  return {
+    read() {
+      if (memory) return memory;
+      try {
+        const { state, writable } = loadState(storage?.getItem(STORAGE_KEY) ?? null);
+        if (!writable) {
+          memory = last === INITIAL_STATE ? state : last;
+          return memory;
+        }
+        last = state;
+        return state;
+      } catch {
+        memory = INITIAL_STATE;
+        return memory;
+      }
+    },
+    write(state) {
+      last = state;
+      if (memory || !storage) {
+        memory = state;
+        return;
+      }
+      try {
+        storage.setItem(STORAGE_KEY, serializeState(state));
+      } catch {
+        memory = state;
+      }
+    },
+    onExternalChange(listener) {
+      addEventListener("storage", (event) => {
+        if (!memory && (event.key === STORAGE_KEY || event.key === null)) listener();
+      });
+    },
+  };
+}
+
+function localStorageOrUndefined(): Storage | undefined {
+  try {
+    // Merely reading the property throws when site data is blocked.
+    return globalThis.localStorage;
+  } catch {
+    return undefined;
+  }
+}

@@ -16,6 +16,7 @@ export interface Board {
   setEditable(editable: boolean): void;
   /** Highlights the axis labels of a cell. */
   setPointed(index: number | undefined): void;
+  setName(name: string): void;
   /** Keeps the grid at its current size (while the info panel is open), or lets it fit again. */
   freeze(frozen: boolean): void;
 }
@@ -38,11 +39,13 @@ export function createBoard(handlers: BoardHandlers): Board {
       }),
     )
   );
-  const grid = el("div", {
-    class: "grid",
-    role: "grid",
-    "aria-label": "Your drawing: 8 by 8 cells, x from left to right, y from top to bottom",
-  }, ...rows);
+  const grid = el("div", { class: "grid", role: "grid" }, ...rows);
+  const name = (what: string) =>
+    grid.setAttribute(
+      "aria-label",
+      `${what}: 8 by 8 cells, x from left to right, y from top to bottom`,
+    );
+  name("Your drawing");
   const columnLabels = range(SIZE).map((x) => el("span", {}, String(x)));
   const rowLabels = range(SIZE).map((y) => el("span", {}, String(y)));
   const element = el(
@@ -182,6 +185,9 @@ export function createBoard(handlers: BoardHandlers): Board {
       editable = value;
       if (!value) stroke = undefined;
       grid.setAttribute("aria-readonly", String(!value));
+    },
+    setName(what) {
+      name(what);
     },
     freeze(frozen) {
       if (frozen) {

@@ -6,10 +6,11 @@ export interface InfoPanel {
   setShowDigits(on: boolean): void;
 }
 
-/** The "?" panel: how to play, and the Show digits setting. */
+/** The "?" panel: how to play, the Show digits setting, and optional extra actions. */
 export function createInfoPanel(
   attempts: string,
   onShowDigits: (on: boolean) => void,
+  actions: readonly HTMLElement[] = [],
 ): InfoPanel {
   // On or off shows as a mark, not by color alone; screen readers get aria-checked instead.
   const mark = el("span", { "aria-hidden": "true" }, "[ ] ");
@@ -41,7 +42,7 @@ export function createInfoPanel(
         attempts,
       ].map((sentence) => el("span", { class: "info-line" }, sentence, " ")),
     ),
-    el("div", { class: "info-actions" }, digits),
+    el("div", { class: "info-actions" }, digits, ...actions),
   );
   return {
     element,

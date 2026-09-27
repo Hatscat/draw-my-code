@@ -35,6 +35,15 @@ export function setShowDigits(state: PlayerState, on: boolean): PlayerState {
   return state.showDigits === on ? state : { ...state, showDigits: on };
 }
 
+/**
+ * Whether the day may move on from puzzle #n, at midnight or when the app comes back: yes once
+ * it is finished or if it was never touched. A puzzle in progress stays until it is finished,
+ * and its result counts for its own number.
+ */
+export function canMoveOn(state: PlayerState, n: number): boolean {
+  return isFinished(state, n) || isUntouched(state, n);
+}
+
 /** Whether puzzle #n is over. Its result, once recorded, never changes. */
 export function isFinished(state: PlayerState, n: number): boolean {
   return state.results[n] !== undefined;

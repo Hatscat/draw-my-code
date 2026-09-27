@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { status } from "./game.ts";
 import { cellIndex, type Color, gridFromRows } from "./grid.ts";
 import {
+  canMoveOn,
   dailyPlay,
   isFinished,
   isUntouched,
@@ -134,4 +135,12 @@ Deno.test("setShowDigits stores the setting and keeps the same state when unchan
   assert.equal(on.showDigits, true);
   assert.equal(setShowDigits(on, true), on);
   assert.equal(setShowDigits(on, false).showDigits, false);
+});
+
+Deno.test("canMoveOn: finished or untouched puzzles make way, one in progress stays", () => {
+  assert.equal(canMoveOn(INITIAL_STATE, 5), true);
+  const inProgress = paintDaily(INITIAL_STATE, 5, SOLUTION, 0, 3);
+  assert.equal(canMoveOn(inProgress, 5), false);
+  const finished = submitDaily(paintDaily(INITIAL_STATE, 5, SOLUTION, TARGET, 1), 5, SOLUTION);
+  assert.equal(canMoveOn(finished, 5), true);
 });

@@ -1,6 +1,8 @@
 import { expect, type Locator, type Page, test as base } from "@playwright/test";
 import { LAUNCH_DATE } from "../../src/core/config.ts";
 import { puzzleDate } from "../../src/core/schedule.ts";
+import { daily } from "../../src/levels/generated.ts";
+import { siteUrl } from "../../tools/site-url.ts";
 
 /** Every test fails on a console error or an uncaught exception. */
 export const test = base.extend<{ consoleErrors: string[] }>({
@@ -39,4 +41,65 @@ export async function cellCenter(page: Page, x: number, y: number) {
   const box = await cell(page, x, y).boundingBox();
   if (!box) throw new Error(`cell ${x}, ${y} is not visible`);
   return { clientX: box.x + box.width / 2, clientY: box.y + box.height / 2 };
+}
+
+/** Puzzle #n's solution: 8 rows of 8 digits, from the generated levels. */
+export function solutionOf(n: number): readonly string[] {
+  const level = daily.find((l) => l.id === n);
+  if (!level) throw new Error(`no daily #${n}`);
+  return level.solution;
+}
+
+/** Paints `rows` (8 rows of 8 digits) onto a blank grid, one color at a time. */
+export async function paintRows(page: Page, rows: readonly string[]): Promise<void> {
+  for (const color of "1234567") {
+    const cells = rows.flatMap((row, y) =>
+      [...row].flatMap((d, x) => (d === color ? [[x, y]] : []))
+    );
+    if (cells.length === 0) continue;
+    await page.keyboard.press(color);
+    for (const [x, y] of cells) await cell(page, x ?? 0, y ?? 0).click();
+  }
+}
+
+/** The site URL the build under test puts in share texts. */
+// deno-lint-ignore no-process-global -- Playwright runs this file on Node
+export const SITE_URL = siteUrl(process.env.VITE_SITE_URL).href;
+
+/**
+ * Replaces the Web Share API and the clipboard with recorders, before the page loads.
+ * `shareError` makes navigator.share reject, as when the player cancels the share sheet.
+ */
+export async function stubShare(page: Page, shareError?: string): Promise<void> {
+  await page.addInitScript((errorName) => {
+    const record = window as unknown as { shared: string[]; copied: string[]; attempts: number };
+    record.shared = [];
+    record.copied = [];
+    record.attempts = 0;
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: (data: ShareData) => {
+        record.attempts++;
+        if (errorName) return Promise.reject(new DOMException("stubbed", errorName));
+        record.shared.push(data.text ?? "");
+        return Promise.resolve();
+      },
+    });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: (text: string) => {
+          record.copied.push(text);
+          return Promise.resolve();
+        },
+      },
+    });
+  }, shareError);
+}
+
+export function sharedTexts(page: Page) {
+  return page.evaluate(() => {
+    const record = window as unknown as { shared: string[]; copied: string[]; attempts: number };
+    return { shared: record.shared, copied: record.copied, attempts: record.attempts };
+  });
 }

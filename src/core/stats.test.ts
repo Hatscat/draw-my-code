@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { computeStats, isResult, type Results } from "./stats.ts";
+import { computeStats, distributionSlot, isResult, type Results } from "./stats.ts";
 
 Deno.test("isResult accepts 1 to 3 and X", () => {
   for (const value of [1, 2, 3, "X"]) assert.equal(isResult(value), true);
@@ -59,4 +59,8 @@ Deno.test("results dated after today (clock moved back) don't count as the curre
   const results: Results = { 4: 1, 5: 1, 9: 1 };
   assert.equal(computeStats(results, 5).currentStreak, 2);
   assert.equal(computeStats(results, 5).played, 3);
+});
+
+Deno.test("distributionSlot: solved in k is slot k - 1, failed is the last slot", () => {
+  assert.deepEqual([1, 2, 3, "X" as const].map(distributionSlot), [0, 1, 2, 3]);
 });

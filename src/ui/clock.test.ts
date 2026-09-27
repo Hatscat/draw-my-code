@@ -1,5 +1,11 @@
 import assert from "node:assert/strict";
-import { dateOverride, formatLongDate, localDate, msUntilNextDay } from "./clock.ts";
+import {
+  dateOverride,
+  formatCountdown,
+  formatLongDate,
+  localDate,
+  msUntilNextDay,
+} from "./clock.ts";
 
 const HOUR = 3_600_000;
 
@@ -75,4 +81,13 @@ Deno.test("formatLongDate spells the date in English, whatever the time zone", (
   inZone("Asia/Tokyo", () => {
     assert.equal(formatLongDate({ y: 2027, m: 1, d: 31 }), "January 31, 2027");
   });
+});
+
+Deno.test("formatCountdown shows hours, minutes and seconds, rounding up", () => {
+  assert.equal(formatCountdown(4 * HOUR), "04:00:00");
+  assert.equal(formatCountdown(25 * HOUR), "25:00:00");
+  assert.equal(formatCountdown(61_500), "00:01:02");
+  assert.equal(formatCountdown(1), "00:00:01");
+  assert.equal(formatCountdown(0), "00:00:00");
+  assert.equal(formatCountdown(-5), "00:00:00");
 });

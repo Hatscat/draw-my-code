@@ -15,6 +15,11 @@ export interface Stats {
   readonly distribution: readonly number[];
 }
 
+/** The distribution bar a result counts in: solved in 1, 2, … ATTEMPTS, then failed. */
+export function distributionSlot(result: Result): number {
+  return result === "X" ? ATTEMPTS : result - 1;
+}
+
 export function isResult(value: unknown): value is Result {
   return value === "X" || (Number.isInteger(value) && (value as number) >= 1 &&
     (value as number) <= ATTEMPTS);
@@ -31,7 +36,7 @@ export function computeStats(results: Results, today: number): Stats {
 
   const distribution = Array<number>(ATTEMPTS + 1).fill(0);
   for (const { result } of entries) {
-    const slot = result === "X" ? ATTEMPTS : result - 1;
+    const slot = distributionSlot(result);
     distribution[slot] = (distribution[slot] ?? 0) + 1;
   }
 

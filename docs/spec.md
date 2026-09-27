@@ -64,8 +64,10 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
 
 ## Result panel
 
-- Inline: it replaces the instruction, swatches, status line and Submit. The grid stays visible and
-  read-only. The page may scroll once the puzzle is over.
+- Inline: the result and the failed-puzzle toggle take the place of the instruction and swatches,
+  right above the grid, so the toggle's effect is in view; stats, share and the countdown take the
+  place of the status line and Submit. The grid stays visible and read-only. The page may scroll
+  once the puzzle is over.
 - Solved: "Solved in N/3". Failed: "X/3", plus a toggle `Solution` (default) / `Your drawing`. Both
   are shown plain, with no per-cell marks: toggling is how the player compares them.
 - Stats (played, win %, current streak, max streak, distribution 1/2/3/X). Distribution bars show

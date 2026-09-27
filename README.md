@@ -31,6 +31,9 @@ npx playwright install --with-deps --no-shell chromium webkit
 | `deno task levels` | Compile and validate every level, regenerate the level list      |
 | `deno task e2e`    | Production build, then the Playwright tests                      |
 
+In `deno task dev`, add `?date=YYYY-MM-DD` to the URL to pretend today is another day. Production
+builds ignore it.
+
 ## Adding a daily puzzle
 
 1. Create `levels/daily/NNNN.c` with the next number: `0008.c` after `0007.c`, no gaps. Puzzle #N
