@@ -11,7 +11,7 @@ import {
 } from "./game.ts";
 import { cellIndex, type Color, gridFromRows } from "./grid.ts";
 
-// Tutorial level 1: a single white cell at (3, 4).
+// Like tutorial level 1: a single white cell, here at (3, 4).
 const ONE_CELL = gridFromRows([
   "00000000",
   "00000000",

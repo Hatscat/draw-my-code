@@ -5,6 +5,10 @@ test.use({ tutorialDone: false });
 
 const label = (page: import("@playwright/test").Page) => page.locator(".header-label");
 
+// Level 1 has a single white cell, the color selected on load: one tap solves it.
+const ONE = tutorial[0]?.solution.join("").indexOf("1") ?? -1;
+const oneCell = (page: import("@playwright/test").Page) => cell(page, ONE % 8, Math.floor(ONE / 8));
+
 test("a first visit starts the tutorial, and Skip leads to the daily", async ({ page }) => {
   await page.clock.install({ time: dayOf(1) });
   await page.goto("./");
@@ -26,8 +30,7 @@ test("a wrong submit shows only the count; a solve moves on with Next", async ({
   await expect(status).not.toContainText("attempt");
   await expect(submit).toHaveAttribute("aria-disabled", "true");
 
-  // Level 1: one white cell at (3, 4), the selected color on load.
-  await cell(page, 3, 4).click();
+  await oneCell(page).click();
   await submit.click();
   await expect(status).toHaveText("Right!");
   await page.getByRole("button", { name: "Next" }).click();
@@ -37,7 +40,7 @@ test("a wrong submit shows only the count; a solve moves on with Next", async ({
 test("a reload resumes at the current tutorial level", async ({ page }) => {
   await page.clock.install({ time: dayOf(1) });
   await page.goto("./");
-  await cell(page, 3, 4).click();
+  await oneCell(page).click();
   await page.getByRole("button", { name: "Submit" }).click();
   await page.reload();
   await expect(label(page)).toHaveText(`Tutorial 2/${tutorial.length}`);
@@ -90,7 +93,7 @@ test("before launch: the tutorial, then the first puzzle's date", async ({ page 
 test("keyboard focus follows onto the next level and into the daily", async ({ page }) => {
   await page.clock.install({ time: dayOf(1) });
   await page.goto("./");
-  await cell(page, 3, 4).focus();
+  await oneCell(page).focus();
   await page.keyboard.press(" ");
   const submit = page.getByRole("button", { name: "Submit" });
   await submit.focus();

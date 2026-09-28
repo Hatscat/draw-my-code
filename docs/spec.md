@@ -236,7 +236,7 @@ than 7 days left it warns (a GitHub annotation in CI), and fails with `--strict`
 
 Seed content:
 
-- Tutorial, in this order: `return x == 3 && y == 4;` (one tap: teaches the axes, and that C
+- Tutorial, in this order: `return x == 2 && y == 3;` (one tap: teaches the axes, and that C
   booleans are 0/1) · `return x;` · `return x / 2;` · `return (x + y) % 2;` ·
   `return x > y ? x : y;`
 - Daily samples, which I will curate and replace:
