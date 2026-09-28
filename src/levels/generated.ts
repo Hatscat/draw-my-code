@@ -4,13 +4,13 @@ import type { Level } from "./types.ts";
 
 export const tutorial: readonly Level[] = [{
   id: 1,
-  code: "int f(int x, int y) {\n  return x == 3 && y == 4;\n}",
+  code: "int f(int x, int y) {\n  return x == 2 && y == 3;\n}",
   solution: [
     "00000000",
     "00000000",
     "00000000",
+    "00100000",
     "00000000",
-    "00010000",
     "00000000",
     "00000000",
     "00000000",
