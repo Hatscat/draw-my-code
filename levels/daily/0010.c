@@ -1,5 +1,5 @@
 int f(int x, int y) {
-  int c = 1 << x;
+  int c = 0x80 >> x;
   int a[] = {
     c & 0x14 ? 3:0, c & 0x1E ? 5:0,
     c & 0x35 ? 5:0, c & 0x1F ? 5:0,

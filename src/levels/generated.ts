@@ -113,7 +113,7 @@ export const tutorial: readonly Level[] = [{
 export const daily: readonly Level[] = [{
   id: 1,
   code:
-    "int f(int x, int y) {\n  int dx = 2*x - 7, dy = 2*y - 7;\n  return dx*dx + dy*dy < 40 ? 2 : 0;\n}",
+    "int f(int x, int y) {\n  int dx = 2*x - 7, dy = 2*y - 7;\n  return dx*dx + dy*dy < 6*6 ? 2:0;\n}",
   solution: [
     "00000000",
     "00222200",
@@ -206,16 +206,17 @@ export const daily: readonly Level[] = [{
   ],
 }, {
   id: 8,
-  code: "int f(int x, int y) {\n  return 1 << x & 0x5A ? 1 : 0;\n}",
+  code:
+    "int f(int x, int y) {\n  int c = 0x80 >> x;\n  int r = 0x1 << y;\n  int m = 0x28;\n  return (c & m) | (r & m) ? 3:0;\n}",
   solution: [
-    "01011010",
-    "01011010",
-    "01011010",
-    "01011010",
-    "01011010",
-    "01011010",
-    "01011010",
-    "01011010",
+    "00303000",
+    "00303000",
+    "00303000",
+    "33333333",
+    "00303000",
+    "33333333",
+    "00303000",
+    "00303000",
   ],
 }, {
   id: 9,
@@ -233,16 +234,16 @@ export const daily: readonly Level[] = [{
 }, {
   id: 10,
   code:
-    "int f(int x, int y) {\n  int c = 1 << x;\n  int a[] = {\n    c & 0x14 ? 3:0, c & 0x1E ? 5:0,\n    c & 0x35 ? 5:0, c & 0x1F ? 5:0,\n    c & 0x3C ? 5:0, c & 0x9E ? 5:0,\n    c & 0x7C ? 5:0, c & 0x14 ? 5:0,\n  };\n  return a[y];\n}",
+    "int f(int x, int y) {\n  int c = 0x80 >> x;\n  int a[] = {\n    c & 0x14 ? 3:0, c & 0x1E ? 5:0,\n    c & 0x35 ? 5:0, c & 0x1F ? 5:0,\n    c & 0x3C ? 5:0, c & 0x9E ? 5:0,\n    c & 0x7C ? 5:0, c & 0x14 ? 5:0,\n  };\n  return a[y];\n}",
   solution: [
-    "00303000",
-    "05555000",
-    "50505500",
-    "55555000",
+    "00030300",
+    "00055550",
+    "00550505",
+    "00055555",
     "00555500",
-    "05555005",
-    "00555550",
-    "00505000",
+    "50055550",
+    "05555500",
+    "00050500",
   ],
 }, {
   id: 11,
