@@ -214,16 +214,18 @@ int f(int x, int y) {
 - One function, exactly `int f(int x, int y)`. Integers only (no `float`, `double` or `char`, no
   string or character literals), no preprocessor, trigraphs or line continuations, no identifier
   starting with `_`, no calls except `abs`, `min`, `max` and `f`, no static or global variables, no
-  variable-length arrays. Loops and recursion are allowed.
+  variable-length arrays. Standard C11 only: no GNU extension such as `0b101` or `x ?: y`. Loops and
+  recursion are allowed.
 
 Generator `tools/levels.ts` (`deno task levels`):
 
 1. Compile `tools/harness.c` with the level three times, using
-   `gcc -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -fsanitize=undefined -fno-sanitize-recover=all -fno-builtin -include tools/prelude.h`
+   `gcc -std=c11 -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -fsanitize=undefined -fno-sanitize-recover=all -fno-builtin -include tools/prelude.h`
    plus `-O1`; `-O0 -ftrivial-auto-var-init=pattern -fanalyzer`; and
    `-O0 -ftrivial-auto-var-init=zero`. The -O0 builds catch UB that -O1 folds away; the two fills
-   and the analyzer catch uninitialized variables in the usual cases; `-fno-builtin` keeps calls to
-   library builtins visible. All three runs must print the same 64 values, row by row.
+   and the analyzer catch uninitialized variables in the usual cases; `-pedantic-errors` rejects GNU
+   extensions; `-fno-builtin` keeps calls to library builtins visible. All three runs must print the
+   same 64 values, row by row.
 2. Reject with a clear message: file format, forbidden construct (token check, and `nm`: only `f`
    and the prelude's helpers defined, only UBSan handlers and the stack protector undefined),
    compile error or warning, UB at runtime, timeout (2 s), crash (any signal), value outside [0, 7],

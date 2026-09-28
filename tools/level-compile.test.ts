@@ -58,6 +58,9 @@ Deno.test("compileLevel rejects every broken fixture with a clear message", asyn
     "external-call.c": /calls `rand`: only abs, min and max are available/,
     "builtin-call.c": /calls `labs`: only abs, min and max are available/,
     "variable-length-array.c": /variable-length array/,
+    // Standard C11 only: players must be able to trust what they read.
+    "gnu-binary-literal.c": /binary constants are a C23 feature or GCC extension/,
+    "gnu-elvis.c": /ISO C forbids omitting the middle term of a .\?:. expression/,
   };
   await withToolchain(async (toolchain) => {
     const verdicts = await Promise.all(

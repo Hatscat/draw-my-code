@@ -75,8 +75,9 @@ docs/spec.md      Product spec
 
 - gcc is the source of truth. Never hand-write or edit a solution, never evaluate C in TypeScript.
 - Never edit `src/levels/generated.ts`: change `levels/` or `tools/`, then run `deno task levels`.
-- Every level returns a value in [0, 7] for all 64 cells, has no undefined behavior (UBSan), and
-  uses nothing but `abs`, `min`, `max` from `tools/prelude.h`. The generator enforces all of this.
+- Every level returns a value in [0, 7] for all 64 cells, has no undefined behavior (UBSan), is
+  standard C11 (no GNU extensions), and uses nothing but `abs`, `min`, `max` from `tools/prelude.h`.
+  The generator enforces all of this.
 - Players see the level file byte for byte, comments included. Levels have no title, only a number.
 
 ### Player data and privacy

@@ -78,6 +78,8 @@ The rules, all checked by the generator:
   with `_`. The only functions available are `abs`, `min` and `max` (from `tools/prelude.h`) and `f`
   itself: no helper functions, no static or global variables (a lookup table is a local
   `int t[8] = {...}`), no variable-length arrays.
+- Standard C11 only: gcc rejects its own extensions, such as binary literals (`0b101`, standard only
+  since C23: write `0x5` and the binary in a comment) or `x ?: y`.
 - At most 12 lines of at most 36 characters, 2-space indentation, printable ASCII, LF line endings,
   no trailing spaces, exactly one final newline. That is what fits a 320 px screen.
 

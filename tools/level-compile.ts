@@ -8,6 +8,9 @@ import { join } from "node:path";
 /** The spec's flags, shared by every build. */
 const FLAGS = [
   "-std=c11",
+  // Without it, gcc quietly accepts GNU extensions (0b101, x ?: y…): players would read C that
+  // isn't C11.
+  "-pedantic-errors",
   "-Wall",
   "-Wextra",
   "-Werror",
