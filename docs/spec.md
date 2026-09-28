@@ -37,15 +37,15 @@ them renumbers or reinterprets every stored result.
 
 ## Tutorial
 
-- 5 levels, shown automatically until finished or skipped (a `Skip tutorial` link). Replayable from
-  the info panel.
+- 8 levels (the files in `levels/tutorial/`), shown automatically until finished or skipped (a
+  `Skip tutorial` link). Replayable from the info panel.
 - Unlimited attempts, no stats, no share. After a wrong submit the status line shows `N wrong` (no
   attempt count). After a solve it says `Right!` and Submit becomes `Next` (`Done` on the last
   level), which leads on to the daily (or the pre-launch screen). Keyboard focus follows onto the
   new level.
-- A reload resumes at the current tutorial level with a blank grid. A replay starts at 1/5 and never
-  touches the daily's state.
-- Analytics: only `tutorial_complete`, the first time level 5 is solved (never on skip).
+- A reload resumes at the current tutorial level with a blank grid. A replay starts at level 1 and
+  never touches the daily's state.
+- Analytics: only `tutorial_complete`, the first time the last level is solved (never on skip).
 
 ## Info panel
 
@@ -172,7 +172,7 @@ Follow `design/`. What was designed:
 
 Additions:
 
-- Header right: `#N` for the daily, `Tutorial 2/5` in the tutorial; a "?" button. Code panel label:
+- Header right: `#N` for the daily, `Tutorial 2/8` in the tutorial; a "?" button. Code panel label:
   `daily_0012.c` / `tutorial_2.c`.
 - Keyboard on the grid: roving focus, arrows, Home/End, Space/Enter paints with the selected color.
   Each cell's accessible name includes its value and color name.
@@ -193,7 +193,7 @@ Additions:
 
 Sources:
 
-- `levels/tutorial/01-one-cell.c` … `05-max.c` (`NN-name.c`, lowercase name).
+- `levels/tutorial/01-one-cell.c` … `08-mask.c` (`NN-name.c`, lowercase name).
 - `levels/daily/0001.c`, `0002.c`, … contiguous; puzzle #N is `daily/NNNN.c`.
 
 Format: the file is exactly what players see, byte for byte: the function, 2-space indentation.
@@ -246,17 +246,12 @@ lists, opens, creates (never over an existing file, from a placeholder that fail
 saves level files, follows changes made on disk, and runs the generator. Its endpoints answer only
 same-origin requests to a localhost host: a check runs the code.
 
-Seed content:
+Content:
 
-- Tutorial, in this order: `return x == 2 && y == 3;` (one tap: teaches the axes, and that C
-  booleans are 0/1) · `return x;` · `return x / 2;` · `return (x + y) % 2;` ·
-  `return x > y ? x : y;`
-- Daily samples, which I will curate and replace:
-  - 0001: the disc above
-  - 0002: `return (x & y) == 0 ? 1 : 0;`
-  - 0003: `return x ^ y;`
-  - 0004–0007: yours, increasing difficulty, varied techniques (distance, modulo, bitwise,
-    `abs`/`min`/`max`).
+- Tutorial, one idea per level, reworked by the owner after a playtest: one red cell (the axes, and
+  numbers as colors) · `x` · integer division · `%` · `max` (the prelude's helpers) · a comparison
+  as 0 or 1 · an array lookup · a bit mask. The files in `levels/tutorial/` are the reference.
+- Daily puzzles: `levels/daily/`, curated by the owner.
 
 ## PWA
 

@@ -3,11 +3,20 @@ import { cell, confettiBursts, countConfetti, dayOf, expect, paintRows, test } f
 
 test.use({ tutorialDone: false });
 
-const label = (page: import("@playwright/test").Page) => page.locator(".header-label");
+type Page = import("@playwright/test").Page;
 
-// Level 1 has a single white cell, the color selected on load: one tap solves it.
-const ONE = tutorial[0]?.solution.join("").indexOf("1") ?? -1;
-const oneCell = (page: import("@playwright/test").Page) => cell(page, ONE % 8, Math.floor(ONE / 8));
+const label = (page: Page) => page.locator(".header-label");
+
+// Level 1 has a single colored cell: its color, then one tap, solve it.
+const LEVEL_1 = tutorial[0]?.solution.join("") ?? "";
+const ONE = [...LEVEL_1].findIndex((digit) => digit !== "0");
+const ONE_COLOR = LEVEL_1[ONE] ?? "1";
+const oneCell = (page: Page) => cell(page, ONE % 8, Math.floor(ONE / 8));
+
+async function solveLevel1(page: Page) {
+  await page.keyboard.press(ONE_COLOR);
+  await oneCell(page).click();
+}
 
 test("a first visit starts the tutorial, and Skip leads to the daily", async ({ page }) => {
   await page.clock.install({ time: dayOf(1) });
@@ -32,7 +41,7 @@ test("a wrong submit shows only the count; a solve moves on with Next", async ({
   await expect(submit).toHaveAttribute("aria-disabled", "true");
   expect(await confettiBursts(page)).toBe(0);
 
-  await oneCell(page).click();
+  await solveLevel1(page);
   await submit.click();
   await expect(status).toHaveText("Right!");
   expect(await confettiBursts(page)).toBe(1);
@@ -43,7 +52,7 @@ test("a wrong submit shows only the count; a solve moves on with Next", async ({
 test("a reload resumes at the current tutorial level", async ({ page }) => {
   await page.clock.install({ time: dayOf(1) });
   await page.goto("./");
-  await oneCell(page).click();
+  await solveLevel1(page);
   await page.getByRole("button", { name: "Submit" }).click();
   await page.reload();
   await expect(label(page)).toHaveText(`Tutorial 2/${tutorial.length}`);
@@ -96,6 +105,7 @@ test("before launch: the tutorial, then the first puzzle's date", async ({ page 
 test("keyboard focus follows onto the next level and into the daily", async ({ page }) => {
   await page.clock.install({ time: dayOf(1) });
   await page.goto("./");
+  await page.keyboard.press(ONE_COLOR);
   await oneCell(page).focus();
   await page.keyboard.press(" ");
   const submit = page.getByRole("button", { name: "Submit" });

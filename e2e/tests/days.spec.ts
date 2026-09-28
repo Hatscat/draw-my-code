@@ -1,3 +1,6 @@
+import { LAUNCH_DATE } from "../../src/core/config.ts";
+import { formatIsoDate } from "../../src/core/date.ts";
+import { puzzleDate } from "../../src/core/schedule.ts";
 import { daily } from "../../src/levels/generated.ts";
 import { cell, dayOf, expect, openPuzzle, paintRows, solutionOf, test } from "./fixtures.ts";
 
@@ -135,8 +138,9 @@ test("no puzzle today once the schedule has run out", async ({ page }) => {
 test("before launch: the first puzzle's date and a countdown", async ({ page }) => {
   await page.clock.install({ time: dayOf(-30) });
   await page.goto("./");
-  await expect(page.getByRole("heading", { name: "First puzzle on November 1, 2026" }))
-    .toBeVisible();
+  const { y, m, d } = LAUNCH_DATE;
+  const launch = new Date(y, m - 1, d).toLocaleDateString("en-US", { dateStyle: "long" });
+  await expect(page.getByRole("heading", { name: `First puzzle on ${launch}` })).toBeVisible();
   await expect(page.getByText("Starts in 31 days")).toBeVisible();
   await expect(page.locator(".header-label")).toHaveText("");
 });
@@ -153,7 +157,8 @@ test("two tabs share one set of attempts", async ({ page, context }) => {
 
 test("production builds ignore the ?date= override", async ({ page }) => {
   await page.clock.install({ time: dayOf(1) });
-  await page.goto("./?date=2026-11-05");
+  // Puzzle #3's date: honoured, it would show #3.
+  await page.goto(`./?date=${formatIsoDate(puzzleDate(LAUNCH_DATE, 3))}`);
   await expect(page.locator(".header-label")).toHaveText("#1");
 });
 
