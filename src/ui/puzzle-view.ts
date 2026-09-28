@@ -30,8 +30,9 @@ export interface PuzzleView {
   /** Submit's label, and whether it does anything. It stays focusable either way. */
   setSubmit(label: string, enabled: boolean): void;
   /**
-   * Shows a finished puzzle's panels, `top` in place of the instruction and swatches and
-   * `bottom` in place of the status line and Submit; undefined restores them.
+   * Shows a finished puzzle's panels, `top` over the instruction and swatches and `bottom` in
+   * place of the status line and Submit; undefined restores them. The grid keeps its size and
+   * position.
    */
   showResult(panels: { readonly top: HTMLElement; readonly bottom: HTMLElement } | undefined): void;
   /** The grid's accessible name: it shows the player's drawing, or the solution. */
@@ -48,12 +49,15 @@ export interface PuzzleView {
 export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): PuzzleView {
   let selected: Color = 1;
   let infoOpen = false;
+  let finished = false;
   const listeners = new AbortController();
+  // The grid keeps its size while the info panel is open, which pushes the page down as in the
+  // design, and once the result's stats take the place of Submit.
+  const freeze = () => board.freeze(infoOpen || finished);
 
   const header = createHeader(() => {
     infoOpen = !infoOpen;
-    // The panel pushes the page down, as in the design, instead of shrinking the grid.
-    board.freeze(infoOpen);
+    freeze();
     info.setOpen(infoOpen);
     header.setHelpOpen(infoOpen);
   });
@@ -76,6 +80,8 @@ export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): P
     swatches.element,
   );
   const resultTop = el("div", { class: "result-slot" });
+  // The result's heading covers the controls instead of replacing them: the grid stays put.
+  const top = el("div", { class: "top" }, controls, resultTop);
   const resultBottom = el("div", { class: "result-slot" });
   const status = el("p", { class: "status", role: "status" });
   const submit = el("button", { type: "button", class: "submit" }, "Submit");
@@ -94,8 +100,7 @@ export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): P
     header.element,
     info.element,
     code.element,
-    controls,
-    resultTop,
+    top,
     board.element,
     footer,
     resultBottom,
@@ -124,8 +129,11 @@ export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): P
       submit.setAttribute("aria-disabled", String(!enabled));
     },
     showResult(panels) {
-      controls.hidden = panels !== undefined;
-      footer.hidden = panels !== undefined;
+      finished = panels !== undefined;
+      // Measured before the result's panels change the layout.
+      freeze();
+      controls.style.visibility = finished ? "hidden" : "";
+      footer.hidden = finished;
       // Re-inserting a panel that is already shown would drop the keyboard focus inside it.
       const place = (slot: HTMLElement, panel: HTMLElement | undefined) => {
         if (slot.firstChild !== (panel ?? null)) slot.replaceChildren(...(panel ? [panel] : []));

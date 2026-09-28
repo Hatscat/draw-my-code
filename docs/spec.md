@@ -66,10 +66,10 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
 
 ## Result panel
 
-- Inline: the result and the failed-puzzle toggle take the place of the instruction and swatches,
-  right above the grid, so the toggle's effect is in view; stats, share and the countdown take the
-  place of the status line and Submit. The grid stays visible and read-only. The page may scroll
-  once the puzzle is over.
+- Inline: the result and the failed-puzzle toggle cover the instruction and swatches, right above
+  the grid, so the toggle's effect is in view; stats, share and the countdown take the place of the
+  status line and Submit. The grid stays visible and read-only. The page may scroll once the puzzle
+  is over.
 - Solved: "Solved in N/3". Failed: "X/3", plus a toggle `Solution` (default) / `Your drawing`. Both
   are shown plain, with no per-cell marks: toggling is how the player compares them.
 - Stats (played, win %, current streak, max streak, distribution 1/2/3/X). Distribution bars show
@@ -167,6 +167,8 @@ Follow `design/`. What was designed:
 - The grid is at least 250 px wide. When the content doesn't fit one screen (long levels, short
   screens, open info panel) the page scrolls; painting gestures never scroll or zoom it. Tighter
   spacing below about 700 px of viewport height.
+- The grid never moves or changes size within a puzzle: the status line always has room for its two
+  lines, and the info panel and the result panel keep the grid at the size it had.
 
 Additions:
 
@@ -311,6 +313,8 @@ browser build, whose text metrics match real devices; time zone and locale pinne
 - Offline reload after the first visit (Chromium only).
 - 320 px wide: no horizontal scroll, every control reachable; a 12-line, 36-column level at 320×568
   keeps the grid at least 250 px wide.
+- A two-line status and the result panel (solved, and failed at 320 px) leave the grid exactly where
+  and as large as it was.
 - No console errors, no request to the analytics hosts.
 
 ## CI/CD — `.github/workflows/ci.yml`

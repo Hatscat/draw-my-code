@@ -234,9 +234,22 @@ h1 {
   font-size: 12px;
 }
 
-.instruction {
+/* The result's heading covers the instruction and swatches, so the grid below never moves. */
+.top {
   margin-top: var(--gap);
   flex: none;
+  display: grid;
+}
+
+.top > * {
+  grid-area: 1 / 1;
+}
+
+.top > .result-slot {
+  align-self: center;
+}
+
+.instruction {
   text-align: center;
   font-size: 13px;
   line-height: 17px;
@@ -306,8 +319,12 @@ h1 {
   container-type: size;
 }
 
+/* A frozen grid still never gets wider than the page, should the window narrow. */
 .board-inner {
-  --side: var(--frozen-side, clamp(250px, min(100cqw - 22px, 100cqh - 20px), 426px));
+  --side: min(
+    var(--frozen-side, clamp(250px, min(100cqw - 22px, 100cqh - 20px), 426px)),
+    100cqw - 22px
+  );
   width: calc(var(--side) + 22px);
   margin: 0 auto;
   display: grid;
@@ -391,8 +408,9 @@ h1 {
   outline-offset: 1px;
 }
 
+/* Always room for two lines: a longer message never takes height from the grid. */
 .status {
-  min-height: clamp(32px, 100svh * 0.16 - 80px, 48px);
+  height: clamp(40px, 100svh * 0.08 - 16px, 48px);
   padding-top: clamp(8px, 100svh * 0.08 - 48px, 16px);
   flex: none;
   font-size: 11px;
@@ -440,7 +458,6 @@ h1 {
   display: block;
 }
 
-.controls,
 .footer {
   flex: none;
 }
@@ -456,7 +473,6 @@ h1 {
 }
 
 .result-top {
-  margin-top: var(--gap);
   text-align: center;
 }
 
@@ -469,6 +485,7 @@ h1 {
 .result-top h2,
 .notice-title {
   font-size: 16px;
+  line-height: 20px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -478,8 +495,9 @@ h1 {
   outline: none;
 }
 
+/* Heading, gap and toggle add up to 56 px: less than the swatches they cover, even at 320 px. */
 .toggle {
-  margin-top: 12px;
+  margin-top: 8px;
   display: inline-flex;
   border: 1px solid var(--help-border);
   border-radius: 5px;
@@ -487,7 +505,8 @@ h1 {
 }
 
 .toggle button {
-  padding: 6px 12px;
+  padding: 5px 12px;
+  line-height: 16px;
   border: 0;
   background: transparent;
   color: var(--muted);

@@ -1,5 +1,6 @@
+import type { Page } from "@playwright/test";
 import { daily } from "../../src/levels/generated.ts";
-import { expect, openPuzzle, test } from "./fixtures.ts";
+import { cell, expect, openPuzzle, paintRows, solutionOf, test } from "./fixtures.ts";
 
 // The daily with the most code: the seed schedule includes one at the limit (12 lines, 36 columns).
 const largest = [...daily].sort((a, b) => {
@@ -8,6 +9,13 @@ const largest = [...daily].sort((a, b) => {
     Math.max(...code.split("\n").map((l) => l.length));
   return size(b.code) - size(a.code);
 })[0];
+
+/** The grid's box in page coordinates: scrolling doesn't move it, layout changes do. */
+const gridBox = (page: Page) =>
+  page.getByRole("grid").evaluate((grid) => {
+    const { x, y, width, height } = grid.getBoundingClientRect();
+    return { x: x + scrollX, y: y + scrollY, width, height };
+  });
 
 test.describe("at 320 px wide", () => {
   test.use({ viewport: { width: 320, height: 568 } });
@@ -63,6 +71,20 @@ test.describe("at 320 px wide", () => {
       320,
     );
   });
+
+  test("a failed puzzle's result, the tallest, doesn't move or resize the grid", async ({ page }) => {
+    await openPuzzle(page, 1);
+    await page.evaluate(() => document.fonts.ready);
+    const before = await gridBox(page);
+    const submit = page.getByRole("button", { name: "Submit" });
+    await submit.click();
+    await cell(page, 0, 0).click();
+    await submit.click();
+    await cell(page, 1, 0).click();
+    await submit.click();
+    await expect(page.getByRole("button", { name: "Your drawing" })).toBeVisible();
+    expect(await gridBox(page)).toEqual(before);
+  });
 });
 
 test("the grid fits the screen on each device", async ({ page }) => {
@@ -95,4 +117,20 @@ test("the grid never shrinks as the window gets taller", async ({ page }) => {
     expect(width, `grid width at ${height} px`).toBeGreaterThanOrEqual(previous);
     previous = width;
   }
+});
+
+test("neither a wrong submit nor the result moves or resizes the grid", async ({ page }) => {
+  await openPuzzle(page, 1);
+  await page.evaluate(() => document.fonts.ready);
+  const before = await gridBox(page);
+
+  await page.getByRole("button", { name: "Submit" }).click();
+  // The longest status: two lines.
+  await expect(page.locator(".status")).toContainText("Change a cell to submit again");
+  expect(await gridBox(page)).toEqual(before);
+
+  await paintRows(page, solutionOf(1));
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByRole("heading", { name: "Solved in 2/3" })).toBeVisible();
+  expect(await gridBox(page)).toEqual(before);
 });
