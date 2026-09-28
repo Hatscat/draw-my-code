@@ -12,3 +12,10 @@ test("the app loads without console errors", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Draw my code" })).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test("the level editor stays on the dev server", async ({ request, baseURL }) => {
+  for (const path of ["src/editor/", "src/editor/index.html", "__editor/levels"]) {
+    const response = await request.get(new URL(path, baseURL).href);
+    expect(response.status(), path).toBe(404);
+  }
+});

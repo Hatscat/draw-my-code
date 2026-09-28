@@ -269,7 +269,7 @@ async function mapPool<T, R>(
 }
 
 /** Today's date in UTC+14: a puzzle counts as published once its date has begun anywhere. */
-function todayInUtcPlus14(): CalendarDate {
+export function todayInUtcPlus14(): CalendarDate {
   const now = new Date(Date.now() + 14 * 3_600_000);
   return { y: now.getUTCFullYear(), m: now.getUTCMonth() + 1, d: now.getUTCDate() };
 }

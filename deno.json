@@ -41,6 +41,7 @@
   },
   "tasks": {
     "dev": "vite --configLoader native",
+    "editor": "vite --configLoader native --open /src/editor/",
     "build": "vite build --configLoader native",
     "preview": "vite preview --configLoader native --host 127.0.0.1 --port 4173 --strictPort",
     "test": "deno test --allow-read --allow-write --allow-run --allow-env=TZ",

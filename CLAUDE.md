@@ -12,6 +12,7 @@ accounts, no cookies.
 | Command                  | Purpose                                                                 |
 | ------------------------ | ----------------------------------------------------------------------- |
 | `deno task dev`          | Vite dev server; the browser console is forwarded to the terminal       |
+| `deno task editor`       | Dev server opened on the level editor (`src/editor/`, never built)      |
 | `deno task check`        | fmt check + lint + type-check + unit tests. Run before every commit     |
 | `deno task test`         | Unit tests only (`src/**/*.test.ts`, `tools/**/*.test.ts`)              |
 | `deno task levels`       | Compile levels with gcc, validate, regenerate `src/levels/generated.ts` |
@@ -35,9 +36,11 @@ src/ui/           Rendering and input. No game rules.
 src/levels/       generated.ts (never edit by hand) + level types.
 src/analytics.ts  The only module that talks to Umami.
 src/sw.ts         Service worker (WebWorker lib, type-checked separately).
+src/editor/       Level editor page, dev server only; its server side is tools/level-editor.ts.
 src/fonts/        JetBrains Mono subset + OFL license
 levels/           Level sources: tutorial/NN-name.c, daily/NNNN.c
-tools/            Level generator, harness.c, prelude.h, icons, lint plugin, SW Vite plugin (Deno)
+tools/            Level generator and editor server, harness.c, prelude.h, icons, lint plugin,
+                  SW Vite plugin (Deno)
 e2e/              Playwright specs, own package.json (Node)
 design/           UI reference from Claude Design
 docs/spec.md      Product spec

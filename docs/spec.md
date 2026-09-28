@@ -239,6 +239,12 @@ Generator `tools/levels.ts` (`deno task levels`):
 `--allow-published-edit`. `--check` regenerates in memory and fails if the file differs. With fewer
 than 7 days left it warns (a GitHub annotation in CI), and fails with `--strict`.
 
+Level editor, for the author (`deno task editor`, dev server only, never built or deployed): a page
+(`src/editor/`) with a level's source, the code panel and grid as players see them, and every check
+of the generator, run by gcc on the dev server (`tools/level-editor.ts`) as the author types. It
+lists, opens, creates, and saves level files, follows changes made on disk, and runs the generator.
+Its endpoints answer only same-origin requests to a localhost host: a check runs the code.
+
 Seed content:
 
 - Tutorial, in this order: `return x == 2 && y == 3;` (one tap: teaches the axes, and that C

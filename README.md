@@ -27,6 +27,7 @@ npx playwright install --with-deps --no-shell chromium webkit
 | Command            | What it does                                                     |
 | ------------------ | ---------------------------------------------------------------- |
 | `deno task dev`    | Dev server; the browser console shows up in the terminal         |
+| `deno task editor` | Dev server, opened on the level editor                           |
 | `deno task check`  | Formatting, lint, type-check and unit tests: run before a commit |
 | `deno task levels` | Compile and validate every level, regenerate the level list      |
 | `deno task e2e`    | Production build, then the Playwright tests                      |
@@ -54,6 +55,16 @@ builds ignore it.
    below, shows the code next to a color preview of its grid, and rewrites
    `src/levels/generated.ts`.
 4. Commit the level and `src/levels/generated.ts` together. CI fails if they disagree.
+
+### The level editor
+
+`deno task editor` opens `/src/editor/` on the dev server: pick a level, or `New daily`, and edit
+it. The page shows what players see and the grid gcc computes, checked again as you type with the
+same checks and gcc builds as `deno task levels`, errors included. Hover a cell for its value.
+`Save` (Ctrl+S) writes the file; `Update the game` saves, then runs `deno task levels` and shows its
+report. Changes made to the file elsewhere, in VS Code say, show up in the page. The editor only
+exists on the dev server, which answers its requests only from the page itself: a check compiles and
+runs the code.
 
 The rules, all checked by the generator:
 

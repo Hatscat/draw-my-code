@@ -1,0 +1,148 @@
+/* The level editor: the game's tokens and components, laid out for a desktop screen. */
+.editor {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-bar {
+  padding: 12px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  border-bottom: 1px solid var(--panel-border);
+  font-size: 13px;
+}
+
+.editor-bar h1 {
+  margin-right: 12px;
+}
+
+.editor-bar select,
+.editor-bar button {
+  padding: 5px 10px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--help-border);
+  border-radius: 4px;
+  font: inherit;
+}
+
+.editor-bar button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Pushes Update the game to the right edge. */
+.editor-save-state {
+  margin-right: auto;
+}
+
+.editor-body {
+  flex: 1;
+  padding: 16px 20px 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 448px);
+  gap: 28px;
+}
+
+.editor-left {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.editor-source {
+  min-height: 24em;
+  padding: 10px 12px;
+  resize: vertical;
+  background: var(--panel);
+  color: var(--tok-text);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  font: 14px/1.6667 var(--font);
+  font-variant-ligatures: none;
+}
+
+.editor-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.editor-warning {
+  font-size: 12px;
+  color: var(--tok-number);
+}
+
+.editor-check {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.editor-errors {
+  display: grid;
+  gap: 6px;
+  color: var(--error);
+}
+
+.editor-errors pre,
+.editor-report {
+  padding: 8px 10px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 5px;
+  font: 12px/1.5 var(--font);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.editor-preview {
+  position: sticky;
+  top: 16px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Square: the grid as wide as the column allows, the readout right below it. */
+.editor-preview .board {
+  flex: none;
+  aspect-ratio: 1;
+}
+
+.editor-code .panel {
+  margin-top: 0;
+}
+
+/* Last valid grid, while the source has errors: the status line says so too. */
+.editor-preview.stale .grid {
+  opacity: 0.35;
+}
+
+.editor-readout {
+  min-height: 17px;
+  margin-top: 8px;
+  flex: none;
+  text-align: center;
+  font-size: 13px;
+}
+
+.editor-digits {
+  margin-top: 8px;
+  flex: none;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+@media (max-width: 800px) {
+  .editor-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editor-preview {
+    position: static;
+  }
+}
