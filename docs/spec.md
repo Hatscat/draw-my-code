@@ -184,6 +184,9 @@ Additions:
   off. No font CDN.
 - Screens that weren't designed (result panel, tutorial controls, toast, pre-launch and no-puzzle)
   reuse the design's tokens.
+- Solving a daily or a tutorial level bursts confetti in the palette's colors (not black) out of the
+  grid, for 3 s, over the page: a canvas that never takes input. Not on a failure, not when a solved
+  puzzle is reopened, and never with `prefers-reduced-motion`: the result text says it all.
 - Dark theme only in v1.
 
 ## Levels
@@ -315,6 +318,8 @@ browser build, whose text metrics match real devices; time zone and locale pinne
   keeps the grid at least 250 px wide.
 - A two-line status and the result panel (solved, and failed at 320 px) leave the grid exactly where
   and as large as it was.
+- Confetti on a solve (daily and tutorial), gone after a few seconds and never in the way of the
+  next tap; none on a failure or with reduced motion.
 - No console errors, no request to the analytics hosts.
 
 ## CI/CD — `.github/workflows/ci.yml`

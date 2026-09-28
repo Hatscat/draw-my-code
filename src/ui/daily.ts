@@ -51,6 +51,7 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
       save(after);
       const outcome = after.results[n];
       if (isFinished(before, n) || outcome === undefined) return;
+      if (outcome !== "X") view.celebrate();
       updateNext(new Date());
       result.focus();
       // Without persistent storage a reload could replay and count the puzzle again.

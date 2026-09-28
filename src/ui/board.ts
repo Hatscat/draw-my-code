@@ -19,6 +19,8 @@ export interface Board {
   setName(name: string): void;
   /** Keeps the grid at its current size (while the info panel is open), or lets it fit again. */
   freeze(frozen: boolean): void;
+  /** Where the grid is in the viewport. */
+  rect(): DOMRect;
 }
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i);
@@ -193,6 +195,9 @@ export function createBoard(handlers: BoardHandlers): Board {
       if (frozen) {
         element.style.setProperty("--frozen-side", `${grid.getBoundingClientRect().width}px`);
       } else element.style.removeProperty("--frozen-side");
+    },
+    rect() {
+      return grid.getBoundingClientRect();
     },
     setPointed(index) {
       columnLabels.forEach((label, x) =>

@@ -24,7 +24,9 @@ export default defineConfig({
     baseURL,
     timezoneId: "Europe/Paris",
     locale: "en-US",
-    trace: "retain-on-failure",
+    // No screencast: it records every frame of the confetti, which slows tests down fourfold. The
+    // DOM snapshots of each step remain.
+    trace: { mode: "retain-on-failure", screenshots: false },
   },
   webServer: {
     command: "deno task preview",

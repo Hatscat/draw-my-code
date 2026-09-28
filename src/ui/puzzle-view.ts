@@ -1,6 +1,7 @@
 import { type Color, type Grid, SIZE } from "../core/grid.ts";
 import { createBoard } from "./board.ts";
 import { createCodePanel } from "./code-panel.ts";
+import { celebrate } from "./confetti.ts";
 import { el } from "./dom.ts";
 import { createHeader } from "./header.ts";
 import { createInfoPanel } from "./info-panel.ts";
@@ -37,6 +38,8 @@ export interface PuzzleView {
   showResult(panels: { readonly top: HTMLElement; readonly bottom: HTMLElement } | undefined): void;
   /** The grid's accessible name: it shows the player's drawing, or the solution. */
   setGridName(name: string): void;
+  /** Confetti out of the grid, for a puzzle just solved. */
+  celebrate(): void;
   focusSubmit(): void;
   /** Removes the page-wide key listener. */
   destroy(): void;
@@ -143,6 +146,9 @@ export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): P
     },
     setGridName(name) {
       board.setName(name);
+    },
+    celebrate() {
+      celebrate(board.rect());
     },
     focusSubmit() {
       submit.focus();

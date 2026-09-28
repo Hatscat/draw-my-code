@@ -33,6 +33,7 @@ test("a wrong submit shows only the count; a solve moves on with Next", async ({
   await oneCell(page).click();
   await submit.click();
   await expect(status).toHaveText("Right!");
+  await expect(page.locator(".confetti")).toBeAttached();
   await page.getByRole("button", { name: "Next" }).click();
   await expect(label(page)).toHaveText(`Tutorial 2/${tutorial.length}`);
 });

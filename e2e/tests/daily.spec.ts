@@ -48,6 +48,8 @@ test("solving shows the result, the stats and the exact share text", async ({ pa
   await page.getByRole("button", { name: "Submit" }).click();
 
   await expect(page.getByRole("heading", { name: "Solved in 2/3" })).toBeFocused();
+  const confetti = page.locator(".confetti");
+  await expect(confetti).toBeAttached();
   const stats = page.locator(".stats");
   for (
     const [label, value] of [["Played", "1"], ["Win %", "100"], ["Current streak", "1"], [
@@ -70,6 +72,17 @@ test("solving shows the result, the stats and the exact share text", async ({ pa
     await expect.poll(async () => (await sharedTexts(page)).copied).toEqual([expected]);
     await expect(page.locator(".toast")).toHaveText("Copied");
   }
+  // The confetti, drawn over the page all along, never got in the way, and is gone after a while.
+  await expect(confetti).toHaveCount(0);
+});
+
+test("no confetti for players who prefer reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openPuzzle(page, 1);
+  await paintRows(page, SOLUTION);
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByRole("heading", { name: "Solved in 1/3" })).toBeVisible();
+  await expect(page.locator(".confetti")).toHaveCount(0);
 });
 
 test("a cancelled share sheet does nothing", async ({ page, isMobile }) => {
@@ -103,6 +116,7 @@ test("3 wrong attempts fail: X/3, the solution, and a toggle to the last drawing
   await submit.click();
 
   await expect(page.getByRole("heading", { name: "X/3" })).toBeVisible();
+  await expect(page.locator(".confetti")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Solution" })).toHaveAttribute(
     "aria-pressed",
     "true",

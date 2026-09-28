@@ -70,11 +70,13 @@ export function showTutorial(
           return;
         }
         play = submit(play);
-        if (status(play) === "solved" && !options.replay) {
+        const solved = status(play) === "solved";
+        if (solved && !options.replay) {
           store.write(tutorialSolved(store.read(), number, levels.length));
         }
-        if (status(play) === "solved" && number === levels.length) countCompletion();
+        if (solved && number === levels.length) countCompletion();
         render();
+        if (solved) levelView.celebrate();
         levelView.focusSubmit();
       },
       onShowDigits(on) {
