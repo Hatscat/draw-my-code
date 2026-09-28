@@ -176,6 +176,8 @@ Additions:
   `daily_0012.c` / `tutorial_2.c`.
 - Keyboard on the grid: roving focus, arrows, Home/End, Space/Enter paints with the selected color.
   Each cell's accessible name includes its value and color name.
+- Over a grid that paints, the mouse pointer is a crosshair; the default arrow once the puzzle is
+  over.
 - Code font scales so the longest line fits without horizontal scroll, never below 11 px.
 - Syntax highlighting with a tiny hand-written tokenizer (keywords, types, function name, numbers,
   operators, identifiers, comments). No library.

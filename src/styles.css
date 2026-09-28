@@ -387,11 +387,14 @@ h1 {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  /* Aiming at one cell, as in a paint tool. */
+  cursor: crosshair;
 }
 
 /* Once the puzzle is over nothing paints: a swipe on the grid scrolls the page again. */
 .grid[aria-readonly="true"] {
   touch-action: pan-x pan-y pinch-zoom;
+  cursor: default;
 }
 
 .grid-row {

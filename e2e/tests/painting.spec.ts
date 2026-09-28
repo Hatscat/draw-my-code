@@ -1,5 +1,5 @@
 import { daily } from "../../src/levels/generated.ts";
-import { cell, cellCenter, expect, openPuzzle, test } from "./fixtures.ts";
+import { cell, cellCenter, expect, openPuzzle, paintRows, solutionOf, test } from "./fixtures.ts";
 
 test.beforeEach(async ({ page }) => {
   await openPuzzle(page, 1);
@@ -13,6 +13,14 @@ test("the grid starts black with white selected", async ({ page }) => {
     "aria-checked",
     "true",
   );
+});
+
+test("the pointer is a crosshair over a grid that paints, an arrow once it can't", async ({ page }) => {
+  await expect(cell(page, 0, 0)).toHaveCSS("cursor", "crosshair");
+  await paintRows(page, solutionOf(1));
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByRole("heading", { name: "Solved in 1/3" })).toBeVisible();
+  await expect(cell(page, 0, 0)).toHaveCSS("cursor", "default");
 });
 
 test("the screen shows the day's puzzle: number, file name and code, byte for byte", async ({ page }) => {
