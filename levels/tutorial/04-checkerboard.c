@@ -1,3 +1,3 @@
 int f(int x, int y) {
-  return (x/2 + y/2) % 2;
+  return (x/2 + y/4) % 2;
 }

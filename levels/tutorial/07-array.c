@@ -1,4 +1,4 @@
 int f(int x, int y) {
-  int a[] = {0,2,3,4,5,6,7,0};
-  return a[y];
+  int w[] = {1,2,3,4,4,3,2,1};
+  return x < w[y] ? 5 : 0;
 }

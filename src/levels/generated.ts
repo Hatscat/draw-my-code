@@ -18,7 +18,7 @@ export const tutorial: readonly Level[] = [{
   ],
 }, {
   id: 2,
-  code: "int f(int x, int y) {\n  return x;\n}",
+  code: "int f(int x, int y) {\n  // tip: drag to paint\n  return x;\n}",
   solution: [
     "01234567",
     "01234567",
@@ -31,7 +31,7 @@ export const tutorial: readonly Level[] = [{
   ],
 }, {
   id: 3,
-  code: "int f(int x, int y) {\n  // Integer division\n  return x / 2;\n}",
+  code: "int f(int x, int y) {\n  // integer division\n  return x / 2;\n}",
   solution: [
     "00112233",
     "00112233",
@@ -44,14 +44,14 @@ export const tutorial: readonly Level[] = [{
   ],
 }, {
   id: 4,
-  code: "int f(int x, int y) {\n  return (x/2 + y/2) % 2;\n}",
+  code: "int f(int x, int y) {\n  return (x/2 + y/4) % 2;\n}",
   solution: [
     "00110011",
     "00110011",
-    "11001100",
-    "11001100",
     "00110011",
     "00110011",
+    "11001100",
+    "11001100",
     "11001100",
     "11001100",
   ],
@@ -70,7 +70,7 @@ export const tutorial: readonly Level[] = [{
   ],
 }, {
   id: 6,
-  code: "int f(int x, int y) {\n  // there is no Boolean type in C\n  return (x*2 < y) * 7;\n}",
+  code: "int f(int x, int y) {\n  // a comparison gives 1 or 0\n  return (x*2 < y) * 7;\n}",
   solution: [
     "00000000",
     "70000000",
@@ -83,30 +83,30 @@ export const tutorial: readonly Level[] = [{
   ],
 }, {
   id: 7,
-  code: "int f(int x, int y) {\n  int a[] = {0,2,3,4,5,6,7,0};\n  return a[y];\n}",
+  code: "int f(int x, int y) {\n  int w[] = {1,2,3,4,4,3,2,1};\n  return x < w[y] ? 5 : 0;\n}",
   solution: [
-    "00000000",
-    "22222222",
-    "33333333",
-    "44444444",
-    "55555555",
-    "66666666",
-    "77777777",
-    "00000000",
+    "50000000",
+    "55000000",
+    "55500000",
+    "55550000",
+    "55550000",
+    "55500000",
+    "55000000",
+    "50000000",
   ],
 }, {
   id: 8,
   code:
-    "int f(int x, int y) {\n  // bitwise left shift\n  int b = 1 << x;\n  // hexadecimal bitmask\n  int mask = 0x5A; // 01011010\n  return b & mask ? 1 : 0;\n}",
+    "int f(int x, int y) {\n  // bitwise left shift\n  int b = 1 << x;\n  // hexadecimal bitmask\n  int mask = 0xB0; // 10110000\n  return b & mask ? 1 : 0;\n}",
   solution: [
-    "01011010",
-    "01011010",
-    "01011010",
-    "01011010",
-    "01011010",
-    "01011010",
-    "01011010",
-    "01011010",
+    "00001101",
+    "00001101",
+    "00001101",
+    "00001101",
+    "00001101",
+    "00001101",
+    "00001101",
+    "00001101",
   ],
 }];
 
@@ -246,15 +246,16 @@ export const daily: readonly Level[] = [{
   ],
 }, {
   id: 11,
-  code: "int f(int x, int y) {\n  int a[] = {\n    0,1\n  };\n  return a[1];\n}",
+  code:
+    "int f(int x, int y) {\n  int a[] = {\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7};\n  return a[x + y*8];\n}",
   solution: [
-    "11111111",
-    "11111111",
-    "11111111",
-    "11111111",
-    "11111111",
-    "11111111",
-    "11111111",
-    "11111111",
+    "01234567",
+    "01234567",
+    "01234567",
+    "01234567",
+    "01234567",
+    "01234567",
+    "01234567",
+    "01234567",
   ],
 }];

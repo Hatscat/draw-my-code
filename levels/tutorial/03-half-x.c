@@ -1,4 +1,4 @@
 int f(int x, int y) {
-  // Integer division
+  // integer division
   return x / 2;
 }
