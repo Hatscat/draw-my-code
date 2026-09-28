@@ -242,8 +242,9 @@ than 7 days left it warns (a GitHub annotation in CI), and fails with `--strict`
 Level editor, for the author (`deno task editor`, dev server only, never built or deployed): a page
 (`src/editor/`) with a level's source, the code panel and grid as players see them, and every check
 of the generator, run by gcc on the dev server (`tools/level-editor.ts`) as the author types. It
-lists, opens, creates, and saves level files, follows changes made on disk, and runs the generator.
-Its endpoints answer only same-origin requests to a localhost host: a check runs the code.
+lists, opens, creates (never over an existing file, from a placeholder that fails the checks), and
+saves level files, follows changes made on disk, and runs the generator. Its endpoints answer only
+same-origin requests to a localhost host: a check runs the code.
 
 Seed content:
 
@@ -323,7 +324,8 @@ browser build, whose text metrics match real devices; time zone and locale pinne
 - 320 px wide: no horizontal scroll, every control reachable; a 12-line, 36-column level at 320×568
   keeps the grid at least 250 px wide.
 - A two-line status and the result panel (solved, and failed at 320 px) leave the grid exactly where
-  and as large as it was.
+  and as large as it was, also with the classic scrollbars of desktop Chrome, which appear with the
+  result (reserved in windows from 495 px wide, where they never narrow the column).
 - Confetti on a solve (daily and tutorial), gone after a few seconds and never in the way of the
   next tap; none on a failure or with reduced motion.
 - No console errors, no request to the analytics hosts.

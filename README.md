@@ -58,10 +58,11 @@ builds ignore it.
 
 ### The level editor
 
-`deno task editor` opens `/src/editor/` on the dev server: pick a level, or `New daily`, and edit
-it. The page shows what players see and the grid gcc computes, checked again as you type with the
-same checks and gcc builds as `deno task levels`, errors included. Hover a cell for its value.
-`Save` (Ctrl+S) writes the file; `Update the game` saves, then runs `deno task levels` and shows its
+`deno task editor` opens `/src/editor/` on the dev server: pick a level, or `New daily` (the next
+number, starting from `return 0;`, which fails the checks until you change it), and edit it. The
+page shows what players see and the grid gcc computes, checked again as you type with the same
+checks and gcc builds as `deno task levels`, errors included. Hover a cell for its value. `Save`
+(Ctrl+S) writes the file; `Update the game` saves, then runs `deno task levels` and shows its
 report. Changes made to the file elsewhere, in VS Code say, show up in the page. The editor only
 exists on the dev server, which answers its requests only from the page itself: a check compiles and
 runs the code.

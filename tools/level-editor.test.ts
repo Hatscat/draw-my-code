@@ -19,12 +19,21 @@ const PAGE: IncomingHttpHeaders = { "sec-fetch-site": "same-origin", host: "loca
 
 const body = (expression: string) => `int f(int x, int y) {\n  return ${expression};\n}\n`;
 
-/** A throwaway repository: two dailies, a tutorial level, and a link to the real tools/. */
-async function repo(): Promise<string> {
+/**
+ * A throwaway repository: two dailies, a tutorial level, and the real tools/, linked or, for a
+ * test that breaks the harness, copied.
+ */
+async function repo({ copyTools = false } = {}): Promise<string> {
   const root = await Deno.makeTempDir({ prefix: "dmc-editor-test-" });
   await Deno.mkdir(`${root}/levels/tutorial`, { recursive: true });
   await Deno.mkdir(`${root}/levels/daily`, { recursive: true });
-  await Deno.symlink(TOOLS, `${root}/tools`);
+  await Deno.mkdir(`${root}/src/levels`, { recursive: true });
+  if (copyTools) {
+    await Deno.mkdir(`${root}/tools`);
+    for (const file of ["harness.c", "prelude.h"]) {
+      await Deno.copyFile(`${TOOLS}${file}`, `${root}/tools/${file}`);
+    }
+  } else await Deno.symlink(TOOLS, `${root}/tools`);
   await Deno.writeTextFile(`${root}/levels/tutorial/01-return-x.c`, body("x"));
   await Deno.writeTextFile(`${root}/levels/daily/0002.c`, body("y"));
   await Deno.writeTextFile(`${root}/levels/daily/0001.c`, body("x ^ y"));
@@ -185,7 +194,79 @@ Deno.test("the editor's endpoints read, save and check levels for its page only"
       404,
     );
   } finally {
-    await editor.close();
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("creating a level never replaces an existing one", async () => {
+  const root = await repo();
+  const editor = createEditor(root);
+  const create = (path: string) =>
+    editor.respond(
+      request("PUT", `/level?path=${path}`, JSON.stringify({ source: body("0"), create: true })),
+    );
+  try {
+    assert.equal((await create("levels/daily/0001.c")).status, 409);
+    assert.equal(await Deno.readTextFile(`${root}/levels/daily/0001.c`), body("x ^ y"));
+    assert.equal((await create("levels/daily/0003.c")).status, 200);
+    assert.equal(await Deno.readTextFile(`${root}/levels/daily/0003.c`), body("0"));
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("a harness that failed to build is built again on the next check", async () => {
+  const root = await repo({ copyTools: true });
+  const editor = createEditor(root);
+  const check = () =>
+    editor.respond(request("POST", "/check", JSON.stringify({ source: body("x"), name: "a.c" })));
+  try {
+    const harness = await Deno.readTextFile(`${root}/tools/harness.c`);
+    await Deno.writeTextFile(`${root}/tools/harness.c`, "not C");
+    await assert.rejects(check, /harness\.c does not compile/);
+    await Deno.writeTextFile(`${root}/tools/harness.c`, harness);
+    const fixed = await check();
+    assert.equal((fixed.body as { ok: boolean }).ok, true);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("work files stay in one cache directory, cleared by the next editor", async () => {
+  const root = await repo();
+  const cache = `${root}/node_modules/.cache/level-editor`;
+  // What a dev server stopped with Ctrl+C in the middle of a check leaves behind.
+  await Deno.mkdir(`${cache}/stale`, { recursive: true });
+  const editor = createEditor(root);
+  try {
+    const checked = await editor.respond(
+      request("POST", "/check", JSON.stringify({ source: body("x"), name: "a.c" })),
+    );
+    assert.equal((checked.body as { ok: boolean }).ok, true);
+    const left = (await Array.fromAsync(Deno.readDir(cache))).map((entry) => entry.name).sort();
+    assert.deepEqual(left, ["harness.O0.o", "harness.O1.o", "harness.Z0.o"]);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("Update the game runs the level generator and reports it as plain text", async () => {
+  const root = await repo();
+  // The generator, unlike the editor's list, rejects any other file in levels/.
+  await Deno.remove(`${root}/levels/daily/notes.txt`);
+  const editor = createEditor(root);
+  try {
+    const { status, body: report } = await editor.respond(request("POST", "/generate"));
+    assert.equal(status, 200);
+    const { ok, lines } = report as { ok: boolean; lines: string[] };
+    assert.equal(ok, true, lines.join("\n"));
+    assert.ok(lines.includes("Wrote src/levels/generated.ts"));
+    // The new levels' previews, their grids as digits rather than terminal colors.
+    assert.ok(lines.some((line) => line.endsWith("0 1 2 3 4 5 6 7")), lines.join("\n"));
+    // deno-lint-ignore no-control-regex -- checks that no ANSI escape is left
+    assert.ok(lines.every((line) => !/\x1b/.test(line)));
+    assert.match(await Deno.readTextFile(`${root}/src/levels/generated.ts`), /daily/);
+  } finally {
     await Deno.remove(root, { recursive: true });
   }
 });

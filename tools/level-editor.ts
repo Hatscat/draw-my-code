@@ -47,7 +47,6 @@ export interface EditorResponse {
 
 export interface Editor {
   respond(request: EditorRequest): Promise<EditorResponse>;
-  close(): Promise<void>;
 }
 
 const PREFIX = "/__editor";
@@ -152,10 +151,24 @@ export async function checkSource(
 
 /** The editor's endpoints, independent of any HTTP server. */
 export function createEditor(root: string): Editor {
-  // Made on the first check: the harness is compiled once per server.
-  let workDir: Promise<string> | undefined;
+  // One fixed directory, emptied when the harness is built: a dev server stopped with Ctrl+C gets
+  // no chance to clean up, so the next one does.
+  const workDir = join(root, "node_modules", ".cache", "level-editor");
   let toolchain: Promise<Toolchain> | undefined;
   const reply = (status: number, body: unknown): EditorResponse => ({ status, body });
+
+  /** The harness, built once per server; a failed build is tried again on the next check. */
+  function tools(): Promise<Toolchain> {
+    toolchain ??= (async () => {
+      await Deno.remove(workDir, { recursive: true }).catch(() => {});
+      await Deno.mkdir(workDir, { recursive: true });
+      return await prepareToolchain(join(root, "tools"), workDir);
+    })().catch((error) => {
+      toolchain = undefined;
+      throw error;
+    });
+    return toolchain;
+  }
 
   async function respond(request: EditorRequest): Promise<EditorResponse> {
     if (!isTrusted(request.headers)) return reply(403, { error: "only the editor page may ask" });
@@ -186,9 +199,7 @@ export function createEditor(root: string): Editor {
       const name = typeof body.name === "string" && /^[\w-]+\.c$/.test(body.name)
         ? body.name
         : "level.c";
-      workDir ??= Deno.makeTempDir({ prefix: "dmc-editor-" });
-      toolchain ??= workDir.then((dir) => prepareToolchain(join(root, "tools"), dir));
-      return reply(200, await checkSource(source, name, await toolchain));
+      return reply(200, await checkSource(source, name, await tools()));
     }
 
     const path = levelPath(root, url.searchParams.get("path") ?? "");
@@ -206,19 +217,22 @@ export function createEditor(root: string): Editor {
       }
     }
     if (route === "PUT /level") {
-      if (source === undefined) return reply(400, { error: "expected { source }" });
-      await Deno.writeTextFile(path, source);
+      if (source === undefined) return reply(400, { error: "expected { source, create? }" });
+      try {
+        // A new level must never replace one that exists, whatever the page believes.
+        await Deno.writeTextFile(path, source, { createNew: body.create === true });
+      } catch (error) {
+        if (error instanceof Deno.errors.AlreadyExists) {
+          return reply(409, { error: `${relative(root, path)} already exists` });
+        }
+        throw error;
+      }
       return reply(200, { saved: relative(root, path) });
     }
     return reply(404, { error: `no route ${route}` });
   }
 
-  return {
-    respond,
-    async close() {
-      if (workDir) await Deno.remove(await workDir, { recursive: true }).catch(() => {});
-    },
-  };
+  return { respond };
 }
 
 function parseBody(text: string): Record<string, unknown> | undefined {
@@ -242,7 +256,6 @@ export function levelEditor(root: string): Plugin {
     apply: (_config, env) => env.command === "serve" && !env.isPreview,
     configureServer(server) {
       const editor = createEditor(root);
-      server.httpServer?.once("close", () => editor.close());
       const levels = join(root, "levels");
       server.watcher.on("all", (_event, file) => {
         if (file.startsWith(`${levels}/`)) {

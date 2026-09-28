@@ -134,3 +134,40 @@ test("neither a wrong submit nor the result moves or resizes the grid", async ({
   await expect(page.getByRole("heading", { name: "Solved in 2/3" })).toBeVisible();
   expect(await gridBox(page)).toEqual(before);
 });
+
+test("the scrollbar the result brings doesn't move the grid", async ({ playwright, browserName, isMobile, baseURL }) => {
+  test.skip(browserName !== "chromium" || isMobile, "classic scrollbars: desktop Chromium only");
+  // Headless Chromium hides scrollbars; desktop Chrome on Linux and Windows takes 15 px for them.
+  const browser = await playwright.chromium.launch({
+    channel: "chromium",
+    ignoreDefaultArgs: ["--hide-scrollbars"],
+  });
+  try {
+    const context = await browser.newContext({
+      baseURL,
+      viewport: { width: 1280, height: 800 },
+      timezoneId: "Europe/Paris",
+    });
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        "draw-my-code",
+        JSON.stringify({ v: 1, tutorial: { done: true, next: 1 } }),
+      );
+    });
+    await openPuzzle(page, 1);
+    const before = await gridBox(page);
+    const submit = page.getByRole("button", { name: "Submit" });
+    await submit.click();
+    await cell(page, 0, 0).click();
+    await submit.click();
+    await cell(page, 1, 0).click();
+    await submit.click();
+    await expect(page.getByRole("heading", { name: "X/3" })).toBeVisible();
+    // The stats below make the page scroll: the scrollbar is there now.
+    expect(await page.evaluate(() => innerWidth - document.documentElement.clientWidth)).toBe(15);
+    expect(await gridBox(page)).toEqual(before);
+  } finally {
+    await browser.close();
+  }
+});

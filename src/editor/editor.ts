@@ -16,7 +16,8 @@ import { type CodePanel, createCodePanel } from "../ui/code-panel.ts";
 import { el } from "../ui/dom.ts";
 import { PALETTE } from "../ui/palette.ts";
 
-const NEW_DAILY = "int f(int x, int y) {\n  return (x + y) % 8;\n}\n";
+// Every cell 0 fails the checks: an untouched new daily can never reach the game.
+const NEW_DAILY = "int f(int x, int y) {\n  return 0;\n}\n";
 const CHECK_DELAY_MS = 250;
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -44,10 +45,12 @@ const gameFileName = (level: EditorLevel | undefined) =>
 
 function start(root: HTMLElement) {
   const picker = el("select", { "aria-label": "Level file" });
-  const newDaily = el("button", { type: "button" }, "New daily");
+  // Enabled once the list is in: the next number comes from it.
+  const newDaily = el("button", { type: "button", disabled: true }, "New daily");
   const save = el("button", { type: "button", disabled: true }, "Save");
   const saveState = el("span", { class: "editor-note editor-save-state", role: "status" });
   const update = el("button", { type: "button" }, "Update the game");
+  const digits = el("input", { type: "checkbox", checked: true });
   const bar = el(
     "header",
     { class: "editor-bar" },
@@ -56,6 +59,7 @@ function start(root: HTMLElement) {
     newDaily,
     save,
     saveState,
+    el("label", { class: "editor-note editor-digits" }, digits, "Show digits"),
     update,
   );
 
@@ -85,7 +89,6 @@ function start(root: HTMLElement) {
 
   const codeSlot = el("div", { class: "editor-code" });
   const readout = el("p", { class: "editor-readout" });
-  const digits = el("input", { type: "checkbox", checked: true });
   const board = createBoard({
     onPaint() {},
     onPoint(index) {
@@ -101,21 +104,26 @@ function start(root: HTMLElement) {
     codeSlot,
     board.element,
     readout,
-    el("label", { class: "editor-note editor-digits" }, digits, "Show digits"),
   );
   root.replaceChildren(bar, el("div", { class: "editor-body" }, left, preview));
 
   let levels: EditorLevel[] = [];
   let current: EditorLevel | undefined;
   let saved = "";
+  /** About the open file (changed on disk, not saved…): shown until the next save or open. */
+  let notice = "";
   let code: CodePanel | undefined;
   let grid: Grid = blankGrid();
+  /** Whether `grid` comes from the open file, or is still the blank one open() put there. */
+  let checkedValid = false;
   let pointed: number | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let checking = false;
   let checkAgain = false;
 
   const dirty = () => current !== undefined && source.value !== saved;
+  const discardChanges = () =>
+    !dirty() || !current || confirm(`Discard your changes to ${current.path}?`);
 
   function showPointed() {
     board.setPointed(pointed);
@@ -151,9 +159,15 @@ function start(root: HTMLElement) {
     timer = setTimeout(check, CHECK_DELAY_MS);
   }
 
-  function showSaveState(note?: string) {
+  function showSaveState() {
     save.disabled = !dirty();
-    saveState.textContent = note ?? (current === undefined ? "" : dirty() ? "Unsaved" : "Saved");
+    saveState.textContent = notice ||
+      (current === undefined ? "" : dirty() ? "Unsaved" : "Saved");
+  }
+
+  function showNotice(text: string) {
+    notice = text;
+    showSaveState();
   }
 
   /** One check at a time: edits made meanwhile are checked right after. */
@@ -164,11 +178,14 @@ function start(root: HTMLElement) {
     }
     checking = true;
     checkState.textContent = "Checking with gcc…";
+    // A result for a file closed meanwhile is dropped: the new file's own check follows.
+    const level = current;
     try {
-      const name = current ? fileName(current) : "level.c";
-      showCheck(await call<LevelResult>("POST", "check", { source: source.value, name }));
+      const name = level ? fileName(level) : "level.c";
+      const result = await call<LevelResult>("POST", "check", { source: source.value, name });
+      if (level === current) showCheck(result);
     } catch (error) {
-      showCheck({ ok: false, errors: [String(error)] });
+      if (level === current) showCheck({ ok: false, errors: [String(error)] });
     } finally {
       checking = false;
       if (checkAgain) {
@@ -183,6 +200,7 @@ function start(root: HTMLElement) {
     preview.classList.toggle("stale", !values);
     if (values) {
       grid = values;
+      checkedValid = true;
       renderGrid();
       const colored = values.filter((value) => value !== 0).length;
       const colors = new Set(values).size;
@@ -192,7 +210,7 @@ function start(root: HTMLElement) {
     }
     const problems = result.ok ? ["gcc printed values outside [0, 7]"] : result.errors;
     checkState.textContent = `✗ ${problems.length} problem${problems.length > 1 ? "s" : ""}: ` +
-      "the grid shows the last valid version";
+      (checkedValid ? "the grid shows the last valid version" : "no valid version yet");
     errors.replaceChildren(...problems.map((problem) => el("pre", {}, problem)));
   }
 
@@ -218,15 +236,29 @@ function start(root: HTMLElement) {
     if (current) picker.value = current.path;
   }
 
-  async function open(level: EditorLevel) {
-    if (dirty() && current && !confirm(`Discard your changes to ${current.path}?`)) {
-      picker.value = current.path;
+  /** `confirmed`: the caller already asked about unsaved changes. */
+  async function open(level: EditorLevel, confirmed = false) {
+    if (!confirmed && !discardChanges()) {
+      if (current) picker.value = current.path;
       return;
     }
-    const { source: text } = await call<{ source: string }>("GET", levelUrl(level));
+    let text: string;
+    try {
+      text = (await call<{ source: string }>("GET", levelUrl(level))).source;
+    } catch (error) {
+      showNotice(`Not opened: ${error}`);
+      return;
+    }
     current = level;
     saved = text;
+    notice = "";
     source.value = text;
+    // The previous file's grid and verdict must not pass for this one's.
+    grid = blankGrid();
+    checkedValid = false;
+    renderGrid();
+    checkState.textContent = "";
+    errors.replaceChildren();
     picker.value = level.path;
     history.replaceState(null, "", `?level=${encodeURIComponent(level.path)}`);
     published.hidden = !level.published;
@@ -242,11 +274,11 @@ function start(root: HTMLElement) {
     try {
       await call("PUT", levelUrl(current), { source: text });
     } catch (error) {
-      showSaveState(`Not saved: ${error}`);
+      showNotice(`Not saved: ${error}`);
       return false;
     }
     saved = text;
-    showSaveState();
+    showNotice("");
     return true;
   }
 
@@ -277,12 +309,23 @@ function start(root: HTMLElement) {
   digits.addEventListener("change", renderGrid);
 
   newDaily.addEventListener("click", async () => {
+    // Asked before anything is written: Cancel must leave no new file behind.
+    if (!discardChanges()) return;
     const id = Math.max(0, ...levels.filter((l) => l.kind === "daily").map((l) => l.id)) + 1;
     const path = `levels/daily/${String(id).padStart(4, "0")}.c`;
-    await call("PUT", `level?path=${encodeURIComponent(path)}`, { source: NEW_DAILY });
-    await refreshList();
+    try {
+      // `create`: the server refuses to replace a level that exists.
+      await call("PUT", `level?path=${encodeURIComponent(path)}`, {
+        source: NEW_DAILY,
+        create: true,
+      });
+      await refreshList();
+    } catch (error) {
+      showNotice(`Not created: ${error}`);
+      return;
+    }
     const level = levels.find((l) => l.path === path);
-    if (level) await open(level);
+    if (level) await open(level, true);
   });
 
   update.addEventListener("click", async () => {
@@ -304,27 +347,42 @@ function start(root: HTMLElement) {
 
   // A file changed on disk, from this page or another editor.
   import.meta.hot?.on("editor:levels-changed", async (data: unknown) => {
-    await refreshList();
     const path = typeof data === "object" && data !== null && "path" in data ? data.path : "";
-    if (!current || path !== current.path) return;
-    const { source: text } = await call<{ source: string }>("GET", levelUrl(current));
-    if (text === saved) return;
-    if (dirty()) {
-      showSaveState("Changed on disk: saving overwrites that version");
-      return;
+    // Another file may be opened while this runs: only the file it is about gets changed.
+    const level = current;
+    try {
+      await refreshList();
+      if (!level || level !== current || path !== level.path) return;
+      if (!levels.some((l) => l.path === level.path)) {
+        // Deleted or renamed: the text on screen is all that is left here, so it counts as unsaved.
+        saved = "";
+        showNotice("Deleted or renamed on disk: Save writes it back here");
+        return;
+      }
+      const { source: text } = await call<{ source: string }>("GET", levelUrl(level));
+      if (level !== current || text === saved) return;
+      if (dirty()) {
+        // Save now replaces what is on disk, and says so.
+        saved = text;
+        showNotice("Changed on disk: Save overwrites that version");
+        return;
+      }
+      saved = text;
+      source.value = text;
+      edited();
+    } catch (error) {
+      showNotice(String(error));
     }
-    saved = text;
-    source.value = text;
-    edited();
   });
 
   renderGrid();
   refreshList().then(() => {
+    newDaily.disabled = false;
     const wanted = new URLSearchParams(location.search).get("level");
     const first = levels.find((l) => l.path === wanted) ??
       levels.find((l) => l.kind === "daily") ?? levels[0];
     if (first) open(first);
-  });
+  }, (error) => showNotice(`No level list: ${error}`));
 }
 
 const root = document.querySelector("#editor");

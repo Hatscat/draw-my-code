@@ -14,7 +14,8 @@ test("the app loads without console errors", async ({ page }) => {
 });
 
 test("the level editor stays on the dev server", async ({ request, baseURL }) => {
-  for (const path of ["src/editor/", "src/editor/index.html", "__editor/levels"]) {
+  // The page under the site's path; the endpoints at the server's root, where the dev server has them.
+  for (const path of ["src/editor/", "src/editor/index.html", "/__editor/levels"]) {
     const response = await request.get(new URL(path, baseURL).href);
     expect(response.status(), path).toBe(404);
   }

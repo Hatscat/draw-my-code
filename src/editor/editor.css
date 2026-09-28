@@ -98,7 +98,10 @@
   overflow-wrap: anywhere;
 }
 
+/* All of it in view beside the source, even a 12-line level on a short screen: the bar and the
+   paddings take 88 px. */
 .editor-preview {
+  max-height: calc(100svh - 88px);
   position: sticky;
   top: 16px;
   align-self: start;
@@ -106,9 +109,10 @@
   flex-direction: column;
 }
 
-/* Square: the grid as wide as the column allows, the readout right below it. */
+/* Square when there is room, the readout right below the grid; shorter when there isn't, and the
+   game's own clamp then shrinks the grid, never below 250 px. */
 .editor-preview .board {
-  flex: none;
+  flex: 0 1 auto;
   aspect-ratio: 1;
 }
 
@@ -130,10 +134,8 @@
 }
 
 .editor-digits {
-  margin-top: 8px;
-  flex: none;
   display: flex;
-  justify-content: center;
+  align-items: center;
   gap: 6px;
 }
 
@@ -142,7 +144,10 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* The game's column width, as players see it. */
   .editor-preview {
+    width: min(448px, 100%);
     position: static;
+    justify-self: center;
   }
 }

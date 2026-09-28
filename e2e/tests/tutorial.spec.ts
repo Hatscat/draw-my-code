@@ -1,5 +1,5 @@
 import { tutorial } from "../../src/levels/generated.ts";
-import { cell, dayOf, expect, paintRows, test } from "./fixtures.ts";
+import { cell, confettiBursts, countConfetti, dayOf, expect, paintRows, test } from "./fixtures.ts";
 
 test.use({ tutorialDone: false });
 
@@ -21,6 +21,7 @@ test("a first visit starts the tutorial, and Skip leads to the daily", async ({ 
 });
 
 test("a wrong submit shows only the count; a solve moves on with Next", async ({ page }) => {
+  await countConfetti(page);
   await page.clock.install({ time: dayOf(1) });
   await page.goto("./");
   const submit = page.getByRole("button", { name: "Submit" });
@@ -29,11 +30,12 @@ test("a wrong submit shows only the count; a solve moves on with Next", async ({
   await expect(status).toContainText("1 wrong");
   await expect(status).not.toContainText("attempt");
   await expect(submit).toHaveAttribute("aria-disabled", "true");
+  expect(await confettiBursts(page)).toBe(0);
 
   await oneCell(page).click();
   await submit.click();
   await expect(status).toHaveText("Right!");
-  await expect(page.locator(".confetti")).toBeAttached();
+  expect(await confettiBursts(page)).toBe(1);
   await page.getByRole("button", { name: "Next" }).click();
   await expect(label(page)).toHaveText(`Tutorial 2/${tutorial.length}`);
 });

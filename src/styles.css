@@ -60,6 +60,17 @@ html {
   background: var(--bg);
 }
 
+/*
+ * Where scrollbars take room (desktop Chrome on Linux or Windows), keep it from the start: the
+ * scrollbar the result's stats bring would otherwise move the grid. Only from 495 px, where the
+ * column keeps its full 448 px anyway: narrower, the room is worth more to the code and the grid.
+ */
+@media (min-width: 495px) {
+  html {
+    scrollbar-gutter: stable;
+  }
+}
+
 body {
   background: radial-gradient(900px 310px at 50% 0, var(--glow), var(--bg)) no-repeat, var(--bg);
   color: var(--ink);

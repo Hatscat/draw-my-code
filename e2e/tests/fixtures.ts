@@ -124,6 +124,28 @@ export async function stubShare(
   }, [shareError, clipboardFails] as const);
 }
 
+/**
+ * Counts the confetti bursts from the first load on. Checking for none with this count can't
+ * pass by waiting until a burst has gone, as checking for no canvas could.
+ */
+export async function countConfetti(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const record = window as unknown as { confetti: number };
+    record.confetti = 0;
+    new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node instanceof Element && node.classList.contains("confetti")) record.confetti++;
+        }
+      }
+    }).observe(document, { childList: true, subtree: true });
+  });
+}
+
+export function confettiBursts(page: Page): Promise<number> {
+  return page.evaluate(() => (window as unknown as { confetti: number }).confetti);
+}
+
 export function sharedTexts(page: Page) {
   return page.evaluate(() => {
     const record = window as unknown as { shared: string[]; copied: string[]; attempts: number };

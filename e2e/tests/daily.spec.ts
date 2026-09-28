@@ -1,5 +1,7 @@
 import {
   cell,
+  confettiBursts,
+  countConfetti,
   expect,
   openPuzzle,
   paintRows,
@@ -42,14 +44,14 @@ test("a wrong submit only tells the count; Submit waits for a change", async ({ 
 
 test("solving shows the result, the stats and the exact share text", async ({ page, isMobile }) => {
   await stubShare(page);
+  await countConfetti(page);
   await openPuzzle(page, 1);
   await page.getByRole("button", { name: "Submit" }).click();
   await paintRows(page, SOLUTION);
   await page.getByRole("button", { name: "Submit" }).click();
 
   await expect(page.getByRole("heading", { name: "Solved in 2/3" })).toBeFocused();
-  const confetti = page.locator(".confetti");
-  await expect(confetti).toBeAttached();
+  expect(await confettiBursts(page)).toBe(1);
   const stats = page.locator(".stats");
   for (
     const [label, value] of [["Played", "1"], ["Win %", "100"], ["Current streak", "1"], [
@@ -73,16 +75,18 @@ test("solving shows the result, the stats and the exact share text", async ({ pa
     await expect(page.locator(".toast")).toHaveText("Copied");
   }
   // The confetti, drawn over the page all along, never got in the way, and is gone after a while.
-  await expect(confetti).toHaveCount(0);
+  await expect(page.locator(".confetti")).toHaveCount(0);
 });
 
 test("no confetti for players who prefer reduced motion", async ({ page }) => {
+  await countConfetti(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openPuzzle(page, 1);
   await paintRows(page, SOLUTION);
   await page.getByRole("button", { name: "Submit" }).click();
   await expect(page.getByRole("heading", { name: "Solved in 1/3" })).toBeVisible();
-  await expect(page.locator(".confetti")).toHaveCount(0);
+  // Bursts start with the result: had there been one, it would have been counted by now.
+  expect(await confettiBursts(page)).toBe(0);
 });
 
 test("a cancelled share sheet does nothing", async ({ page, isMobile }) => {
@@ -101,6 +105,7 @@ test("a cancelled share sheet does nothing", async ({ page, isMobile }) => {
 
 test("3 wrong attempts fail: X/3, the solution, and a toggle to the last drawing", async ({ page }) => {
   await stubShare(page);
+  await countConfetti(page);
   await openPuzzle(page, 1);
   // Two cells that are black in the solution, painted white in attempts 2 and 3.
   const zeros = SOLUTION.flatMap((row, y) =>
@@ -116,7 +121,7 @@ test("3 wrong attempts fail: X/3, the solution, and a toggle to the last drawing
   await submit.click();
 
   await expect(page.getByRole("heading", { name: "X/3" })).toBeVisible();
-  await expect(page.locator(".confetti")).toHaveCount(0);
+  expect(await confettiBursts(page)).toBe(0);
   await expect(page.getByRole("button", { name: "Solution" })).toHaveAttribute(
     "aria-pressed",
     "true",
