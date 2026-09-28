@@ -207,7 +207,7 @@ export const daily: readonly Level[] = [{
 }, {
   id: 8,
   code:
-    "int f(int x, int y) {\n  int c = 0x80 >> x;\n  int r = 0x1 << y;\n  int m = 0x28;\n  return (c & m) | (r & m) ? 3:0;\n}",
+    "int f(int x, int y) {\n  int c = 0x80 >> x, r = 0x1 << y;\n  int m = 0x28;\n  return (c & m) | (r & m) ? 3:0;\n}",
   solution: [
     "00303000",
     "00303000",
@@ -220,15 +220,16 @@ export const daily: readonly Level[] = [{
   ],
 }, {
   id: 9,
-  code: "int f(int x, int y) {\n  int a[] = {0,2,3,4,5,6,7,0};\n  return a[y];\n}",
+  code:
+    "int f(int x, int y) {\n  int tx=3, ty=4, tz=5, r=6;\n  int z = 7;\n  for (; z > 0; z--) {\n    int dx=tx-x, dy=ty-y, dz=tz-z;\n    int x2=dx*dx,y2=dy*dy,z2=dz*dz;\n    if (x2<r && y2<r && z2<r) {\n      break;\n    }\n  }\n  return z;\n}",
   solution: [
     "00000000",
-    "22222222",
-    "33333333",
-    "44444444",
-    "55555555",
-    "66666666",
-    "77777777",
+    "00000000",
+    "07777700",
+    "07777700",
+    "07777700",
+    "07777700",
+    "07777700",
     "00000000",
   ],
 }, {
@@ -258,5 +259,19 @@ export const daily: readonly Level[] = [{
     "01234567",
     "01234567",
     "01234567",
+  ],
+}, {
+  id: 12,
+  code:
+    "int f(int x, int y) {\n  int z = (x+y) & 0xA8;\n  int w = y*y*y + x*x*x;\n  int u = z ^ w;\n  int v = (u << 3) & 7;\n  return v | y;\n}",
+  solution: [
+    "00000000",
+    "11111111",
+    "22222222",
+    "33333333",
+    "44444444",
+    "55555555",
+    "66666666",
+    "77777777",
   ],
 }];
