@@ -274,4 +274,1007 @@ export const daily: readonly Level[] = [{
     "66666666",
     "77777777",
   ],
+}, {
+  id: 13,
+  code:
+    "int f(int x, int y) {\n  if (x == 0 || y == 0)\n    return 1;\n  int left = f(x - 1, y);\n  int up = f(x, y - 1);\n  return (left + up) % 7;\n}",
+  solution: [
+    "11111111",
+    "12345601",
+    "13631001",
+    "14360001",
+    "15100001",
+    "16000001",
+    "10000001",
+    "11111112",
+  ],
+}, {
+  id: 14,
+  code:
+    "int f(int x, int y) {\n  // a mine where x*y is 6 or 12\n  if (x*y == 6 || x*y == 12)\n    return 7;\n  int n = 0;\n  for (int i = x-1; i <= x+1; i++)\n    for (int j = y-1; j <= y+1; j++)\n      n += i*j == 6 || i*j == 12;\n  return n;\n}",
+  solution: [
+    "00000111",
+    "00111272",
+    "01272372",
+    "01747211",
+    "01272100",
+    "12321000",
+    "17710000",
+    "12210000",
+  ],
+}, {
+  id: 15,
+  code:
+    "int f(int x, int y) {\n  enum {\n    SAND = 3, SUN, SKY = 6, SEA\n  };\n  if (y > 5) return SAND;\n  if (y > 3) return SEA;\n  if (abs(x - 5) + abs(y - 1) < 2)\n    return SUN;\n  return SKY;\n}",
+  solution: [
+    "66666466",
+    "66664446",
+    "66666466",
+    "66666666",
+    "77777777",
+    "77777777",
+    "33333333",
+    "33333333",
+  ],
+}, {
+  id: 16,
+  code:
+    "int f(int x, int y) {\n  int n = 8*y + x, r = 0;\n  while ((r + 1) * (r + 1) <= n)\n    r++;\n  return r;\n}",
+  solution: [
+    "01112222",
+    "23333333",
+    "44444444",
+    "45555555",
+    "55556666",
+    "66666666",
+    "67777777",
+    "77777777",
+  ],
+}, {
+  id: 17,
+  code:
+    "int f(int x, int y) {\n  // a = 3, b = 4, c = 5\n  int u = 3*x - 4*y;\n  int v = 4*x + 3*y;\n  if (u > 9) return 2;\n  if (u < -16) return 3;\n  if (v < 12) return 4;\n  if (v > 37) return 5;\n  return 6;\n}",
+  solution: [
+    "44462222",
+    "44466222",
+    "44666622",
+    "46666666",
+    "66666665",
+    "33666655",
+    "33366555",
+    "33336555",
+  ],
+}, {
+  id: 18,
+  code:
+    "int f(int x, int y) {\n  int piece[] = {\n    0xF0, 0xC6, 0x2E, 0x66,\n    0x6C, 0x8E, 0xE4, 0x00\n  };\n  int k = x/4 + y/2*2;\n  int bit = 0x80 >> (y%2*4 + x%4);\n  return piece[k] & bit ? k + 1 : 0;\n}",
+  solution: [
+    "11112200",
+    "00000220",
+    "00300440",
+    "33300440",
+    "05506000",
+    "55006660",
+    "77700000",
+    "07000000",
+  ],
+}, {
+  id: 19,
+  code:
+    "int f(int x, int y) {\n  int charge = 80; // percent\n  int bars = charge / 100 * 5;\n  int ink = bars < 2 ? 2 : 1;\n  if (y < 2 || y > 5)\n    return 0;\n  if (x == 7)\n    return (y == 3 || y == 4) * ink;\n  if (x % 6 == 0 || y % 3 == 2)\n    return ink;\n  return x <= bars ? 5 : 0;\n}",
+  solution: [
+    "00000000",
+    "00000000",
+    "22222220",
+    "20000022",
+    "20000022",
+    "22222220",
+    "00000000",
+    "00000000",
+  ],
+}, {
+  id: 20,
+  code:
+    "int f(int x, int y) {\n  int out[8] = {0}, p = 7, k = 0;\n  while (k < 3 * y) {\n    p = (p + 1) % 8;\n    if (!out[p] && ++k % 3 == 0)\n      out[p] = 1;\n  }\n  return out[x] ? 0 : 4;\n}",
+  solution: [
+    "44444444",
+    "44044444",
+    "44044044",
+    "04044044",
+    "04040044",
+    "00040044",
+    "00040040",
+    "00000040",
+  ],
+}, {
+  id: 21,
+  code:
+    "int f(int x, int y) {\n  int dx = 2*x - 7, dy = 2*y - 7;\n  if (x == 3 && y == 1)\n    return 0;\n  if (dx > 0 && abs(dy) < dx)\n    return x == 7 && abs(dy) == 1;\n  return dx*dx + dy*dy < 64 ? 4 : 0;\n}",
+  solution: [
+    "00444400",
+    "04404440",
+    "44444400",
+    "44444001",
+    "44444001",
+    "44444400",
+    "04444440",
+    "00444400",
+  ],
+}, {
+  id: 22,
+  code: "int f(int x, int y) {\n  return x % (y + 1);\n}",
+  solution: [
+    "00000000",
+    "01010101",
+    "01201201",
+    "01230123",
+    "01234012",
+    "01234501",
+    "01234560",
+    "01234567",
+  ],
+}, {
+  id: 23,
+  code:
+    "int f(int x, int y) {\n  int lo = 0, hi = 7, s = 1, m;\n  do {\n    m = (lo + hi) / 2;\n    if (m == x)\n      return m == y ? 5 : s;\n    if (m < y) lo = m + 1;\n    if (m > y) hi = m - 1;\n    s++;\n  } while (m != y);\n  return 0;\n}",
+  solution: [
+    "52010000",
+    "05010000",
+    "02510000",
+    "00050000",
+    "00015200",
+    "00010500",
+    "00010250",
+    "00010235",
+  ],
+}, {
+  id: 24,
+  code:
+    "int f(int x, int y) {\n  // Thales: is angle APB >= 90?\n  // A = (0,2), B = (5,5)\n  int a = x*(x-5) + (y-2)*(y-5);\n  // A = (2,2), B = (7,5)\n  int b = (x-2)*(x-7) + (y-2)*(y-5);\n  if (a <= 0 && b <= 0)\n    return 7;\n  if (a <= 0)\n    return 2;\n  return b <= 0 ? 6 : 0;\n}",
+  solution: [
+    "00000000",
+    "02277660",
+    "22777766",
+    "22777766",
+    "22777766",
+    "22777766",
+    "02277660",
+    "00000000",
+  ],
+}, {
+  id: 25,
+  code:
+    "int f(int x, int y) {\n  // a press toggles its cell and\n  // the 4 cells next to it\n  int p[8] = {0, 0, 60, 60, 60, 60};\n  int on = p[y] ^ p[y]<<1 ^ p[y]>>1;\n  if (y > 0) on ^= p[y - 1];\n  if (y < 7) on ^= p[y + 1];\n  return on >> x & 1 ? 4 : 0;\n}",
+  solution: [
+    "00000000",
+    "00444400",
+    "04400440",
+    "04044040",
+    "04044040",
+    "04400440",
+    "00444400",
+    "00000000",
+  ],
+}, {
+  id: 26,
+  code: "int f(int x, int y) {\n  return x --> y ? x : 7;\n}",
+  solution: [
+    "70123456",
+    "77123456",
+    "77723456",
+    "77773456",
+    "77777456",
+    "77777756",
+    "77777776",
+    "77777777",
+  ],
+}, {
+  id: 27,
+  code:
+    "int f(int x, int y) {\n  int dx = abs(2*x - 7);\n  if (dx > 2*y + 3)\n    return 0;\n  if (y == 7 && x % 3 == 1)\n    return 0;\n  int eye = x%4 == 1 || x%4 == 2;\n  if ((y == 2 || y == 3) && eye)\n    return y > 2 && x%4 > 1 ? 6 : 1;\n  return 2;\n}",
+  solution: [
+    "00222200",
+    "02222220",
+    "21122112",
+    "21622162",
+    "22222222",
+    "22222222",
+    "22222222",
+    "20220220",
+  ],
+}, {
+  id: 28,
+  code:
+    "int f(int x, int y) {\n  int n = 31415926;\n  for (int i = x; i < 7; i++)\n    n /= 10;\n  int d = n % 10;\n  if (y == 2)\n    return 3;\n  if (y < 2)\n    return y == d / 5 ? 2 : 0;\n  return y - 3 == d % 5 ? 0 : 5;\n}",
+  solution: [
+    "22220020",
+    "00002202",
+    "33333333",
+    "55550555",
+    "50505550",
+    "55555505",
+    "05555555",
+    "55055055",
+  ],
+}, {
+  id: 29,
+  code:
+    "int f(int x, int y) {\n  enum { C, D, E, F, G, A, B };\n  int n[] = {E,E,F,G,G,F,E,D};\n  if (7 - n[x] == y)\n    return 2;\n  return y % 2 && y < 6 ? 1 : 0;\n}",
+  solution: [
+    "00000000",
+    "11111111",
+    "00000000",
+    "11122111",
+    "00200200",
+    "22111121",
+    "00000002",
+    "00000000",
+  ],
+}, {
+  id: 30,
+  code:
+    "int f(int x, int y) {\n  int dx = abs(x - 3);\n  int dy = abs(y - 4);\n  if (dx + dy == 0) return 1;\n  if (dx * dy == 2) return 2;\n  if (dx == dy || !dx || !dy)\n    return 7;\n  return 0;\n}",
+  solution: [
+    "00070007",
+    "70070070",
+    "07272700",
+    "02777200",
+    "77717777",
+    "02777200",
+    "07272700",
+    "70070070",
+  ],
+}, {
+  id: 31,
+  code:
+    "int f(int x, int y) {\n  int u = 2*x - 8, v = 2*y - 7;\n  int s = u - 4, t = v + 2;\n  if (x == 6 && y == 1) return 1;\n  if (u*u + v*v > 58) return 6;\n  if (s*s + t*t < 40) return 6;\n  return 4;\n}",
+  solution: [
+    "66644666",
+    "66446616",
+    "64466666",
+    "64466666",
+    "64446666",
+    "64444666",
+    "66444446",
+    "66644466",
+  ],
+}, {
+  id: 32,
+  code:
+    "int f(int x, int y) {\n  int h[] = {3,1,0,4,2,1,5,2};\n  int l = 0, r = 0, z = 7 - y;\n  for (int i = 0; i < 8; i++) {\n    if (i <= x) l = max(l, h[i]);\n    if (i >= x) r = max(r, h[i]);\n  }\n  if (z < h[x]) return 3;\n  return z < min(l, r) ? 6 : 0;\n}",
+  solution: [
+    "00000000",
+    "00000000",
+    "00000000",
+    "00000030",
+    "00036630",
+    "36636630",
+    "36633633",
+    "33633333",
+  ],
+}, {
+  id: 33,
+  code:
+    "int f(int x, int y) {\n  switch (y) {\n  case 1: case 2: case 5: case 6:\n    if (x < 2) {\n    case 0: case 3: case 4: case 7:\n      return 4;\n    }\n  }\n  return 6;\n}",
+  solution: [
+    "44444444",
+    "44666666",
+    "44666666",
+    "44444444",
+    "44444444",
+    "44666666",
+    "44666666",
+    "44444444",
+  ],
+}, {
+  id: 34,
+  code:
+    "int f(int x, int y) {\n  int px[] = {2, 6, 3, 0};\n  int py[] = {1, 3, 6, 5};\n  int best = 99, c = 0;\n  for (int i = 0; i < 4; i++) {\n    int dx = x-px[i], dy = y-py[i];\n    int d = dx*dx + dy*dy;\n    if (d == best) c = 1;\n    if (d < best) best = d, c = i+2;\n  }\n  return best ? c : 0;\n}",
+  solution: [
+    "22222133",
+    "22022333",
+    "22221333",
+    "51223303",
+    "55141333",
+    "05444133",
+    "55404413",
+    "51444441",
+  ],
+}, {
+  id: 35,
+  code:
+    "int f(int x, int y) {\n  int img[] = {\n    000004000, 000014000, 000114200,\n    001114220, 011114222, 033333333,\n    063333336, 066666666\n  };\n  int n = img[y];\n  for (int i = 0; i < x; i++)\n    n /= 8;\n  return n % 8;\n}",
+  solution: [
+    "00040000",
+    "00041000",
+    "00241100",
+    "02241110",
+    "22241111",
+    "33333333",
+    "63333336",
+    "66666666",
+  ],
+}, {
+  id: 36,
+  code:
+    "int f(int x, int y) {\n  int u = abs(2*x - 7);\n  if (y < 2) return 6;\n  if (u > 2*y - 3) return 5;\n  if (u == 1) return y % 2 * 4;\n  return 0;\n}",
+  solution: [
+    "66666666",
+    "66666666",
+    "55500555",
+    "55044055",
+    "50000005",
+    "00044000",
+    "00000000",
+    "00044000",
+  ],
+}, {
+  id: 37,
+  code:
+    "int f(int x, int y) {\n  if (x > 3) return f(7 - x, y);\n  if (y > 3) return f(x, 7 - y);\n  if (x > y) return f(y, x);\n  if (x == y) return 4;\n  if (y == 3) return 6;\n  return x;\n}",
+  solution: [
+    "40066004",
+    "04166140",
+    "01466410",
+    "66644666",
+    "66644666",
+    "01466410",
+    "04166140",
+    "40066004",
+  ],
+}, {
+  id: 38,
+  code:
+    "int f(int x, int y) {\n  int n = 8*y + x, d = 2;\n  while (d < 8 && n % d != 0)\n    d++;\n  return d % 8;\n}",
+  solution: [
+    "20232527",
+    "23202023",
+    "20202320",
+    "25232020",
+    "23252023",
+    "20202320",
+    "27232025",
+    "23202023",
+  ],
+}, {
+  id: 39,
+  code:
+    "int f(int x, int y) {\n  // one hex digit per half row\n  int s = 0x4EF717F6;\n  int c = min(x, 7 - x);\n  int bit = 4*(7 - y) + 3 - c;\n  if (s >> bit & 1)\n    return c == 3 ? 7 : 3;\n  return 0;\n}",
+  solution: [
+    "03000030",
+    "33300333",
+    "33377333",
+    "03377330",
+    "00077000",
+    "03377330",
+    "33377333",
+    "03300330",
+  ],
+}, {
+  id: 40,
+  code:
+    "int f(int x, int y) {\n  int h[] = {2,5,3,7,4,6,1,3};\n  for (int i = 0; i < 8; i++) {\n    int t = h[i];\n    h[i] = h[7 - i];\n    h[7 - i] = t;\n  }\n  return h[x] > 7 - y ? h[x] : 0;\n}",
+  solution: [
+    "00000000",
+    "00070000",
+    "00070600",
+    "05070600",
+    "05074600",
+    "05374603",
+    "25374603",
+    "25374613",
+  ],
+}, {
+  id: 41,
+  code:
+    "int f(int x, int y) {\n  // 4 grains topple, 1 to each side\n  int s[100] = {[44] = 16};\n  for (int k = 0; k < 64; k++)\n    for (int p = 11; p < 89; p++)\n      if (s[p] > 3 && p % 10 % 9) {\n        s[p] -= 4;\n        s[p-1]++, s[p+1]++;\n        s[p-10]++, s[p+10]++;\n      }\n  return s[10*y + x + 11];\n}",
+  solution: [
+    "00000000",
+    "00010000",
+    "00212000",
+    "01101100",
+    "00212000",
+    "00010000",
+    "00000000",
+    "00000000",
+  ],
+}, {
+  id: 42,
+  code:
+    "int f(int x, int y) {\n  int g[] = {31415926, 27182818,\n    16180339, 14142135, 17320508,\n    69314718, 22360679, 11235813};\n  int s = g[7], d = g[y], c = 0;\n  for (int i = x; i < 7; i++)\n    d /= 10;\n  for (int i = 7; s; i--, s /= 10)\n    if (s % 10 == d % 10)\n      c = max(c, i == x ? 5 : 4);\n  return c;\n}",
+  solution: [
+    "45045040",
+    "40444554",
+    "50440440",
+    "50404444",
+    "50440404",
+    "00440054",
+    "44400000",
+    "55555555",
+  ],
+}, {
+  id: 43,
+  code:
+    "int f(int x, int y) {\n  // side view, sea level at y = 5\n  int top[] = {3,2,2,4,6,7,7,4};\n  int g = top[x];\n  if (y < g)\n    return y < 5 ? 0 : 6;\n  if (y == g)\n    return g > 5 ? 4 : 5;\n  return y < g + 3 ? 3 : 1;\n}",
+  solution: [
+    "00000000",
+    "00000000",
+    "05500000",
+    "53300000",
+    "33350005",
+    "31136663",
+    "11134663",
+    "11113441",
+  ],
+}, {
+  id: 44,
+  code:
+    "int f(int x, int y) {\n  // a magic square of 0..63\n  int n = 8*y + x;\n  int a = x % 4, b = y % 4;\n  if (a != b && a + b != 3)\n    n = 63 - n;\n  return n / 8;\n}",
+  solution: [
+    "07700770",
+    "61166116",
+    "52255225",
+    "34433443",
+    "43344334",
+    "25522552",
+    "16611661",
+    "70077007",
+  ],
+}, {
+  id: 45,
+  code:
+    "int f(int x, int y) {\n  int t = x;\n  x = y;\n  y = 7 - t;\n  if (x == 1) return 4;\n  if (x == 0) return 0;\n  if (y == 0 && x < 7) return 2;\n  if (y == 3 && x < 6) return 6;\n  return 0;\n}",
+  solution: [
+    "00000000",
+    "44444444",
+    "00006002",
+    "00006002",
+    "00006002",
+    "00006002",
+    "00000002",
+    "00000000",
+  ],
+}, {
+  id: 46,
+  code:
+    "int f(int x, int y) {\n  // one octal digit per board row\n  int X = 0521, O = 0244;\n  if (x % 3 == 2 || y % 3 == 2)\n    return 1;\n  int bit = 1 << (8 - y/3*3 - x/3);\n  if (X & bit) return 2;\n  return O & bit ? 6 : 0;\n}",
+  solution: [
+    "22166122",
+    "22166122",
+    "11111111",
+    "66122100",
+    "66122100",
+    "11111111",
+    "66100122",
+    "66100122",
+  ],
+}, {
+  id: 47,
+  code:
+    "int f(int x, int y) {\n  int n = 1;\n  int ok = x > 1 && ++n && y > 1\n    && ++n && x < 6 && ++n && y < 6;\n  return n + ok;\n}",
+  solution: [
+    "11222222",
+    "11222222",
+    "11555533",
+    "11555533",
+    "11555533",
+    "11555533",
+    "11444433",
+    "11444433",
+  ],
+}, {
+  id: 48,
+  code:
+    "int f(int x, int y) {\n  int n = x + y;\n  if (n > 9)\n    return n - 7;\n  return f(f(n + 8, 0), 0);\n}",
+  solution: [
+    "33333333",
+    "33333333",
+    "33333333",
+    "33333333",
+    "33333334",
+    "33333345",
+    "33333456",
+    "33334567",
+  ],
+}, {
+  id: 49,
+  code:
+    "int f(int x, int y) {\n  int n = (x/4 + 1) * (y/4 + 2);\n  int u = x%4 - 1, v = y%4 - 1;\n  if (u > 1 || v > 1)\n    return 0;\n  int pip = n > 3;\n  if (u == v) pip = n > 1;\n  if (v == 0) pip = n == 6;\n  if (u == 0) pip = v == 0 && n % 2;\n  return pip ? 1 : 2;\n}",
+  solution: [
+    "12201210",
+    "22202220",
+    "22101210",
+    "00000000",
+    "12201210",
+    "21201210",
+    "22101210",
+    "00000000",
+  ],
+}, {
+  id: 50,
+  code: "int f(int x, int y) {\n  return x && y % x == 0 ? x : 0;\n}",
+  solution: [
+    "01234567",
+    "01000000",
+    "01200000",
+    "01030000",
+    "01204000",
+    "01000500",
+    "01230060",
+    "01000007",
+  ],
+}, {
+  id: 51,
+  code:
+    "int f(int x, int y) {\n  int r[] = {\n    0,0,7,7,6, 5,1,6,2,4,\n    0,5,7,7,5, 1,3,3,6,3};\n  int c = 0;\n  for (int i = 0; i < 20; i += 5)\n    if (x >= r[i] && x <= r[i+2] &&\n      y >= r[i+1] && y <= r[i+3])\n      c = r[i+4];\n  return c;\n}",
+  solution: [
+    "66666666",
+    "66666446",
+    "66666446",
+    "63336666",
+    "63336666",
+    "53335555",
+    "53335555",
+    "55555555",
+  ],
+}, {
+  id: 52,
+  code: "int f(int x, int y) {\n  return x + y ? 7*y / (x + y) : 0;\n}",
+  solution: [
+    "00000000",
+    "73211110",
+    "74322211",
+    "75433222",
+    "75443322",
+    "75543332",
+    "76544333",
+    "76544433",
+  ],
+}, {
+  id: 53,
+  code:
+    "int f(int x, int y) {\n  int key[] = {13,5,21,7,2,10,8};\n  int t[8] = {0};\n  for (int i = 0; i < y; i++) {\n    int p = key[i] % 8;\n    while (t[p]) p = (p + 1) % 8;\n    t[p] = i + 1;\n  }\n  return t[x];\n}",
+  solution: [
+    "00000000",
+    "00000100",
+    "00000120",
+    "00000123",
+    "40000123",
+    "40500123",
+    "40560123",
+    "47560123",
+  ],
+}, {
+  id: 54,
+  code:
+    "int f(int x, int y) {\n  int dots[] = {\n    022, 025, 051, 056,\n    062, 063, 064, 065};\n  for (int i = 0; i < 8; i++)\n    if (8*y + x == dots[i])\n      return 0;\n  return 4;\n}",
+  solution: [
+    "44444444",
+    "44444444",
+    "44044044",
+    "44444444",
+    "44444444",
+    "40444404",
+    "44000044",
+    "44444444",
+  ],
+}, {
+  id: 55,
+  code:
+    "int f(int x, int y) {\n  if (y == 0)\n    return (x + 1) % 8;\n  if (x == 0)\n    return f(1, y - 1);\n  return f(f(x - 1, y), y - 1);\n}",
+  solution: [
+    "12345670",
+    "23456701",
+    "35713571",
+    "55555555",
+    "55555555",
+    "55555555",
+    "55555555",
+    "55555555",
+  ],
+}, {
+  id: 56,
+  code:
+    "int f(int x, int y) {\n  int u = 2*x - 7, a = abs(u);\n  int h = 4*y + 2;\n  if (h < a || h > 32 - a) return 0;\n  if (h < 16 - a) return 4;\n  return u < 0 ? 3 : 2;\n}",
+  solution: [
+    "00044000",
+    "04444440",
+    "34444442",
+    "33344222",
+    "33332222",
+    "33332222",
+    "03332220",
+    "00032000",
+  ],
+}, {
+  id: 57,
+  code:
+    "int f(int x, int y) {\n  int a = abs(2*x - 7);\n  int b = abs(2*y - 7);\n  if (a < 2 || b < 2) return 2;\n  if (a == b) return 1;\n  return 6;\n}",
+  solution: [
+    "16622661",
+    "61622616",
+    "66122166",
+    "22222222",
+    "22222222",
+    "66122166",
+    "61622616",
+    "16622661",
+  ],
+}, {
+  id: 58,
+  code: "int f(int x, int y) {\n  return x * y % 7;\n}",
+  solution: [
+    "00000000",
+    "01234560",
+    "02461350",
+    "03625140",
+    "04152630",
+    "05316420",
+    "06543210",
+    "00000000",
+  ],
+}, {
+  id: 59,
+  code:
+    "int f(int x, int y) {\n  int n = 8*y + x + 1;\n  if (n % 3 == 0)\n    return 4; // Fizz\n  if (n % 5 == 0)\n    return 6; // Buzz\n  if (n % 15 == 0)\n    return 5; // FizzBuzz\n  return 0;\n}",
+  solution: [
+    "00406400",
+    "46040040",
+    "04064004",
+    "60400400",
+    "40640046",
+    "04004004",
+    "06400460",
+    "40040040",
+  ],
+}, {
+  id: 60,
+  code:
+    "int f(int x, int y) {\n  // 2048, swipe left: tile 2^k is k\n  int b[] = {\n    01111, 02023, 04333, 01234};\n  int t[4] = {0}, n = 0, m = -1;\n  for (int i = 9; i >= 0; i -= 3) {\n    int k = b[y/2] >> i & 7;\n    if (k == m) t[n-1]++, m = -1;\n    else if (k) t[n++] = m = k;\n  }\n  return t[x/2];\n}",
+  solution: [
+    "22220000",
+    "22220000",
+    "33330000",
+    "33330000",
+    "44443300",
+    "44443300",
+    "11223344",
+    "11223344",
+  ],
+}, {
+  id: 61,
+  code:
+    "int f(int x, int y) {\n  int m[] = {-1,0,5, 0,1,3, 1,0,5,\n    0,1,3, -1,0,5};\n  int px = 6, py = 1;\n  for (int i = 0; i < 15; i += 3)\n    for (int k = m[i+2]; k; k--) {\n      if (px == x && py == y)\n        return i / 3 + 1;\n      px += m[i], py += m[i+1];\n    }\n  return px == x && py == y ? 7 : 0;\n}",
+  solution: [
+    "00000000",
+    "02111110",
+    "02000000",
+    "02000000",
+    "03333340",
+    "00000040",
+    "00000040",
+    "07555550",
+  ],
+}, {
+  id: 62,
+  code:
+    "int f(int x, int y) {\n  int h[] = {4,0,0,7,2,0,0,5};\n  int n = 8;\n  for (int i = 0; i < n; i++)\n    if (h[i] == 0) {\n      for (int j = i; j < n-1; j++)\n        h[j] = h[j + 1];\n      n--;\n    }\n  if (x >= n) return 0;\n  return h[x] > 7 - y ? h[x] : 0;\n}",
+  solution: [
+    "00000000",
+    "00700000",
+    "00700000",
+    "00700500",
+    "40700500",
+    "40700500",
+    "40720500",
+    "40720500",
+  ],
+}, {
+  id: 63,
+  code:
+    "int f(int x, int y) {\n  // full rows are cleared\n  int w[] = {\n    0x00, 0x36, 0xFF, 0x7F,\n    0xFF, 0x7F, 0x3E, 0xFF,\n    0x1C, 0x08, 0xFF, 0x00\n  };\n  int k = 12, n = 8 - y;\n  while (n)\n    n -= w[--k] != 0xFF;\n  return w[k] >> x & 1 ? 2 : 0;\n}",
+  solution: [
+    "00000000",
+    "02202200",
+    "22222220",
+    "22222220",
+    "02222200",
+    "00222000",
+    "00020000",
+    "00000000",
+  ],
+}, {
+  id: 64,
+  code:
+    "int f(int x, int y) {\n  int u = abs(2*x - 7);\n  if (y < 4) return u > 2*y+1 ? 6:2;\n  if (u > 5) return 5;\n  if (u < 3 && y > 4) return 3;\n  if (u == 5 && y == 5) return 4;\n  return 1;\n}",
+  solution: [
+    "66622666",
+    "66222266",
+    "62222226",
+    "22222222",
+    "51111115",
+    "54133145",
+    "51133115",
+    "51133115",
+  ],
+}, {
+  id: 65,
+  code:
+    "int f(int x, int y) {\n  int m = y + 2, p = 1;\n  for (int i = 2; i <= x; i++)\n    p = p * i % m;\n  return p;\n}",
+  solution: [
+    "11000000",
+    "11200000",
+    "11220000",
+    "11214000",
+    "11200000",
+    "11263160",
+    "11260000",
+    "11266300",
+  ],
+}, {
+  id: 66,
+  code:
+    "int f(int x, int y) {\n  int dx = 2*x - 7, dy = 2*y - 14;\n  int d = dx*dx + dy*dy, r = 0;\n  while (r*r < d)\n    r++;\n  r /= 2;\n  return r > 1 && r < 8 ? 9 - r : 0;\n}",
+  solution: [
+    "02222220",
+    "23333332",
+    "33444433",
+    "44555544",
+    "45666654",
+    "56777765",
+    "56700765",
+    "67000076",
+  ],
+}, {
+  id: 67,
+  code:
+    "int f(int x, int y) {\n  int a[] = {3,7,1,6,5,2,4,0};\n  for (int p = 0; p < y; p++)\n    for (int i = 0; i < 7; i++)\n      if (a[i] > a[i + 1]) {\n        int t = a[i];\n        a[i] = a[i + 1];\n        a[i + 1] = t;\n      }\n  return a[x];\n}",
+  solution: [
+    "37165240",
+    "31652407",
+    "13524067",
+    "13240567",
+    "12304567",
+    "12034567",
+    "10234567",
+    "01234567",
+  ],
+}, {
+  id: 68,
+  code:
+    "int f(int x, int y) {\n  int cx = min(max(x, 2), 5);\n  int cy = max(min(y, 2), 5);\n  int dx = x - cx, dy = y - cy;\n  return dx*dx + dy*dy < 5 ? 6 : 1;\n}",
+  solution: [
+    "11111111",
+    "11111111",
+    "11111111",
+    "11666611",
+    "16666661",
+    "66666666",
+    "16666661",
+    "11666611",
+  ],
+}, {
+  id: 69,
+  code:
+    "int f(int x, int y) {\n  // y steps, up to x + 1 at a time\n  int ways = y == 0;\n  for (int k = 1; k <= x + 1; k++)\n    if (k <= y)\n      ways += f(x, y - k);\n  return ways % 8;\n}",
+  solution: [
+    "11111111",
+    "11111111",
+    "12222222",
+    "13444444",
+    "15700000",
+    "10570000",
+    "15057000",
+    "15405700",
+  ],
+}, {
+  id: 70,
+  code:
+    "int f(int x, int y) {\n  int r = min(x, y);\n  r = min(r, 7 - max(x, y));\n  int wall = r % 2 == 0;\n  int door = x == r && y == r + 1;\n  return wall != door ? 5 : 0;\n}",
+  solution: [
+    "55555555",
+    "00000005",
+    "55555505",
+    "50000505",
+    "50550505",
+    "50555505",
+    "50000005",
+    "55555555",
+  ],
+}, {
+  id: 71,
+  code:
+    "int f(int x, int y) {\n  // Towers of Hanoi, move number n:\n  // which disk moves?\n  int n = 8*y + x + 1;\n  int disk = 1;\n  while (n % 2 == 0) {\n    n /= 2;\n    disk++;\n  }\n  return disk;\n}",
+  solution: [
+    "12131214",
+    "12131215",
+    "12131214",
+    "12131216",
+    "12131214",
+    "12131215",
+    "12131214",
+    "12131217",
+  ],
+}, {
+  id: 72,
+  code:
+    "int f(int x, int y) {\n  // the sun is in the top left\n  if (abs(2*x - 3) < y) return 4;\n  if (x == 0 || y == 0) return 6;\n  if (f(x-1, y-1) == 6) return 6;\n  return 0;\n}",
+  solution: [
+    "66666666",
+    "66666666",
+    "64466666",
+    "64406666",
+    "44440666",
+    "44440066",
+    "44444006",
+    "44444000",
+  ],
+}, {
+  id: 73,
+  code:
+    "int f(int x, int y) {\n  int p = 1;\n  for (int i = 0; i < y; i++)\n    p = p * x % 7;\n  return p;\n}",
+  solution: [
+    "11111111",
+    "01234560",
+    "01422410",
+    "01161660",
+    "01244210",
+    "01452360",
+    "01111110",
+    "01234560",
+  ],
+}, {
+  id: 74,
+  code:
+    "int f(int x, int y) {\n  // red plays first\n  long long m = 62665655443;\n  int h = 0, t = 0;\n  for (; m > 0; m /= 10, t++)\n    if (m % 10 == x && ++h == 8 - y)\n      return t % 2 ? 4 : 2;\n  return 0;\n}",
+  solution: [
+    "00000000",
+    "00000000",
+    "00000000",
+    "00000000",
+    "00000020",
+    "00000220",
+    "00002240",
+    "00424440",
+  ],
+}, {
+  id: 75,
+  code:
+    "int f(int x, int y) {\n  int a = (2*x - 7) / 4;\n  int b = (2*y - 7) / 4;\n  return 6 - 2 * (abs(a) + abs(b));\n}",
+  solution: [
+    "22444422",
+    "22444422",
+    "44666644",
+    "44666644",
+    "44666644",
+    "44666644",
+    "22444422",
+    "22444422",
+  ],
+}, {
+  id: 76,
+  code:
+    "int f(int x, int y) {\n  int cx[] = {1,2,0,1,2,5,5,5};\n  int cy[] = {0,1,2,2,2,4,5,6};\n  int n = 0, a = 0;\n  for (int k = 0; k < 8; k++) {\n    int dx = abs(x - cx[k]);\n    int dy = abs(y - cy[k]);\n    if (dx + dy == 0) a = 1;\n    else n += dx < 2 && dy < 2;\n  }\n  return 4*(n == 3 || n+a == 3) + a;\n}",
+  solution: [
+    "01000000",
+    "40500000",
+    "15500000",
+    "04000000",
+    "00000100",
+    "00004540",
+    "00000100",
+    "00000000",
+  ],
+}, {
+  id: 77,
+  code:
+    "int f(int x, int y) {\n  // 64 bits, one per cell\n  long long p = 0x3C7EE7DBFFDB7E3C;\n  return p >> (8*y + x) & 1 ? 4 : 0;\n}",
+  solution: [
+    "00444400",
+    "04444440",
+    "44044044",
+    "44444444",
+    "44044044",
+    "44400444",
+    "04444440",
+    "00444400",
+  ],
+}, {
+  id: 78,
+  code:
+    "int f(int x, int y) {\n  int u = abs(2*x - 7);\n  if (y == 7) return 6;\n  if (y > 4) return u+2*y<17 ? 2:6;\n  if (x == 4) return 3;\n  if (x < 4) return x + y > 2;\n  return x - 4 <= y / 2;\n}",
+  solution: [
+    "00013000",
+    "00113000",
+    "01113100",
+    "11113100",
+    "11113110",
+    "62222226",
+    "66222266",
+    "66666666",
+  ],
+}, {
+  id: 79,
+  code:
+    "int f(int x, int y) {\n  // a ball bounces off the walls\n  for (int t = 0; t < 14; t++) {\n    int s = (t + 3) % 14;\n    int a = 7 - abs(7 - t);\n    int b = 7 - abs(7 - s);\n    if (x == a && y == b)\n      return t / 2 + 1;\n  }\n  return 0;\n}",
+  solution: [
+    "00060000",
+    "00706000",
+    "07000500",
+    "10000050",
+    "01000004",
+    "00200040",
+    "00020300",
+    "00003000",
+  ],
+}, {
+  id: 80,
+  code:
+    "int f(int x, int y) {\n  int n = y + 1;\n  for (int i = 0; i < x; i++)\n    n = n % 2 ? 3*n + 1 : n / 2;\n  return n < 8 ? n : 0;\n}",
+  solution: [
+    "14214214",
+    "21421421",
+    "30500421",
+    "42142142",
+    "50042142",
+    "63050042",
+    "70000000",
+    "04214214",
+  ],
+}, {
+  id: 81,
+  code:
+    "int f(int x, int y) {\n  int h = 13, m = 37, s = 59;\n  int d[] = {\n    h / 10, h % 10, 0, m / 10,\n    m % 10, 0, s / 10, s % 10\n  };\n  if (x % 3 == 2)\n    return y % 3 == 2;\n  int bit = d[x] >> (7 - y) / 2 & 1;\n  return bit ? 2 + x/3*2 : 0;\n}",
+  solution: [
+    "00000006",
+    "00000006",
+    "00104160",
+    "00004060",
+    "02044000",
+    "02144100",
+    "22044066",
+    "22044066",
+  ],
+}, {
+  id: 82,
+  code:
+    "int f(int x, int y) {\n  int w = abs(2*x - 7);\n  if (y == 7)\n    return w == 1 ? 3 : 0;\n  if (w > y + 1)\n    return 0;\n  if (y == 0)\n    return 4;\n  return (x + 2*y) % 5 ? 5 : 2;\n}",
+  solution: [
+    "00044000",
+    "00025000",
+    "00555500",
+    "00552500",
+    "05255550",
+    "05555250",
+    "55525555",
+    "00033000",
+  ],
+}, {
+  id: 83,
+  code:
+    "int f(int x, int y) {\n  int a = x, b = y;\n  for (int i = 0; i < 6; i++) {\n    int c = (a + b) % 8;\n    a = b;\n    b = c;\n  }\n  return a * b % 8;\n}",
+  solution: [
+    "00000000",
+    "01234567",
+    "02460246",
+    "03614725",
+    "04040404",
+    "05274163",
+    "06420642",
+    "07654321",
+  ],
+}, {
+  id: 84,
+  code:
+    "int f(int x, int y) {\n  int a = abs(2*x - 7), b = 9 - 2*y;\n  if (y < 5) {\n    if (a*a + b*b > 82)\n      return 0;\n    return (a + y) % 4 ? 2 : 1;\n  }\n  if (a > 3)\n    return 0;\n  return a > 1 || y > 5;\n}",
+  solution: [
+    "00022000",
+    "02122120",
+    "22222222",
+    "21211212",
+    "22222222",
+    "00100100",
+    "00111100",
+    "00111100",
+  ],
 }];

@@ -1,0 +1,12 @@
+int f(int x, int y) {
+  // full rows are cleared
+  int w[] = {
+    0x00, 0x36, 0xFF, 0x7F,
+    0xFF, 0x7F, 0x3E, 0xFF,
+    0x1C, 0x08, 0xFF, 0x00
+  };
+  int k = 12, n = 8 - y;
+  while (n)
+    n -= w[--k] != 0xFF;
+  return w[k] >> x & 1 ? 2 : 0;
+}
