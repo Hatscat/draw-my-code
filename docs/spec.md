@@ -255,7 +255,9 @@ Content:
 - Tutorial, one idea per level, reworked by the owner after a playtest: one red cell (the axes, and
   numbers as colors) · `x` · integer division · `%` · `max` (the prelude's helpers) · a comparison
   as 0 or 1 · an array lookup · a bit mask. The files in `levels/tutorial/` are the reference.
-- Daily puzzles: `levels/daily/`, curated by the owner.
+- Daily puzzles: `levels/daily/`, curated by the owner. Unscheduled candidates wait in
+  `levels/pool/` (its README lists them); `docs/puzzle-pool.html` shows every candidate of the
+  2026-09-28 design round with its grid and notes.
 
 ## PWA
 

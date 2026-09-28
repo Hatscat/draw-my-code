@@ -17,6 +17,8 @@
   "fmt": {
     "lineWidth": 100,
     "exclude": [
+      // A generated snapshot: the level catalogue page.
+      "docs/puzzle-pool.html",
       "!e2e/",
       "!src/sw.ts",
       "e2e/node_modules/",
