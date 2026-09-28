@@ -4,12 +4,13 @@ import type { Level } from "./types.ts";
 
 export const tutorial: readonly Level[] = [{
   id: 1,
-  code: "int f(int x, int y) {\n  return x == 2 && y == 3;\n}",
+  code:
+    "int f(int x, int y) {\n  // numbers represent colors\n  int red = 2;\n  return x == 1 && y == 2 ? red : 0;\n}",
   solution: [
     "00000000",
     "00000000",
+    "02000000",
     "00000000",
-    "00100000",
     "00000000",
     "00000000",
     "00000000",
@@ -30,7 +31,7 @@ export const tutorial: readonly Level[] = [{
   ],
 }, {
   id: 3,
-  code: "int f(int x, int y) {\n  return x / 2;\n}",
+  code: "int f(int x, int y) {\n  // Integer division\n  return x / 2;\n}",
   solution: [
     "00112233",
     "00112233",
@@ -43,20 +44,20 @@ export const tutorial: readonly Level[] = [{
   ],
 }, {
   id: 4,
-  code: "int f(int x, int y) {\n  return (x + y) % 2;\n}",
+  code: "int f(int x, int y) {\n  return (x/2 + y/2) % 2;\n}",
   solution: [
-    "01010101",
-    "10101010",
-    "01010101",
-    "10101010",
-    "01010101",
-    "10101010",
-    "01010101",
-    "10101010",
+    "00110011",
+    "00110011",
+    "11001100",
+    "11001100",
+    "00110011",
+    "00110011",
+    "11001100",
+    "11001100",
   ],
 }, {
   id: 5,
-  code: "int f(int x, int y) {\n  return x > y ? x : y;\n}",
+  code: "int f(int x, int y) {\n  // available: max, min, abs\n  return max(x, y);\n}",
   solution: [
     "01234567",
     "11234567",
@@ -66,6 +67,46 @@ export const tutorial: readonly Level[] = [{
     "55555567",
     "66666667",
     "77777777",
+  ],
+}, {
+  id: 6,
+  code: "int f(int x, int y) {\n  // there is no Boolean type in C\n  return (x*2 < y) * 7;\n}",
+  solution: [
+    "00000000",
+    "70000000",
+    "70000000",
+    "77000000",
+    "77000000",
+    "77700000",
+    "77700000",
+    "77770000",
+  ],
+}, {
+  id: 7,
+  code: "int f(int x, int y) {\n  int a[] = {0,2,3,4,5,6,7,0};\n  return a[y];\n}",
+  solution: [
+    "00000000",
+    "22222222",
+    "33333333",
+    "44444444",
+    "55555555",
+    "66666666",
+    "77777777",
+    "00000000",
+  ],
+}, {
+  id: 8,
+  code:
+    "int f(int x, int y) {\n  // bitwise left shift\n  int b = 1 << x;\n  // hexadecimal bitmask\n  int mask = 0x5A; // 01011010\n  return b & mask ? 1 : 0;\n}",
+  solution: [
+    "01011010",
+    "01011010",
+    "01011010",
+    "01011010",
+    "01011010",
+    "01011010",
+    "01011010",
+    "01011010",
   ],
 }];
 
@@ -202,5 +243,18 @@ export const daily: readonly Level[] = [{
     "05555005",
     "00555550",
     "00505000",
+  ],
+}, {
+  id: 11,
+  code: "int f(int x, int y) {\n  int a[] = {\n    0,1\n  };\n  return a[1];\n}",
+  solution: [
+    "11111111",
+    "11111111",
+    "11111111",
+    "11111111",
+    "11111111",
+    "11111111",
+    "11111111",
+    "11111111",
   ],
 }];

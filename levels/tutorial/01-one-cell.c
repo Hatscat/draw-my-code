@@ -1,3 +1,5 @@
 int f(int x, int y) {
-  return x == 2 && y == 3;
+  // numbers represent colors
+  int red = 2;
+  return x == 1 && y == 2 ? red : 0;
 }

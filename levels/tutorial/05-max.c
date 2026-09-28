@@ -1,3 +1,4 @@
 int f(int x, int y) {
-  return x > y ? x : y;
+  // available: max, min, abs
+  return max(x, y);
 }
