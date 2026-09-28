@@ -259,6 +259,31 @@ Content:
   `levels/pool/` (its README lists them); `docs/puzzle-pool.html` shows every candidate of the
   2026-09-28 design round with its grid and notes.
 
+Level design. The generator can't check these; they apply when a level is written or reviewed.
+
+- Every level has an aha (a shape to discover, a trap, a C rule), not 64 cells of arithmetic, and is
+  solvable in the head or on paper in under 10 minutes.
+- The player can debug `N wrong`: symmetry, a repeated tile, rows that are permutations, or a
+  recognizable picture.
+- The painting budget is counted in strokes, not cells: a drag paints a straight run, so diagonals
+  and isolated cells are taps. At most one tap-heavy level a week.
+- No shift or bitwise operator on a negative value, and no result that depends on a type's width or
+  on `sizeof`.
+- Comments are truthful hints, never lures.
+- A trap turns on one visible token, in standard C, never on a compiler quirk. Its plausible naive
+  reading is at least 15 cells off, and the true grid is still worth painting.
+- House style, since players see the code byte for byte: tight products (`2*x`, `dx*dx`); spaces
+  around `+`, `-`, comparisons and `?:`; lowercase comment fragments without a final period; a
+  single-statement body on its own line, without braces; squeeze spacing only where the 36-column
+  limit forces it.
+- Weekly rhythm: Monday easy or a picture; Tuesday to Thursday one or two ideas; Friday a trick or a
+  trap; Saturday the hardest; Sunday a picture or a game.
+- Traps: one or two a week, never on consecutive days, a new mechanism each time. Bitwise levels: at
+  most two a week, never on consecutive days. Circles: at most one every two weeks. Levels with the
+  same skeleton (Minesweeper and Life, a sieve and a buggy sieve) at least four weeks apart.
+- Holidays: Halloween is #27, Christmas #82, Valentine's Day #133 (`levels/pool/ready/rle-heart.c`
+  is kept for it), Pi Day #161.
+
 ## PWA
 
 - `manifest.webmanifest`: name, short_name, `standalone`, theme and background colors from the
