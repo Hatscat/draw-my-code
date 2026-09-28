@@ -1,4 +1,8 @@
 int f(int x, int y) {
-  int d = abs(x - 3) + abs(y - 4);
-  return 5 - min(d, 5);
+  int dx = 2*x - 7, dy = 2*y - 7;
+  int d = dx*dx + dy*dy;
+  int z = 7;
+  while (z > 0 && d + z*z > 64)
+    z--;
+  return z;
 }

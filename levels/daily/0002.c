@@ -1,3 +1,5 @@
 int f(int x, int y) {
-  return (x & y) == 0;
+  int c = 0x80 >> x, r = 0x1 << y;
+  int m = 0x28;
+  return (c & m) | (r & m) ? 3 : 0;
 }

@@ -1,5 +1,5 @@
 int f(int x, int y) {
-  int dx = abs(2*x - 7);
-  int dy = abs(2*y - 7);
-  return max(dx, dy) / 2;
+  // one compare instead of two
+  unsigned u = x - 2, v = y - 3;
+  return u < 2 || v < 2 ? 1 : 2;
 }

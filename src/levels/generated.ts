@@ -113,7 +113,7 @@ export const tutorial: readonly Level[] = [{
 export const daily: readonly Level[] = [{
   id: 1,
   code:
-    "int f(int x, int y) {\n  int dx = 2*x - 7, dy = 2*y - 7;\n  return dx*dx + dy*dy < 6*6 ? 2:0;\n}",
+    "int f(int x, int y) {\n  // 2*x - 7: 0 is the grid's center\n  int dx = 2*x - 7, dy = 2*y - 7;\n  return dx*dx + dy*dy < 6*6 ? 2:0;\n}",
   solution: [
     "00000000",
     "00222200",
@@ -126,6 +126,33 @@ export const daily: readonly Level[] = [{
   ],
 }, {
   id: 2,
+  code:
+    "int f(int x, int y) {\n  int c = 0x80 >> x, r = 0x1 << y;\n  int m = 0x28;\n  return (c & m) | (r & m) ? 3 : 0;\n}",
+  solution: [
+    "00303000",
+    "00303000",
+    "00303000",
+    "33333333",
+    "00303000",
+    "33333333",
+    "00303000",
+    "00303000",
+  ],
+}, {
+  id: 3,
+  code: "int f(int x, int y) {\n  return y ? f(y, x % y) : x;\n}",
+  solution: [
+    "01234567",
+    "11111111",
+    "21212121",
+    "31131131",
+    "41214121",
+    "51111511",
+    "61232161",
+    "71111117",
+  ],
+}, {
+  id: 4,
   code: "int f(int x, int y) {\n  return (x & y) == 0;\n}",
   solution: [
     "11111111",
@@ -138,7 +165,76 @@ export const daily: readonly Level[] = [{
     "10000000",
   ],
 }, {
-  id: 3,
+  id: 5,
+  code:
+    "int f(int x, int y) {\n  // one compare instead of two\n  unsigned u = x - 2, v = y - 3;\n  return u < 2 || v < 2 ? 1 : 2;\n}",
+  solution: [
+    "22112222",
+    "22112222",
+    "22112222",
+    "11111111",
+    "11111111",
+    "22112222",
+    "22112222",
+    "22112222",
+  ],
+}, {
+  id: 6,
+  code:
+    "int f(int x, int y) {\n  int dx = 2*x - 7, dy = 2*y - 7;\n  int d = dx*dx + dy*dy;\n  int z = 7;\n  while (z > 0 && d + z*z > 64)\n    z--;\n  return z;\n}",
+  solution: [
+    "00233200",
+    "03566530",
+    "25677652",
+    "36777763",
+    "36777763",
+    "25677652",
+    "03566530",
+    "00233200",
+  ],
+}, {
+  id: 7,
+  code:
+    "int f(int x, int y) {\n  int cat[] = {\n    0x81, 0xC3, 0xFF, 0xBD,\n    0xFF, 0xE7, 0x7E, 0x3C,\n  };\n  int fur = cat[y] << x & 0x80;\n  return fur ? 3 : y == 3 ? 5 : 0;\n}",
+  solution: [
+    "30000003",
+    "33000033",
+    "33333333",
+    "35333353",
+    "33333333",
+    "33300333",
+    "03333330",
+    "00333300",
+  ],
+}, {
+  id: 8,
+  code: "int f(int x, int y) {\n  int d = abs(x - 3) + abs(y - 4);\n  return 5 - min(d, 5);\n}",
+  solution: [
+    "00010000",
+    "00121000",
+    "01232100",
+    "12343210",
+    "23454321",
+    "12343210",
+    "01232100",
+    "00121000",
+  ],
+}, {
+  id: 9,
+  code:
+    "int f(int x, int y) {\n  int a[] = {\n    0,0,0,0,0,0,0,0,\n    0,0,0,0,3,0,0,0,\n    0,0,0,0,3,3,0,0,\n    6,6,6,6,3,3,3,0,\n    6,6,6,6,3,3,3,0,\n    0,0,0,0,3,3,0,0,\n    0,0,0,0,3,0,0,0,\n    0,0,0,0,0,0,0,0};\n  return a[y + x*8];\n}",
+  solution: [
+    "00066000",
+    "00066000",
+    "00066000",
+    "00066000",
+    "03333330",
+    "00333300",
+    "00033000",
+    "00000000",
+  ],
+}, {
+  id: 10,
   code: "int f(int x, int y) {\n  return x ^ y;\n}",
   solution: [
     "01234567",
@@ -151,20 +247,7 @@ export const daily: readonly Level[] = [{
     "76543210",
   ],
 }, {
-  id: 4,
-  code: "int f(int x, int y) {\n  return (x ^ y) >> 1 & 1 ? 6 : 4;\n}",
-  solution: [
-    "44664466",
-    "44664466",
-    "66446644",
-    "66446644",
-    "44664466",
-    "44664466",
-    "66446644",
-    "66446644",
-  ],
-}, {
-  id: 5,
+  id: 11,
   code:
     "int f(int x, int y) {\n  int dx = abs(2*x - 7);\n  int dy = abs(2*y - 7);\n  return max(dx, dy) / 2;\n}",
   solution: [
@@ -178,92 +261,9 @@ export const daily: readonly Level[] = [{
     "33333333",
   ],
 }, {
-  id: 6,
-  code: "int f(int x, int y) {\n  int d = abs(x - 3) + abs(y - 4);\n  return 5 - min(d, 5);\n}",
-  solution: [
-    "00010000",
-    "00121000",
-    "01232100",
-    "12343210",
-    "23454321",
-    "12343210",
-    "01232100",
-    "00121000",
-  ],
-}, {
-  id: 7,
-  code:
-    "int f(int x, int y) {\n  // Bits set in x * y, and a twist.\n  int v = x * y;\n  int bits = 0;\n  while (v > 0) {\n    bits += v & 1;\n    v /= 2;\n  }\n  if (bits >= 4)\n    return 7;\n  return bits + (x + y) % 2 * 4;\n}",
-  solution: [
-    "04040404",
-    "41525263",
-    "05161627",
-    "42626763",
-    "05161627",
-    "42676373",
-    "06262727",
-    "43737373",
-  ],
-}, {
-  id: 8,
-  code:
-    "int f(int x, int y) {\n  int c = 0x80 >> x, r = 0x1 << y;\n  int m = 0x28;\n  return (c & m) | (r & m) ? 3:0;\n}",
-  solution: [
-    "00303000",
-    "00303000",
-    "00303000",
-    "33333333",
-    "00303000",
-    "33333333",
-    "00303000",
-    "00303000",
-  ],
-}, {
-  id: 9,
-  code:
-    "int f(int x, int y) {\n  int tx=3, ty=4, tz=5, r=6;\n  int z = 7;\n  for (; z > 0; z--) {\n    int dx=tx-x, dy=ty-y, dz=tz-z;\n    int x2=dx*dx,y2=dy*dy,z2=dz*dz;\n    if (x2<r && y2<r && z2<r) {\n      break;\n    }\n  }\n  return z;\n}",
-  solution: [
-    "00000000",
-    "00000000",
-    "07777700",
-    "07777700",
-    "07777700",
-    "07777700",
-    "07777700",
-    "00000000",
-  ],
-}, {
-  id: 10,
-  code:
-    "int f(int x, int y) {\n  int c = 0x80 >> x;\n  int a[] = {\n    c & 0x14 ? 3:0, c & 0x1E ? 5:0,\n    c & 0x35 ? 5:0, c & 0x1F ? 5:0,\n    c & 0x3C ? 5:0, c & 0x9E ? 5:0,\n    c & 0x7C ? 5:0, c & 0x14 ? 5:0,\n  };\n  return a[y];\n}",
-  solution: [
-    "00030300",
-    "00055550",
-    "00550505",
-    "00055555",
-    "00555500",
-    "50055550",
-    "05555500",
-    "00050500",
-  ],
-}, {
-  id: 11,
-  code:
-    "int f(int x, int y) {\n  int a[] = {\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7,\n    0,1,2,3,4,5,6,7};\n  return a[x + y*8];\n}",
-  solution: [
-    "01234567",
-    "01234567",
-    "01234567",
-    "01234567",
-    "01234567",
-    "01234567",
-    "01234567",
-    "01234567",
-  ],
-}, {
   id: 12,
   code:
-    "int f(int x, int y) {\n  int z = (x+y) & 0xA8;\n  int w = y*y*y + x*x*x;\n  int u = z ^ w;\n  int v = (u << 3) & 7;\n  return v | y;\n}",
+    "int f(int x, int y) {\n  int z = (x + y) & 0xA8;\n  int w = y*y*y + x*x*x;\n  int u = z ^ w;\n  int v = (u << 3) & 7;\n  return v | y;\n}",
   solution: [
     "00000000",
     "11111111",

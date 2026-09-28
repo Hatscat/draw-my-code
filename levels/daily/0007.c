@@ -1,12 +1,8 @@
 int f(int x, int y) {
-  // Bits set in x * y, and a twist.
-  int v = x * y;
-  int bits = 0;
-  while (v > 0) {
-    bits += v & 1;
-    v /= 2;
-  }
-  if (bits >= 4)
-    return 7;
-  return bits + (x + y) % 2 * 4;
+  int cat[] = {
+    0x81, 0xC3, 0xFF, 0xBD,
+    0xFF, 0xE7, 0x7E, 0x3C,
+  };
+  int fur = cat[y] << x & 0x80;
+  return fur ? 3 : y == 3 ? 5 : 0;
 }
