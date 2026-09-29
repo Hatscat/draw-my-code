@@ -89,12 +89,18 @@ The rules, all checked by the generator:
 - At most 12 lines of at most 36 characters, 2-space indentation, printable ASCII, LF line endings,
   no trailing spaces, exactly one final newline. That is what fits a 320 px screen.
 
-Today's puzzle and the past week's are frozen (anywhere: the generator counts in UTC+14): players
-can still open them. `deno task levels` refuses to change what they show unless you pass
-`--allow-published-edit`. Every other level may change.
+Today's puzzle and the past week's are frozen: players can still open them. The generator counts
+them from UTC+14, the first time zone to reach a date, back to UTC−12, the last. `deno task levels`
+refuses to change what they show unless you pass `--allow-published-edit`. Every other level may
+change. CI checks the same against the deployed levels, so push soon after generating: a puzzle that
+opened in between is frozen too. To change an open puzzle on purpose, put `[allow-published-edit]`
+in the commit message.
 
 Adding levels makes the loop longer. After launch, the generator makes the change start tomorrow,
-carrying on from where the loop was, so no day already shown changes.
+carrying on from where the loop was, so no day already shown changes. Keep the pool a multiple of 7
+levels long: each loop then keeps every level on its weekday. `src/levels/generated.ts` holds that
+state, so after launch the generator stops if the file is missing or broken: restore it from git (in
+a merge conflict, keep either side) and run `deno task levels` again.
 
 ## Deploying
 

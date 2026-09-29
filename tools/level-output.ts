@@ -51,10 +51,10 @@ let reads = 0;
 
 /**
  * The levels in an existing generated.ts, to tell new and changed levels apart and to keep past
- * days stable. Missing or malformed files read as no levels: `--check` then reports the file as
- * out of date anyway.
+ * days stable; undefined when the file is missing or can't be read (a merge conflict, say). A file
+ * from before specials and epochs reads with none.
  */
-export async function readGenerated(path: string): Promise<LevelSet> {
+export async function readGenerated(path: string): Promise<LevelSet | undefined> {
   try {
     // A fresh query string per read, or Deno would return the module it loaded the first time.
     const module = await import(`${pathToFileURL(path).href}?read=${++reads}`);
@@ -68,7 +68,7 @@ export async function readGenerated(path: string): Promise<LevelSet> {
   } catch {
     // Handled below, like a file with an unexpected shape.
   }
-  return NO_LEVELS;
+  return undefined;
 }
 
 function isList<T>(value: unknown, isItem: (item: unknown) => item is T): value is T[] {

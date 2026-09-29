@@ -226,7 +226,9 @@ function start(root: HTMLElement) {
           ? `Tutorial ${level.id} · ${fileName(level)}`
           : level.kind === "special"
           ? `${fileName(level)}${level.published ? " · open" : ""}`
-          : `#${level.id} · ${level.live}${level.published ? " · open" : ""}`,
+          : `${fileName(level)} · ${level.live ? `first on ${level.live}` : "not generated yet"}${
+            level.published ? " · open" : ""
+          }`,
       );
     const groups = { tutorial: "Tutorial", daily: "Daily pool", special: "Special dates" };
     picker.replaceChildren(

@@ -43,11 +43,11 @@ Deno.test("renderGenerated round-trips through deno fmt and readGenerated", asyn
   assert.equal(await denoFmt(text, ROOT), text);
 });
 
-Deno.test("readGenerated reads a missing or malformed file as no levels", async () => {
+Deno.test("readGenerated reads a missing or malformed file as undefined", async () => {
   const dir = await Deno.makeTempDir({ prefix: "dmc-generated-" });
-  assert.deepEqual(await readGenerated(`${dir}/missing.ts`), NO_LEVELS);
+  assert.equal(await readGenerated(`${dir}/missing.ts`), undefined);
   await Deno.writeTextFile(`${dir}/bad.ts`, "export const tutorial = [{ id: 'x' }];");
-  assert.deepEqual(await readGenerated(`${dir}/bad.ts`), NO_LEVELS);
+  assert.equal(await readGenerated(`${dir}/bad.ts`), undefined);
   // A file from before specials and epochs reads with none of them.
   await Deno.writeTextFile(`${dir}/old.ts`, "export const tutorial = []; export const daily = [];");
   assert.deepEqual(await readGenerated(`${dir}/old.ts`), NO_LEVELS);

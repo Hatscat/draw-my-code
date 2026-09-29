@@ -27,7 +27,27 @@ jobs:
           cache: true
       - run: deno install --frozen
       - run: deno task check
-      - run: deno task levels:check
+      # Open puzzles are frozen against what players have now: the deployed commit's schedule
+      # (the push's previous head, or the pull request's base), not just the committed file.
+      # [allow-published-edit] in a pushed commit's message, or in a pull request's title, lifts
+      # the freeze, as the flag does locally.
+      - id: deployed
+        env:
+          SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          MESSAGES: ${{ join(github.event.commits.*.message, ' ') }} ${{ github.event.pull_request.title }}
+        run: |
+          case "$MESSAGES" in
+            *"[allow-published-edit]"*)
+              echo "options=--allow-published-edit" >> "$GITHUB_OUTPUT"
+              exit 0
+              ;;
+          esac
+          # A new branch has no previous head. Otherwise a failed fetch fails the check.
+          if [ -z "$SHA" ] || [ "$SHA" = "0000000000000000000000000000000000000000" ]; then exit 0; fi
+          git fetch --quiet --depth=1 origin "$SHA"
+          git show "$SHA:src/levels/generated.ts" > "$RUNNER_TEMP/deployed-generated.ts"
+          echo "options=--base=$RUNNER_TEMP/deployed-generated.ts" >> "$GITHUB_OUTPUT"
+      - run: deno task levels:check ${{ steps.deployed.outputs.options }}
 
   build:
     runs-on: ubuntu-26.04

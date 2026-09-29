@@ -37,7 +37,8 @@ export function levelFor(levels: Levels, launch: CalendarDate, n: number): Puzzl
   const { m, d } = puzzleDate(launch, n);
   const special = levels.special.find((level) => level.month === m && level.day === d);
   if (special) return special;
-  const level = levels.daily[poolIndex(levels.epochs, n)];
+  // Wrapped at the pool's current length: a pool that shrank leaves no past day without a level.
+  const level = levels.daily[poolIndex(levels.epochs, n) % levels.daily.length];
   // The generator guarantees a pool and epochs that cover every puzzle from 1.
   if (!level) throw new Error(`no daily level for puzzle ${n}`);
   return level;

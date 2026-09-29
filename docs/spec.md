@@ -221,7 +221,8 @@ date's special if there is one; otherwise pool level `(start + N − from) mod s
 for the latest epoch `{ from, size, start }` with `from ≤ N`. The first epoch is `{ 1, P, 0 }`. When
 the pool changes size after launch, the generator adds an epoch starting tomorrow (in UTC+14) that
 carries on from where the loop was, so no day already shown changes level. A special takes its day
-without shifting the pool: the level it replaces comes back in a later loop.
+without shifting the pool: the level it replaces comes back in a later loop. If the pool shrinks, a
+past day whose level is gone wraps around the new pool: every day always has a level.
 
 Format: the file is exactly what players see, byte for byte: the function, 2-space indentation.
 Comments are allowed and shown to players, so they can serve as hints.
@@ -264,10 +265,17 @@ Generator `tools/levels.ts` (`deno task levels`):
    the pool's size (one loop every N days), the number of special dates, and today's puzzle number
    in UTC+14, the first time zone to reach a date.
 
-`deno task levels` refuses any change to what an open puzzle shows (today's and the past
-`CATCH_UP_DAYS` days', in UTC+14), unless run with `--allow-published-edit`. Any other level may
-change, even one shown in an earlier loop: finished plays keep their own solution. `--check`
-regenerates in memory and fails if the file differs.
+`deno task levels` refuses any change to what an open puzzle shows, unless run with
+`--allow-published-edit`: open anywhere, from today's in UTC+14 back to the oldest still open in
+UTC−12, `CATCH_UP_DAYS` + 2 days earlier (UTC−12 can be two dates behind). Any other level may
+change, even one shown in an earlier loop: finished plays keep their own solution. After launch it
+also stops when `src/levels/generated.ts` is missing, unreadable (a merge conflict) or has no
+epochs: its epochs are state, and rebuilding them from nothing would move past days to other levels.
+`--check` regenerates in memory and fails if the file differs. `--base=<file>` freezes open puzzles
+against another `generated.ts` than the one on disk: CI passes the deployed commit's (the push's
+previous head, or the pull request's base), so levels generated days before their push can't change
+a puzzle that opened meanwhile. In CI, `[allow-published-edit]` in a pushed commit's message (or a
+pull request's title) stands for the flag.
 
 Level editor, for the author (`deno task editor`, dev server only, never built or deployed): a page
 (`src/editor/`) with a level's source, the code panel and grid as players see them, and every check
@@ -303,7 +311,9 @@ Level design. The generator can't check these; they apply when a level is writte
   single-statement body on its own line, without braces; squeeze spacing only where the 36-column
   limit forces it.
 - Weekly rhythm: Monday easy or a picture; Tuesday to Thursday one or two ideas; Friday a trick or a
-  trap; Saturday the hardest; Sunday a picture or a game.
+  trap; Saturday the hardest; Sunday a picture or a game. The pool stays a multiple of 7 levels
+  long, so every loop keeps each level on its weekday, and the spacing rules below also hold across
+  the seam, from the pool's last levels to its first.
 - Traps: one or two a week, never on consecutive days, a new mechanism each time. Bitwise levels: at
   most two a week, never on consecutive days. Circles: at most one every two weeks. Levels with the
   same skeleton (Minesweeper and Life, a sieve and a buggy sieve) at least four weeks apart.
@@ -365,11 +375,12 @@ Unit (`deno task test`, assertions from the built-in `node:assert/strict`):
   machine (a wrong submit yields only the wrong count; an unchanged grid can't be resubmitted),
   share text (exact), stats and streaks (missed day still open or closed, catching up, failed day,
   today unplayed, win % rounding, nothing played), the looping schedule (specials, Feb 29, a pool
-  that grows after launch), open puzzles and play retention, storage load, migration, corrupted and
-  newer-version data.
+  that grows or shrinks after launch), open puzzles and play retention, storage load, migration,
+  corrupted and newer-version data.
 - ui: the local-date and next-midnight helpers, under several time zones; the highlighter tokenizer.
 - tools: every rejection case with fixtures (format, forbidden constructs, out of range, UB
-  overflow, compile error, timeout, crash, numbering gap, line too long); deterministic output.
+  overflow, compile error, timeout, crash, numbering gap, line too long); deterministic output; the
+  freeze (open puzzles back to UTC−12, against `--base`), an unreadable `generated.ts` after launch.
 
 E2E (Playwright; projects: Desktop Chrome, Pixel 7, iPhone 14 on WebKit; Chromium runs the full
 browser build, whose text metrics match real devices; time zone and locale pinned):
@@ -399,7 +410,8 @@ browser build, whose text metrics match real devices; time zone and locale pinne
 
 - Triggers: pull requests and pushes to `main`. All jobs run on a pinned `ubuntu-26.04` (same gcc as
   local).
-- `check`: pinned Deno, cached deps, `deno task check`, `deno task levels:check`.
+- `check`: pinned Deno, cached deps, `deno task check`, `deno task levels:check` against the
+  deployed commit's levels (see Levels).
 - `build`: a single build, with the base path and site URL from the Pages configuration.
 - `e2e` (needs `build`): pinned Node LTS and Deno, npm cache, browsers installed fresh each run
   (Playwright advises against caching them), tests that exact build; HTML report uploaded as an

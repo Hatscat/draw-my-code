@@ -307,3 +307,26 @@ Deno.test("Update the game runs the level generator and reports it as plain text
     await Deno.remove(root, { recursive: true });
   }
 });
+
+Deno.test("listLevels dates each pool level by its first showing in the schedule", async () => {
+  const root = await repo();
+  try {
+    // A special takes Nov 2: pool level 2 first shows on Nov 4.
+    const schedule = { ...SCHEDULE, special: [{ month: 11, day: 2, name: "x", ...puzzle }] };
+    await Deno.writeTextFile(`${root}/src/levels/generated.ts`, renderGenerated(schedule));
+    const levels = await listLevels(root, LAUNCH, LAUNCH);
+    assert.deepEqual(levels.filter((l) => l.kind === "daily").map((l) => l.live), [
+      "2026-11-01",
+      "2026-11-04",
+    ]);
+    // Without a generated schedule, no date.
+    await Deno.remove(`${root}/src/levels/generated.ts`);
+    const unscheduled = await listLevels(root, LAUNCH, LAUNCH);
+    assert.deepEqual(unscheduled.filter((l) => l.kind === "daily").map((l) => l.live), [
+      undefined,
+      undefined,
+    ]);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});

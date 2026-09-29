@@ -157,3 +157,19 @@ Deno.test("growEpochs wraps the start into a pool that shrank", () => {
   // Puzzle 9 would show index 8, beyond a 5-level pool: it wraps to 3.
   assert.deepEqual(growEpochs(epochs, 5, 9)[1], { from: 9, size: 5, start: 3 });
 });
+
+Deno.test("a pool that shrank still gives every past and future puzzle a level", () => {
+  const pool = Array.from({ length: 10 }, (_, i) => level(i + 1));
+  const epochs = [{ from: 1, size: 10, start: 0 }];
+  // On puzzle day 20, levels 6 to 10 were removed: puzzles 16 to 20 pointed at them.
+  const shrunk: Levels = {
+    daily: pool.slice(0, 5),
+    special: [],
+    epochs: growEpochs(epochs, 5, 21),
+  };
+  for (let n = 1; n <= 40; n++) {
+    assert.ok(shrunk.daily.includes(levelFor(shrunk, LAUNCH, n) as Level), `puzzle ${n}`);
+  }
+  // Past indexes wrap at the pool's current length: puzzle 16 showed index 5, now index 0.
+  assert.equal(levelFor(shrunk, LAUNCH, 16), shrunk.daily[0]);
+});

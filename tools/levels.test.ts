@@ -123,7 +123,11 @@ const TEN = Object.fromEntries(
     body(`(x + ${i}) % 8`),
   ]),
 );
-const levelsIn = (root: string) => readGenerated(`${root}/src/levels/generated.ts`);
+async function levelsIn(root: string) {
+  const levels = await readGenerated(`${root}/src/levels/generated.ts`);
+  if (!levels) throw new Error("generated.ts can't be read");
+  return levels;
+}
 
 Deno.test("generate refuses to change what an open puzzle shows: today's or the past week's", async () => {
   const root = await repo(TEN);
@@ -242,6 +246,63 @@ Deno.test("the report sums up the pool and the date", async () => {
     assert.ok(before.lines.includes("Puzzle #1 on 2026-11-01"));
     const after = await generate(options(root, { today: { y: 2026, m: 11, d: 9 } }));
     assert.ok(after.lines.includes("Today, in UTC+14: puzzle #9"));
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("after launch, an unreadable generated.ts stops the generator: its epochs are state", async () => {
+  const root = await repo(TEN);
+  const onDay5 = { today: { y: 2026, m: 11, d: 5 } };
+  try {
+    await generate(options(root));
+    await Deno.writeTextFile(`${root}/src/levels/generated.ts`, "<<<<<<< HEAD\nbroken\n");
+    const refused = await generate(options(root, onDay5));
+    assert.equal(refused.ok, false);
+    assert.match(refused.lines.join("\n"), /src\/levels\/generated\.ts can't be read/);
+    // Before launch there is nothing to keep: it regenerates.
+    assert.equal((await generate(options(root))).ok, true);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("the frozen window reaches back to the oldest puzzle open anywhere, in UTC-12", async () => {
+  const root = await repo(TEN);
+  // Nov 12 in UTC+14 is puzzle 12; UTC-12 can still be on Nov 10, with puzzle 3 open there.
+  const onDay12 = { today: { y: 2026, m: 11, d: 12 } };
+  try {
+    await generate(options(root));
+    await Deno.writeTextFile(`${root}/levels/daily/0003.c`, body("x | y"));
+    const refused = await generate(options(root, onDay12));
+    assert.equal(refused.ok, false);
+    assert.match(refused.lines.join("\n"), /puzzle #3 \(2026-11-03\) would change/);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("--check with --base freezes open puzzles against the deployed schedule", async () => {
+  const root = await repo(TEN);
+  try {
+    // Deployed on Nov 1 with ten levels.
+    await generate(options(root));
+    const deployed = await levelsIn(root);
+    // Level 6, shown on Nov 6, is edited on Nov 1: allowed then, since nobody could open it yet.
+    await Deno.writeTextFile(`${root}/levels/daily/0006.c`, body("x | y"));
+    assert.equal((await generate(options(root, { today: LAUNCH }))).ok, true);
+    // Pushed on Nov 8: puzzle 6 is open by then, and players have the deployed version.
+    const late = { check: true, today: { y: 2026, m: 11, d: 8 } };
+    assert.equal((await generate(options(root, late))).ok, true);
+    const refused = await generate(options(root, { ...late, base: deployed }));
+    assert.equal(refused.ok, false);
+    assert.match(refused.lines.join("\n"), /puzzle #6 \(2026-11-06\) would change/);
+    // CI can't take the flag: the refusal names the commit message marker CI reads instead.
+    assert.match(refused.lines.join("\n"), /\[allow-published-edit\] in the commit message/);
+    const meant = await generate(
+      options(root, { ...late, base: deployed, allowPublishedEdit: true }),
+    );
+    assert.equal(meant.ok, true, meant.lines.join("\n"));
   } finally {
     await Deno.remove(root, { recursive: true });
   }

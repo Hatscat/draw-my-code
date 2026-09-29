@@ -8,7 +8,7 @@ import { Buffer } from "node:buffer";
 import type { IncomingHttpHeaders } from "node:http";
 import { join, relative } from "node:path";
 import type { Plugin } from "vite";
-import { CATCH_UP_DAYS, LAUNCH_DATE } from "../src/core/config.ts";
+import { LAUNCH_DATE } from "../src/core/config.ts";
 import { type CalendarDate, formatIsoDate } from "../src/core/date.ts";
 import { poolIndex, puzzleDate, puzzleNumber } from "../src/core/schedule.ts";
 import { PALETTE } from "../src/ui/palette.ts";
@@ -18,9 +18,9 @@ import {
   prepareToolchain,
   type Toolchain,
 } from "./level-compile.ts";
-import { type LevelSet, readGenerated } from "./level-output.ts";
+import { type LevelSet, NO_LEVELS, readGenerated } from "./level-output.ts";
 import { levelId, type LevelKind, sourceErrors, specialDate } from "./level-source.ts";
-import { generate, type Report, todayInUtcPlus14 } from "./levels.ts";
+import { generate, openRange, type Report, todayInUtcPlus14 } from "./levels.ts";
 
 export interface EditorLevel {
   /** From the repository root, such as `levels/daily/0001.c`. */
@@ -28,7 +28,10 @@ export interface EditorLevel {
   readonly kind: LevelKind | "special";
   /** Position in the tutorial or the daily pool; 0 for a special. */
   readonly id: number;
-  /** A daily's first date, YYYY-MM-DD; a special's date, MM-DD. */
+  /**
+   * A pool level's first date in the generated schedule, YYYY-MM-DD (none before it is
+   * generated); a special's date, MM-DD.
+   */
   readonly live?: string;
   /** Shown today or in the past week: `deno task levels` refuses to change it. */
   readonly published: boolean;
@@ -104,14 +107,33 @@ export function openLevels(
   today: CalendarDate,
 ): Set<string> {
   const open = new Set<string>();
-  const t = puzzleNumber(launch, today);
   if (levels.daily.length === 0 || levels.epochs.length === 0) return open;
-  for (let n = Math.max(1, t - CATCH_UP_DAYS); n <= t; n++) {
+  const { first, last } = openRange(puzzleNumber(launch, today));
+  for (let n = first; n <= last; n++) {
     const { m, d } = puzzleDate(launch, n);
     if (levels.special.some((s) => s.month === m && s.day === d)) open.add(`special:${mmdd(m, d)}`);
-    else open.add(`daily:${poolIndex(levels.epochs, n) + 1}`);
+    else open.add(`daily:${(poolIndex(levels.epochs, n) % levels.daily.length) + 1}`);
   }
   return open;
+}
+
+/**
+ * The first puzzle that shows each pool level (by index), as the generated schedule has it:
+ * specials take their dates, and epochs may bring a level in late.
+ */
+export function firstShowings(levels: LevelSet, launch: CalendarDate): Map<number, number> {
+  const first = new Map<number, number>();
+  const last = levels.epochs.at(-1);
+  if (!last || levels.daily.length === 0) return first;
+  // Every level of the latest epoch shows within two of its loops, a year of specials aside.
+  const limit = last.from + 2 * last.size + 366;
+  for (let n = 1; n <= limit && first.size < levels.daily.length; n++) {
+    const { m, d } = puzzleDate(launch, n);
+    if (levels.special.some((s) => s.month === m && s.day === d)) continue;
+    const index = poolIndex(levels.epochs, n) % levels.daily.length;
+    if (!first.has(index)) first.set(index, n);
+  }
+  return first;
 }
 
 const mmdd = (m: number, d: number) =>
@@ -123,11 +145,9 @@ export async function listLevels(
   launch: CalendarDate,
   today: CalendarDate,
 ): Promise<EditorLevel[]> {
-  const open = openLevels(
-    await readGenerated(join(root, "src/levels/generated.ts")),
-    launch,
-    today,
-  );
+  const schedule = await readGenerated(join(root, "src/levels/generated.ts")) ?? NO_LEVELS;
+  const open = openLevels(schedule, launch, today);
+  const first = firstShowings(schedule, launch);
   const levels: EditorLevel[] = [];
   for (const kind of KINDS) {
     const found: EditorLevel[] = [];
@@ -140,11 +160,12 @@ export async function listLevels(
           found.push({ path, kind, id, published: false });
           continue;
         }
+        const n = first.get(id - 1);
         found.push({
           path,
           kind,
           id,
-          live: formatIsoDate(puzzleDate(launch, id)),
+          live: n === undefined ? undefined : formatIsoDate(puzzleDate(launch, n)),
           published: open.has(`daily:${id}`),
         });
       }

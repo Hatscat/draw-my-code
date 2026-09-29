@@ -14,6 +14,7 @@ import { compileLevel, gccVersion, prepareToolchain, type Toolchain } from "./le
 import {
   denoFmt,
   type LevelSet,
+  NO_LEVELS,
   preview,
   readGenerated,
   renderGenerated,
@@ -42,6 +43,19 @@ export interface Options {
   /** Today in UTC+14, the first time zone to reach each date. */
   readonly today: CalendarDate;
   readonly launch: CalendarDate;
+  /**
+   * The schedule players have now (CI passes the deployed commit's generated.ts): open puzzles
+   * must not change against it. By default, the generated.ts on disk.
+   */
+  readonly base?: LevelSet;
+}
+
+/**
+ * The puzzles open somewhere on puzzle day `today` in UTC+14: from the oldest one still open in
+ * UTC-12, 26 hours behind and so up to two dates back, to today's.
+ */
+export function openRange(today: number): { readonly first: number; readonly last: number } {
+  return { first: Math.max(1, today - CATCH_UP_DAYS - 2), last: today };
 }
 
 export interface Report {
@@ -102,8 +116,21 @@ export async function generate(options: Options): Promise<Report> {
   }
 
   const outputPath = join(options.root, OUTPUT);
-  const previous = await readGenerated(outputPath);
   const today = puzzleNumber(options.launch, options.today);
+  const read = await readGenerated(outputPath);
+  if (today >= 1 && (!read || read.epochs.length === 0) && !options.allowPublishedEdit) {
+    // Rebuilding the epochs from scratch would move past days to other levels.
+    return {
+      ok: false,
+      lines: [
+        ...lines,
+        `${OUTPUT} can't be read, or has no epochs: after launch, its epochs keep past days on ` +
+        "their levels. Restore it from git (git checkout HEAD -- src/levels/generated.ts, or " +
+        "one side of a merge conflict), then re-run. --allow-published-edit starts the loop over.",
+      ],
+    };
+  }
+  const previous = read ?? NO_LEVELS;
   const levels: LevelSet = {
     tutorial: numbered("tutorial"),
     daily,
@@ -116,7 +143,15 @@ export async function generate(options: Options): Promise<Report> {
   const changes = diff(previous, levels);
 
   if (!options.allowPublishedEdit) {
-    errors.push(...openPuzzleChanges(previous, levels, options.launch, today));
+    const frozen = openPuzzleChanges(options.base ?? previous, levels, options.launch, today);
+    errors.push(...frozen);
+    if (options.base && frozen.length > 0) {
+      errors.push(
+        "Compared with the deployed levels (--base). Levels generated before these puzzles " +
+          "opened: restore the deployed src/levels/generated.ts, run deno task levels again, and " +
+          "commit. A change you mean: put [allow-published-edit] in the commit message.",
+      );
+    }
   }
 
   if (options.check) {
@@ -146,8 +181,8 @@ export async function generate(options: Options): Promise<Report> {
 }
 
 /**
- * Changes to what a puzzle players can still open shows: today's and the past week's, which a
- * player may be playing right now or come back to.
+ * Changes to what a puzzle players can still open shows (anywhere: see openRange), which a player
+ * may be playing right now or come back to.
  */
 function openPuzzleChanges(
   before: LevelSet,
@@ -158,12 +193,13 @@ function openPuzzleChanges(
   // Nothing generated yet: nothing was shown.
   if (before.daily.length === 0 || before.epochs.length === 0) return [];
   const errors: string[] = [];
-  for (let n = Math.max(1, today - CATCH_UP_DAYS); n <= today; n++) {
+  const { first, last } = openRange(today);
+  for (let n = first; n <= last; n++) {
     if (sameLevel(levelFor(before, launch, n), levelFor(after, launch, n))) continue;
     errors.push(
       `puzzle #${n} (${formatIsoDate(puzzleDate(launch, n))}) would change, and players can ` +
-        `still open it: today's and the past ${CATCH_UP_DAYS} days' puzzles are frozen. Re-run ` +
-        "with --allow-published-edit if you really mean it.",
+        `still open it: today's and the past ${CATCH_UP_DAYS} days' puzzles, anywhere, are ` +
+        "frozen. Re-run with --allow-published-edit if you really mean it.",
     );
   }
   return errors;
@@ -327,12 +363,19 @@ export function todayInUtcPlus14(): CalendarDate {
 
 if (import.meta.main) {
   const flags = ["--check", "--allow-published-edit"];
-  const unknown = Deno.args.filter((arg) => !flags.includes(arg));
+  const basePath = Deno.args.find((arg) => arg.startsWith("--base="))?.slice("--base=".length);
+  const unknown = Deno.args.filter((arg) => !flags.includes(arg) && !arg.startsWith("--base="));
   if (unknown.length > 0) {
-    console.error(`Unknown option ${unknown.join(" ")}. Options: ${flags.join(" ")}`);
+    console.error(`Unknown option ${unknown.join(" ")}. Options: ${flags.join(" ")} --base=<file>`);
+    Deno.exit(2);
+  }
+  const base = basePath === undefined ? undefined : await readGenerated(basePath);
+  if (basePath !== undefined && !base) {
+    console.error(`--base: ${basePath} can't be read as a generated.ts`);
     Deno.exit(2);
   }
   const report = await generate({
+    base,
     root: fileURLToPath(new URL("..", import.meta.url)).replace(/\/$/, ""),
     check: Deno.args.includes("--check"),
     allowPublishedEdit: Deno.args.includes("--allow-published-edit"),
