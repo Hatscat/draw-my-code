@@ -50,7 +50,7 @@
     "check": "deno fmt --check && deno lint && deno check && deno check --config tools/sw.deno.json src/sw.ts && deno task test",
     "levels": "deno run --allow-read --allow-write --allow-run --allow-env=GITHUB_ACTIONS tools/levels.ts",
     "levels:check": "deno run --allow-read --allow-write --allow-run --allow-env=GITHUB_ACTIONS tools/levels.ts --check",
-    "icons": "deno run --allow-write=public/icons tools/icons.ts",
+    "icons": "deno run --allow-write=public/icons,public/og.png tools/icons.ts",
     "e2e": "deno task build && deno task e2e:run",
     "e2e:run": "cd e2e && ./node_modules/.bin/tsc -p . && ./node_modules/.bin/playwright test"
   }

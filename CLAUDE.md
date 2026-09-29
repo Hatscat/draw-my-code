@@ -17,7 +17,7 @@ accounts, no cookies.
 | `deno task test`         | Unit tests only (`src/**/*.test.ts`, `tools/**/*.test.ts`)              |
 | `deno task levels`       | Compile levels with gcc, validate, regenerate `src/levels/generated.ts` |
 | `deno task levels:check` | Fail if `generated.ts` is stale or any level is invalid (CI)            |
-| `deno task icons`        | Regenerate the PWA icons in `public/icons/`                             |
+| `deno task icons`        | Regenerate the PWA icons and the link preview image `public/og.png`     |
 | `deno task build`        | Production build to `dist/`                                             |
 | `deno task preview`      | Serve `dist/`                                                           |
 | `deno task e2e`          | Build, then run Playwright (Node) from `e2e/`                           |

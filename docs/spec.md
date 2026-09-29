@@ -86,7 +86,7 @@ Exact text, lines joined by `\n`, no trailing newline:
 Draw my code #12 2/3
 🟩🟩🟩🟨🟨🟩🟩🟩
 …(8 rows of 8)
-https://hatscat.github.io/draw-my-code/
+https://drawmycode.lonebee.games/
 ```
 
 A failed puzzle reads `Draw my code #12 X/3`. The URL is the site URL, with its trailing slash.
@@ -99,6 +99,11 @@ solve outlines the non-black cells).
 Touch devices (`pointer: coarse`) with `navigator.share`: `navigator.share({ text })`, called
 directly in the click handler; a cancel does nothing. Otherwise: clipboard and a "Copied" toast. If
 both fail, the text is shown in a read-only field to copy by hand.
+
+Link previews, for the URL in shared texts: the page's description, Open Graph and Twitter card tags
+(`summary_large_image`) with absolute URLs built from the site URL, and `public/og.png` (1200×630:
+the title in a pixel font, `int f(int x, int y)` and puzzle #1's disc), drawn by `deno task icons`
+like the icons.
 
 ## Stats and streaks
 

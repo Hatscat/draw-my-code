@@ -19,7 +19,14 @@ export default defineConfig(({ command, isPreview }) => {
     appType: "mpa",
     define: { "import.meta.env.VITE_SITE_URL": JSON.stringify(site.href) },
     // The level editor (src/editor/) only exists on the dev server.
-    plugins: [serviceWorker("src/sw.ts"), levelEditor(root)],
+    plugins: [
+      serviceWorker("src/sw.ts"),
+      levelEditor(root),
+      {
+        name: "draw-my-code:site-url",
+        transformIndexHtml: (html) => html.replaceAll("%SITE_URL%", site.href),
+      },
+    ],
     server: {
       // `true` would forward only warnings and errors.
       forwardConsole: { unhandledErrors: true, logLevels: ["error", "warn", "info", "log"] },
