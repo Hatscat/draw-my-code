@@ -108,13 +108,10 @@ export const tutorial: readonly Level[] = [{
     "00001101",
     "00001101",
   ],
-}];
-
-/** The daily pool, in order: it loops forever. */
-export const daily: readonly Level[] = [{
-  id: 1,
+}, {
+  id: 9,
   code:
-    "int f(int x, int y) {\n  // 2*x - 7: 0 is the grid's center\n  int dx = 2*x - 7, dy = 2*y - 7;\n  return dx*dx + dy*dy < 6*6 ? 2:0;\n}",
+    "int f(int x, int y) {\n  // dx and dy are odd, in [-7, 7],\n  // 0 is the center, between cells\n  int dx = 2*x - 7, dy = 2*y - 7;\n  // a negative number multiplied by\n  // itself becomes positive, so\n  // dx*dx and dy*dy: 1, 9, 25 or 49\n  int d = dx*dx + dy*dy;\n  // d: squared distance to center,\n  // in half cells (Pythagoras)\n  return d < 6*6 ? 2 : 0;\n}",
   solution: [
     "00000000",
     "00222200",
@@ -124,6 +121,23 @@ export const daily: readonly Level[] = [{
     "02222220",
     "00222200",
     "00000000",
+  ],
+}];
+
+/** The daily pool, in order: it loops forever. */
+export const daily: readonly Level[] = [{
+  id: 1,
+  code:
+    "int f(int x, int y) {\n  int dx = abs(2*x - 7);\n  if (dx > 2*y + 3)\n    return 0;\n  if (y == 7 && x % 3 == 1)\n    return 0;\n  int eye = x%4 == 1 || x%4 == 2;\n  if ((y == 2 || y == 3) && eye)\n    return y > 2 && x%4 > 1 ? 6 : 1;\n  return 2;\n}",
+  solution: [
+    "00222200",
+    "02222220",
+    "21122112",
+    "21622162",
+    "22222222",
+    "22222222",
+    "22222222",
+    "20220220",
   ],
 }, {
   id: 2,

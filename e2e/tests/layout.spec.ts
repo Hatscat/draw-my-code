@@ -18,6 +18,11 @@ const largest = [...daily].sort((a, b) => {
   return size(b.code) - size(a.code);
 })[0];
 
+// The daily with the fewest lines. A short level leaves the whole grid on screen; a long one pushes
+// it down, and the page scrolls.
+const shortest =
+  [...daily].sort((a, b) => a.code.split("\n").length - b.code.split("\n").length)[0];
+
 /** The grid's box in page coordinates: scrolling doesn't move it, layout changes do. */
 const gridBox = (page: Page) =>
   page.getByRole("grid").evaluate((grid) => {
@@ -95,8 +100,9 @@ test.describe("at 320 px wide", () => {
   });
 });
 
-test("the grid fits the screen on each device", async ({ page }) => {
-  await openPuzzle(page, 1);
+test("a short level's grid fits the screen on each device", async ({ page }) => {
+  if (!shortest) throw new Error("no daily levels");
+  await openPuzzle(page, numberShowing(shortest));
   await page.evaluate(() => document.fonts.ready);
   const width = page.viewportSize()?.width ?? 0;
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(

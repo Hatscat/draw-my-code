@@ -37,7 +37,7 @@ them renumbers or reinterprets every stored result.
 
 ## Tutorial
 
-- 8 levels (the files in `levels/tutorial/`), shown automatically until finished or skipped (a
+- 9 levels (the files in `levels/tutorial/`), shown automatically until finished or skipped (a
   `Skip tutorial` link). Replayable from the info panel.
 - Unlimited attempts, no stats, no share. After a wrong submit the status line shows `N wrong` (no
   attempt count). After a solve it says `Right!` and Submit becomes `Next` (`Done` on the last
@@ -192,7 +192,7 @@ Follow `design/`. What was designed:
 
 Additions:
 
-- Header right: `#N` for the daily, `Tutorial 2/8` in the tutorial; a "?" button. Code panel label:
+- Header right: `#N` for the daily, `Tutorial 2/9` in the tutorial; a "?" button. Code panel label:
   `daily_0012.c` / `tutorial_2.c`.
 - Keyboard on the grid: roving focus, arrows, Home/End, Space/Enter paints with the selected color.
   Each cell's accessible name includes its value and color name.
@@ -218,7 +218,7 @@ Additions:
 
 Sources:
 
-- `levels/tutorial/01-one-cell.c` … `08-mask.c` (`NN-name.c`, lowercase name).
+- `levels/tutorial/01-one-cell.c` … `09-center.c` (`NN-name.c`, lowercase name).
 - `levels/daily/0001.c`, `0002.c`, … contiguous: the daily pool, in order.
 - `levels/special/MM-DD-name.c` (e.g. `10-31-halloween.c`): a level shown every year on that date,
   in place of the pool's. Feb 29 is allowed and shows in leap years only. One level per date.
@@ -295,7 +295,9 @@ Content:
 
 - Tutorial, one idea per level, reworked by the owner after a playtest: one red cell (the axes, and
   numbers as colors) · `x` · integer division · `%` · `max` (the prelude's helpers) · a comparison
-  as 0 or 1 · an array lookup · a bit mask. The files in `levels/tutorial/` are the reference.
+  as 0 or 1 · an array lookup · a bit mask · the grid's center (`2*x - 7`) and the squared distance
+  to it, which draws a disc (daily #1 until the owner made it the last tutorial level). The files in
+  `levels/tutorial/` are the reference.
 - Daily puzzles: a pool of 196 levels in `levels/daily/` (a loop of 28 weeks), curated by the owner,
   and 7 special dates in `levels/special/`: New Year, Valentine's Day, Pi Day, April Fools' Day,
   Programmers' Day (Sep 13, the 256th day), Halloween and Christmas. Unscheduled candidates wait in

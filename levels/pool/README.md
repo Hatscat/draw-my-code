@@ -12,9 +12,8 @@ Each file here is exactly what players would see. To use one, copy it to the nex
 every level on its weekday. The generator ignores this folder, so these files are not checked in CI:
 recheck any of them with the editor or `deno task levels` before scheduling it.
 
-- `ready/` (5): graded A, or B with the curator's tweak, and not scheduled: the reserve, held back
-  to space out circles, negative `%` and octal. `ghost.c` was daily 27 until a jack-o'-lantern took
-  Halloween.
+- `ready/` (4): graded A, or B with the curator's tweak, and not scheduled: the reserve, held back
+  to space out circles, negative `%` and octal.
 - `needs-rule-change/` (16): need string literals, `char`, floats, libm or an `isqrt` helper, which
   the level rules forbid. The file name starts with the feature. Only strings and `char` were judged
   worth allowing, after launch and as their own change.
@@ -25,13 +24,12 @@ Holidays are special levels (`levels/special/MM-DD-name.c`), shown every year on
 
 ## Ready
 
-| File                                       | Family   | Difficulty | Grade | Aha                                                                                                           |
-| ------------------------------------------ | -------- | ---------- | ----- | ------------------------------------------------------------------------------------------------------------- |
-| [archery.c](ready/archery.c)               | rules    | 2          | B     | Concentric rings by distance from the center; the square root is a one-line loop, so it needs no helper.      |
-| [capsule.c](ready/capsule.c)               | geometry | 3          | A     | Clamping x + y to [4, 10] picks the nearest point (t/2, t/2) on the segment.                                  |
-| [ghost.c](ready/ghost.c)                   | research | 2          | A     | It is Blinky, the red Pac-Man ghost: a dome top, white eyes with blue pupils looking right, and a wavy skirt. |
-| [remainder-sign.c](ready/remainder-sign.c) | research | 2          | A     | In C, (y - x) % 4 has the sign of y - x.                                                                      |
-| [zero-padded.c](ready/zero-padded.c)       | rules    | 3          | A     | The zero-padded 004, 010, 020 and 040 are octal: 4, 8, 16, 32 (powers of two).                                |
+| File                                       | Family   | Difficulty | Grade | Aha                                                                                                      |
+| ------------------------------------------ | -------- | ---------- | ----- | -------------------------------------------------------------------------------------------------------- |
+| [archery.c](ready/archery.c)               | rules    | 2          | B     | Concentric rings by distance from the center; the square root is a one-line loop, so it needs no helper. |
+| [capsule.c](ready/capsule.c)               | geometry | 3          | A     | Clamping x + y to [4, 10] picks the nearest point (t/2, t/2) on the segment.                             |
+| [remainder-sign.c](ready/remainder-sign.c) | research | 2          | A     | In C, (y - x) % 4 has the sign of y - x.                                                                 |
+| [zero-padded.c](ready/zero-padded.c)       | rules    | 3          | A     | The zero-padded 004, 010, 020 and 040 are octal: 4, 8, 16, 32 (powers of two).                           |
 
 ## Needs a rule change
 
