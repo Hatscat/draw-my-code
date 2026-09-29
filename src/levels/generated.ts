@@ -263,7 +263,7 @@ export const daily: readonly Level[] = [{
 }, {
   id: 12,
   code:
-    "int f(int x, int y) {\n  int z = (x + y) & 0xA8;\n  int w = y*y*y + x*x*x;\n  int u = z ^ w;\n  int v = (u << 3) & 7;\n  return v | y;\n}",
+    "int f(int x, int y) {\n  int z = (x + y) & 0xA8;\n  int w = y*y + x*x;\n  int u = z ^ w;\n  int v = (u << 3) & 7;\n  return v | y;\n}",
   solution: [
     "00000000",
     "11111111",
