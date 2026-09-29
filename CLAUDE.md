@@ -38,7 +38,8 @@ src/analytics.ts  The only module that talks to Umami.
 src/sw.ts         Service worker (WebWorker lib, type-checked separately).
 src/editor/       Level editor page, dev server only; its server side is tools/level-editor.ts.
 src/fonts/        JetBrains Mono subset + OFL license
-levels/           Level sources: tutorial/NN-name.c, daily/NNNN.c; pool/: unscheduled candidates
+levels/           Level sources: tutorial/NN-name.c, daily/NNNN.c (the looping pool),
+                  special/MM-DD-name.c (yearly dates); pool/: unscheduled candidates
 tools/            Level generator and editor server, harness.c, prelude.h, icons, lint plugin,
                   SW Vite plugin (Deno)
 e2e/              Playwright specs, own package.json (Node)

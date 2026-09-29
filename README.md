@@ -35,10 +35,16 @@ npx playwright install --with-deps --no-shell chromium webkit
 In `deno task dev`, add `?date=YYYY-MM-DD` to the URL to pretend today is another day. Production
 builds ignore it.
 
-## Adding a daily puzzle
+## Adding a level
 
-1. Create `levels/daily/NNNN.c` with the next number: `0008.c` after `0007.c`, no gaps. Puzzle #N
-   goes live on `LAUNCH_DATE` (in `src/core/config.ts`) plus N − 1 days, at local midnight.
+The daily levels are one pool, `levels/daily/`, that loops forever: after the last level comes the
+first again, so the game never runs out. In the first loop, puzzle #N (on `LAUNCH_DATE` plus N − 1
+days, at local midnight) shows `levels/daily/NNNN.c`. A level for a date that comes back every year,
+a holiday say, goes in `levels/special/MM-DD-name.c` instead (e.g. `10-31-halloween.c`): it replaces
+the pool's level on that date.
+
+1. Create `levels/daily/NNNN.c` with the next number (`0085.c` after `0084.c`, no gaps), or a
+   special.
 2. Write the function exactly as players will see it:
 
    ```c
@@ -83,30 +89,26 @@ The rules, all checked by the generator:
 - At most 12 lines of at most 36 characters, 2-space indentation, printable ASCII, LF line endings,
   no trailing spaces, exactly one final newline. That is what fits a 320 px screen.
 
-A puzzle whose date has come (anywhere: the generator counts in UTC+14) is frozen: players already
-have results for it. `deno task levels` refuses to change it unless you pass
-`--allow-published-edit`.
+Today's puzzle and the past week's are frozen (anywhere: the generator counts in UTC+14): players
+can still open them. `deno task levels` refuses to change what they show unless you pass
+`--allow-published-edit`. Every other level may change.
 
-### Keeping the queue full
-
-CI runs `deno task levels:check --strict` every day: with fewer than 7 days of puzzles left, that
-run fails and GitHub emails you. GitHub disables scheduled workflows after 60 days without a commit,
-so the reminder stops if the repository goes quiet.
+Adding levels makes the loop longer. After launch, the generator makes the change start tomorrow,
+carrying on from where the loop was, so no day already shown changes.
 
 ## Deploying
 
-CI (`.github/workflows/ci.yml`) runs on pull requests, on pushes to `main` and once a day. Pull
-requests and pushes run `check`, build the site with the base path and URL from the Pages
-configuration (so Pages must be set up first), and run the end-to-end tests on that exact build.
-Pushes to `main` then deploy that build to GitHub Pages. The daily run only runs `check`. One-time
-setup:
+CI (`.github/workflows/ci.yml`) runs on pull requests and on pushes to `main`: `check`, a build of
+the site with the base path and URL from the Pages configuration (so Pages must be set up first),
+and the end-to-end tests on that exact build. Pushes to `main` then deploy that build to GitHub
+Pages. One-time setup:
 
 1. Make the repository public: GitHub Free serves Pages only from public repositories.
 2. Settings > Pages > Source: GitHub Actions.
 3. Optional, for analytics: Settings > Secrets and variables > Actions > Variables, add
    `VITE_UMAMI_WEBSITE_ID`. Without it nothing is tracked.
-4. Set `LAUNCH_DATE` in `src/core/config.ts` to the first puzzle's date, and keep enough puzzles
-   queued. After launch, don't change it (or `ATTEMPTS`): stored results depend on both.
+4. Set `LAUNCH_DATE` in `src/core/config.ts` to the first puzzle's date. After launch, don't change
+   it (or `ATTEMPTS`): stored results depend on both.
 
 Choose the final domain before launch: player data belongs to the site's origin, so moving to a
 custom domain later starts everyone over. The code needs no change for a custom domain.

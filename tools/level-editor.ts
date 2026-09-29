@@ -8,9 +8,9 @@ import { Buffer } from "node:buffer";
 import type { IncomingHttpHeaders } from "node:http";
 import { join, relative } from "node:path";
 import type { Plugin } from "vite";
-import { LAUNCH_DATE } from "../src/core/config.ts";
-import { type CalendarDate, daysBetween, formatIsoDate } from "../src/core/date.ts";
-import { puzzleDate } from "../src/core/schedule.ts";
+import { CATCH_UP_DAYS, LAUNCH_DATE } from "../src/core/config.ts";
+import { type CalendarDate, formatIsoDate } from "../src/core/date.ts";
+import { poolIndex, puzzleDate, puzzleNumber } from "../src/core/schedule.ts";
 import { PALETTE } from "../src/ui/palette.ts";
 import {
   compileLevel,
@@ -18,17 +18,19 @@ import {
   prepareToolchain,
   type Toolchain,
 } from "./level-compile.ts";
-import { levelId, type LevelKind, sourceErrors } from "./level-source.ts";
+import { type LevelSet, readGenerated } from "./level-output.ts";
+import { levelId, type LevelKind, sourceErrors, specialDate } from "./level-source.ts";
 import { generate, type Report, todayInUtcPlus14 } from "./levels.ts";
 
 export interface EditorLevel {
   /** From the repository root, such as `levels/daily/0001.c`. */
   readonly path: string;
-  readonly kind: LevelKind;
+  readonly kind: LevelKind | "special";
+  /** Position in the tutorial or the daily pool; 0 for a special. */
   readonly id: number;
-  /** A daily's date, YYYY-MM-DD. */
+  /** A daily's first date, YYYY-MM-DD; a special's date, MM-DD. */
   readonly live?: string;
-  /** A daily whose date has come: `deno task levels` refuses to change it. */
+  /** Shown today or in the past week: `deno task levels` refuses to change it. */
   readonly published: boolean;
 }
 
@@ -83,19 +85,49 @@ export function isTrusted(headers: IncomingHttpHeaders): boolean {
 
 /** A level file's absolute path, from its path under the root; undefined for anything else. */
 export function levelPath(root: string, path: string): string | undefined {
-  const match = /^levels\/(tutorial|daily)\/([^/]+)$/.exec(path);
-  const kind = KINDS.find((k) => k === match?.[1]);
+  const match = /^levels\/(tutorial|daily|special)\/([^/]+)$/.exec(path);
+  const folder = match?.[1];
   const name = match?.[2];
-  if (!kind || !name || levelId(kind, name) === undefined) return undefined;
-  return join(root, "levels", kind, name);
+  if (!folder || !name) return undefined;
+  const kind = KINDS.find((k) => k === folder);
+  const valid = kind ? levelId(kind, name) !== undefined : specialDate(name) !== undefined;
+  return valid ? join(root, "levels", folder, name) : undefined;
 }
 
-/** Every level file, tutorial first, in order; dailies with their date. */
+/**
+ * The levels players can still open (today's and the past week's puzzles), as the last
+ * generated schedule has them: `daily:<id>` and `special:<MM-DD>`.
+ */
+export function openLevels(
+  levels: LevelSet,
+  launch: CalendarDate,
+  today: CalendarDate,
+): Set<string> {
+  const open = new Set<string>();
+  const t = puzzleNumber(launch, today);
+  if (levels.daily.length === 0 || levels.epochs.length === 0) return open;
+  for (let n = Math.max(1, t - CATCH_UP_DAYS); n <= t; n++) {
+    const { m, d } = puzzleDate(launch, n);
+    if (levels.special.some((s) => s.month === m && s.day === d)) open.add(`special:${mmdd(m, d)}`);
+    else open.add(`daily:${poolIndex(levels.epochs, n) + 1}`);
+  }
+  return open;
+}
+
+const mmdd = (m: number, d: number) =>
+  `${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+/** Every level file: tutorial, daily pool and specials, in order; dailies with their first date. */
 export async function listLevels(
   root: string,
   launch: CalendarDate,
   today: CalendarDate,
 ): Promise<EditorLevel[]> {
+  const open = openLevels(
+    await readGenerated(join(root, "src/levels/generated.ts")),
+    launch,
+    today,
+  );
   const levels: EditorLevel[] = [];
   for (const kind of KINDS) {
     const found: EditorLevel[] = [];
@@ -108,13 +140,12 @@ export async function listLevels(
           found.push({ path, kind, id, published: false });
           continue;
         }
-        const live = puzzleDate(launch, id);
         found.push({
           path,
           kind,
           id,
-          live: formatIsoDate(live),
-          published: daysBetween(live, today) >= 0,
+          live: formatIsoDate(puzzleDate(launch, id)),
+          published: open.has(`daily:${id}`),
         });
       }
     } catch (error) {
@@ -122,6 +153,24 @@ export async function listLevels(
     }
     levels.push(...found.sort((a, b) => a.id - b.id || a.path.localeCompare(b.path)));
   }
+  const specials: EditorLevel[] = [];
+  try {
+    for await (const entry of Deno.readDir(join(root, "levels", "special"))) {
+      const date = entry.isFile ? specialDate(entry.name) : undefined;
+      if (!date) continue;
+      const live = mmdd(date.month, date.day);
+      specials.push({
+        path: `levels/special/${entry.name}`,
+        kind: "special",
+        id: 0,
+        live,
+        published: open.has(`special:${live}`),
+      });
+    }
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) throw error;
+  }
+  levels.push(...specials.sort((a, b) => a.path.localeCompare(b.path)));
   return levels;
 }
 
@@ -181,11 +230,9 @@ export function createEditor(root: string): Editor {
       const report = await generate({
         root,
         check: false,
-        strict: false,
         allowPublishedEdit: false,
         today: todayInUtcPlus14(),
         launch: LAUNCH_DATE,
-        annotate: false,
       });
       return reply(200, { ok: report.ok, lines: report.lines.map(plainText) } satisfies Report);
     }

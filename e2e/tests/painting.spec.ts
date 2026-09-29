@@ -1,5 +1,14 @@
 import { daily } from "../../src/levels/generated.ts";
-import { cell, cellCenter, expect, openPuzzle, paintRows, solutionOf, test } from "./fixtures.ts";
+import {
+  cell,
+  cellCenter,
+  expect,
+  openPuzzle,
+  paintRows,
+  shownCode,
+  solutionOf,
+  test,
+} from "./fixtures.ts";
 
 test.beforeEach(async ({ page }) => {
   await openPuzzle(page, 1);
@@ -26,15 +35,7 @@ test("the pointer is a crosshair over a grid that paints, an arrow once it can't
 test("the screen shows the day's puzzle: number, file name and code, byte for byte", async ({ page }) => {
   await expect(page.locator(".header-label")).toHaveText("#1");
   await expect(page.getByText("daily_0001.c")).toBeVisible();
-  const shown = await page.locator(".code").evaluate((pre) =>
-    [...pre.querySelectorAll(".code-line")].map((line) =>
-      [...line.childNodes]
-        .filter((node) => !(node instanceof HTMLElement && node.classList.contains("code-number")))
-        .map((node) => node.textContent)
-        .join("")
-    ).join("\n")
-  );
-  expect(shown).toBe(daily[0]?.code);
+  expect(await shownCode(page)).toBe(daily[0]?.code);
 });
 
 test("painted cells take the palette's colors", async ({ page }) => {

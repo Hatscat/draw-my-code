@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
+import { readGenerated } from "./level-output.ts";
 import { generate, type Options } from "./levels.ts";
 
 const TOOLS = fileURLToPath(new URL(".", import.meta.url));
@@ -12,6 +13,7 @@ async function repo(files: Record<string, string>): Promise<string> {
   const root = await Deno.makeTempDir({ prefix: "dmc-repo-" });
   await Deno.mkdir(`${root}/levels/tutorial`, { recursive: true });
   await Deno.mkdir(`${root}/levels/daily`, { recursive: true });
+  await Deno.mkdir(`${root}/levels/special`, { recursive: true });
   await Deno.mkdir(`${root}/src/levels`, { recursive: true });
   await Deno.symlink(TOOLS, `${root}/tools`);
   for (const [path, text] of Object.entries(files)) {
@@ -24,11 +26,9 @@ function options(root: string, overrides: Partial<Options> = {}): Options {
   return {
     root,
     check: false,
-    strict: false,
     allowPublishedEdit: false,
     today: { y: 2026, m: 9, d: 27 },
     launch: LAUNCH,
-    annotate: false,
     ...overrides,
   };
 }
@@ -70,7 +70,7 @@ Deno.test("--check fails when a level changed since the last generation", async 
     assert.ok(
       check.lines.includes("src/levels/generated.ts is out of date: run `deno task levels`"),
     );
-    assert.ok(check.lines.includes("  changed: levels/daily/0002"));
+    assert.ok(check.lines.includes("  changed: levels/daily/0002.c"));
   } finally {
     await Deno.remove(root, { recursive: true });
   }
@@ -116,51 +116,132 @@ Deno.test("generate names the failing file and writes nothing", async () => {
   }
 });
 
-Deno.test("generate refuses to change a daily whose date has come", async () => {
-  const root = await repo(SEED);
-  const onDay2 = { today: { y: 2026, m: 11, d: 2 } };
+/** Ten dailies, each drawing a different grid. */
+const TEN = Object.fromEntries(
+  Array.from({ length: 10 }, (_, i) => [
+    `levels/daily/${String(i + 1).padStart(4, "0")}.c`,
+    body(`(x + ${i}) % 8`),
+  ]),
+);
+const levelsIn = (root: string) => readGenerated(`${root}/src/levels/generated.ts`);
+
+Deno.test("generate refuses to change what an open puzzle shows: today's or the past week's", async () => {
+  const root = await repo(TEN);
+  // Nov 3 is puzzle 3: puzzles 1 to 3 are open, and they show pool levels 1 to 3.
+  const onDay3 = { today: { y: 2026, m: 11, d: 3 } };
   try {
     await generate(options(root));
     await Deno.writeTextFile(`${root}/levels/daily/0002.c`, body("x | y"));
-    const refused = await generate(options(root, onDay2));
+    const refused = await generate(options(root, onDay3));
     assert.equal(refused.ok, false);
-    assert.match(refused.lines.join("\n"), /levels\/daily\/0002\.c went live on 2026-11-02/);
+    assert.match(refused.lines.join("\n"), /puzzle #2 \(2026-11-02\) would change/);
 
-    const allowed = await generate(options(root, { ...onDay2, allowPublishedEdit: true }));
+    const allowed = await generate(options(root, { ...onDay3, allowPublishedEdit: true }));
     assert.equal(allowed.ok, true, allowed.lines.join("\n"));
   } finally {
     await Deno.remove(root, { recursive: true });
   }
 });
 
-Deno.test("generate allows changing a daily that isn't live yet", async () => {
-  const root = await repo(SEED);
+Deno.test("generate lets a level change while no open puzzle shows it", async () => {
+  const root = await repo(TEN);
   try {
     await generate(options(root));
-    await Deno.writeTextFile(`${root}/levels/daily/0002.c`, body("x | y"));
-    const report = await generate(options(root, { today: { y: 2026, m: 11, d: 1 } }));
+    await Deno.writeTextFile(`${root}/levels/daily/0009.c`, body("x | y"));
+    const report = await generate(options(root, { today: { y: 2026, m: 11, d: 3 } }));
     assert.equal(report.ok, true, report.lines.join("\n"));
   } finally {
     await Deno.remove(root, { recursive: true });
   }
 });
 
-Deno.test("a short schedule warns, and fails with --strict", async () => {
+Deno.test("a pool that grows after launch loops on from tomorrow, and no open puzzle changes", async () => {
   const root = await repo(SEED);
-  const lastDay = { today: { y: 2026, m: 11, d: 2 } };
-  const message = "Fewer than 7 days of daily puzzles left: add levels to levels/daily/";
+  // Nov 5 is puzzle 5: with 2 levels, puzzle 6 would show level 2 (index 1).
+  const onDay5 = { today: { y: 2026, m: 11, d: 5 } };
   try {
-    const warned = await generate(options(root, lastDay));
-    assert.equal(warned.ok, true);
-    assert.ok(warned.lines.includes("Daily puzzles scheduled until 2026-11-02 (0 days left)"));
-    assert.ok(warned.lines.includes(message));
+    await generate(options(root));
+    assert.deepEqual((await levelsIn(root)).epochs, [{ from: 1, size: 2, start: 0 }]);
+    await Deno.writeTextFile(`${root}/levels/daily/0003.c`, body("x & 3"));
+    const grown = await generate(options(root, onDay5));
+    assert.equal(grown.ok, true, grown.lines.join("\n"));
+    assert.deepEqual((await levelsIn(root)).epochs, [
+      { from: 1, size: 2, start: 0 },
+      { from: 6, size: 3, start: 1 },
+    ]);
+    // Regenerating another day keeps the epochs: --check still passes.
+    const check = await generate(options(root, { check: true, today: { y: 2026, m: 11, d: 20 } }));
+    assert.equal(check.ok, true, check.lines.join("\n"));
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
 
-    const annotated = await generate(options(root, { ...lastDay, annotate: true }));
-    assert.ok(annotated.lines.includes(`::warning title=Puzzle schedule::${message}`));
+Deno.test("specials: MM-DD-name.c, a real date, one level per date", async () => {
+  const root = await repo({
+    ...SEED,
+    "levels/special/10-31-ghost.c": body("x == y"),
+    "levels/special/02-29-leap.c": body("x != y"),
+  });
+  try {
+    const report = await generate(options(root));
+    assert.equal(report.ok, true, report.lines.join("\n"));
+    // Sorted by date, with the name from the file.
+    const { special } = await levelsIn(root);
+    assert.deepEqual(special.map(({ month, day, name }) => [month, day, name]), [
+      [2, 29, "leap"],
+      [10, 31, "ghost"],
+    ]);
 
-    const strict = await generate(options(root, { ...lastDay, check: true, strict: true }));
-    assert.equal(strict.ok, false);
-    assert.ok(strict.lines.includes(message));
+    await Deno.writeTextFile(`${root}/levels/special/10-31-pumpkin.c`, body("x"));
+    await Deno.writeTextFile(`${root}/levels/special/02-30-never.c`, body("x"));
+    const refused = await generate(options(root));
+    assert.equal(refused.ok, false);
+    const lines = refused.lines.join("\n");
+    assert.match(
+      lines,
+      /levels\/special\/10-31-pumpkin\.c: levels\/special\/10-31-ghost\.c already has this date/,
+    );
+    assert.match(lines, /levels\/special\/02-30-never\.c: name special levels MM-DD-name\.c/);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("a special goes through the same checks as any level", async () => {
+  const root = await repo({ ...SEED, "levels/special/12-25-tree.c": body("x +") });
+  try {
+    const report = await generate(options(root));
+    assert.equal(report.ok, false);
+    assert.match(report.lines.join("\n"), /✗ levels\/special\/12-25-tree\.c/);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("the daily pool can't be empty", async () => {
+  const root = await repo({ "levels/tutorial/01-return-x.c": body("x") });
+  try {
+    const report = await generate(options(root));
+    assert.equal(report.ok, false);
+    assert.ok(report.lines.includes("levels/daily: add a level: the daily pool is empty"));
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("the report sums up the pool and the date", async () => {
+  const root = await repo(SEED);
+  try {
+    const before = await generate(options(root));
+    assert.ok(
+      before.lines.includes(
+        "1 tutorial levels, 2 daily levels (one loop every 2 days), 0 special dates",
+      ),
+    );
+    assert.ok(before.lines.includes("Puzzle #1 on 2026-11-01"));
+    const after = await generate(options(root, { today: { y: 2026, m: 11, d: 9 } }));
+    assert.ok(after.lines.includes("Today, in UTC+14: puzzle #9"));
   } finally {
     await Deno.remove(root, { recursive: true });
   }

@@ -9,7 +9,7 @@ import { recordShare } from "../core/sent.ts";
 import { shareText } from "../core/share.ts";
 import { computeStats } from "../core/stats.ts";
 import type { PlayerState } from "../core/storage.ts";
-import type { Level } from "../levels/types.ts";
+import type { Puzzle } from "../levels/types.ts";
 import { formatCountdown, msUntilNextDay } from "./clock.ts";
 import { installButton } from "./install-dialog.ts";
 import { showPuzzleView } from "./puzzle-view.ts";
@@ -23,9 +23,7 @@ import type { Toast } from "./toast.ts";
 export interface DailyOptions {
   readonly store: Store;
   readonly number: number;
-  readonly level: Level;
-  /** Whether the bundle has puzzle #n's level: no countdown to a puzzle that won't come. */
-  hasLevel(n: number): boolean;
+  readonly level: Puzzle;
   readonly siteUrl: string;
   readonly toast: Toast;
   onReplayTutorial(): void;
@@ -133,13 +131,11 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
 
   function updateNext(now: Date) {
     const current = todayNumber();
-    if (current > n) {
-      result.setNext(
-        options.hasLevel(current) ? { kind: "play", number: current } : { kind: "none" },
-      );
-    } else if (options.hasLevel(n + 1)) {
-      result.setNext({ kind: "countdown", text: formatCountdown(msUntilNextDay(now)) });
-    } else result.setNext({ kind: "none" });
+    result.setNext(
+      current > n
+        ? { kind: "play", number: current }
+        : { kind: "countdown", text: formatCountdown(msUntilNextDay(now)) },
+    );
   }
 
   render(store.read());

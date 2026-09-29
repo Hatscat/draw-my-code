@@ -75,9 +75,8 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
   are shown plain, with no per-cell marks: toggling is how the player compares them.
 - Stats (played, win %, current streak, max streak, distribution 1/2/3/X). Distribution bars show
   their counts; today's bar is highlighted by more than color.
-- Share button, `Next puzzle in HH:MM:SS` (or `New puzzles are on the way` when the bundle has no
-  next level; or a `Play #N` button when the puzzle was finished after midnight and today's level
-  exists), optional `Follow for new games` link (hidden when `FOLLOW_URL` is empty).
+- Share button, `Next puzzle in HH:MM:SS` (or a `Play #N` button when the puzzle was finished after
+  midnight), optional `Follow for new games` link (hidden when `FOLLOW_URL` is empty).
 
 ## Share
 
@@ -117,7 +116,6 @@ distribution are derived from them.
   morning; a failed or missed puzzle resets it.
 - Max streak: the longest run over all results. Results numbered after today (the device clock moved
   back) count for played and max streak, not for the current streak.
-- A day without a level (schedule ran out) counts as missed; the CI reminder exists to prevent it.
 
 ## Dates
 
@@ -127,8 +125,6 @@ distribution are derived from them.
   the app comes back to the foreground. A finished or untouched puzzle then reloads to today's. An
   in-progress puzzle stays until finished, and its result counts for its own number. The tutorial is
   never interrupted: if the day changed meanwhile, its end leads to today's puzzle.
-- No level for today (schedule ran out): friendly "No puzzle today. New puzzles are on the way."
-  state, with stats if any. When online, it checks once per date for a new version of the site.
 - Before `LAUNCH_DATE`: tutorial on the first visit, then "First puzzle on <Month D, YYYY>" (e.g.
   "First puzzle on October 1, 2026") and a countdown: `Starts in N days`, then `Starts in HH:MM:SS`
   on the last day. On both screens the header shows only "?".
@@ -190,8 +186,8 @@ Additions:
 - Font: JetBrains Mono, a variable woff2 subset (ASCII plus `·`, `×`, `∈`) downloaded once from
   Google Fonts and committed with its OFL license, precached; system monospace fallback; ligatures
   off. No font CDN.
-- Screens that weren't designed (result panel, tutorial controls, toast, pre-launch and no-puzzle)
-  reuse the design's tokens.
+- Screens that weren't designed (result panel, tutorial controls, toast, pre-launch) reuse the
+  design's tokens.
 - Solving a daily or a tutorial level bursts confetti in the palette's colors (not black) out of the
   grid, for 3 s, over the page: a canvas that never takes input. Not on a failure, not when a solved
   puzzle is reopened, and never with `prefers-reduced-motion`: the result text says it all.
@@ -202,7 +198,16 @@ Additions:
 Sources:
 
 - `levels/tutorial/01-one-cell.c` … `08-mask.c` (`NN-name.c`, lowercase name).
-- `levels/daily/0001.c`, `0002.c`, … contiguous; puzzle #N is `daily/NNNN.c`.
+- `levels/daily/0001.c`, `0002.c`, … contiguous: the daily pool, in order.
+- `levels/special/MM-DD-name.c` (e.g. `10-31-halloween.c`): a level shown every year on that date,
+  in place of the pool's. Feb 29 is allowed and shows in leap years only. One level per date.
+
+Schedule: the pool loops forever, so there is always a puzzle after launch. Puzzle #N shows its
+date's special if there is one; otherwise pool level `(start + N − from) mod size`, counted from 0,
+for the latest epoch `{ from, size, start }` with `from ≤ N`. The first epoch is `{ 1, P, 0 }`. When
+the pool changes size after launch, the generator adds an epoch starting tomorrow (in UTC+14) that
+carries on from where the loop was, so no day already shown changes level. A special takes its day
+without shifting the pool: the level it replaces comes back in a later loop.
 
 Format: the file is exactly what players see, byte for byte: the function, 2-space indentation.
 Comments are allowed and shown to players, so they can serve as hints.
@@ -239,15 +244,16 @@ Generator `tools/levels.ts` (`deno task levels`):
    dump.
 3. Write `src/levels/generated.ts`, deterministic and `deno fmt`-clean: `tutorial` and `daily` lists
    of `id`, `code`, and `solution` as 8 strings of 8 digits, one per row, so the drawing is readable
-   in diffs.
-4. Print every new or changed level: its code next to an ANSI truecolor preview of the grid, then
-   `Daily puzzles scheduled until YYYY-MM-DD (N days left)`, counted from today in UTC+14 (the first
-   time zone to reach a date). Past 50 days left, it reminds that GitHub disables scheduled
-   workflows after 60 days without a commit.
+   in diffs; `special` (month, day, name, code, solution) and `epochs`. The daily pool can't be
+   empty.
+4. Print every new or changed level: its code next to an ANSI truecolor preview of the grid. Then
+   the pool's size (one loop every N days), the number of special dates, and today's puzzle number
+   in UTC+14, the first time zone to reach a date.
 
-`deno task levels` refuses to change or remove a daily whose date has come, unless run with
-`--allow-published-edit`. `--check` regenerates in memory and fails if the file differs. With fewer
-than 7 days left it warns (a GitHub annotation in CI), and fails with `--strict`.
+`deno task levels` refuses any change to what an open puzzle shows (today's and the past
+`CATCH_UP_DAYS` days', in UTC+14), unless run with `--allow-published-edit`. Any other level may
+change, even one shown in an earlier loop: finished plays keep their own solution. `--check`
+regenerates in memory and fails if the file differs.
 
 Level editor, for the author (`deno task editor`, dev server only, never built or deployed): a page
 (`src/editor/`) with a level's source, the code panel and grid as players see them, and every check
@@ -359,7 +365,8 @@ browser build, whose text metrics match real devices; time zone and locale pinne
   share text (Web Share and clipboard stubs, including a cancelled share).
 - 3 failed attempts → solution revealed, X/3.
 - Reload mid-puzzle restores state; a finished puzzle stays finished; midnight while open; next day
-  (`page.clock`) → new puzzle and updated streak; no-puzzle-today state.
+  (`page.clock`) → new puzzle and updated streak; after the pool's last level, the first again; a
+  special date's level.
 - Offline reload after the first visit (Chromium only).
 - 320 px wide: no horizontal scroll, every control reachable; a 12-line, 36-column level at 320×568
   keeps the grid at least 250 px wide.
@@ -372,11 +379,9 @@ browser build, whose text metrics match real devices; time zone and locale pinne
 
 ## CI/CD — `.github/workflows/ci.yml`
 
-- Triggers: pull requests, pushes to `main`, and a daily schedule (the scheduled run only runs
-  `check`). All jobs run on a pinned `ubuntu-26.04` (same gcc as local).
-- `check`: pinned Deno, cached deps, `deno task check`, `deno task levels:check` (`--strict` on the
-  scheduled run, so fewer than 7 days of puzzles fails and GitHub emails me; a warning annotation
-  otherwise).
+- Triggers: pull requests and pushes to `main`. All jobs run on a pinned `ubuntu-26.04` (same gcc as
+  local).
+- `check`: pinned Deno, cached deps, `deno task check`, `deno task levels:check`.
 - `build`: a single build, with the base path and site URL from the Pages configuration.
 - `e2e` (needs `build`): pinned Node LTS and Deno, npm cache, browsers installed fresh each run
   (Playwright advises against caching them), tests that exact build; HTML report uploaded as an

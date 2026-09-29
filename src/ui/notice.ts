@@ -10,14 +10,12 @@ import type { Screen } from "./screen.ts";
 import { el } from "./dom.ts";
 import { createHeader } from "./header.ts";
 import { createInfoPanel } from "./info-panel.ts";
-import { checkForNewVersion } from "./pwa.ts";
 import { createStatsView } from "./stats-view.ts";
 import type { Store } from "./storage.ts";
 
-/** The screens without a puzzle: before launch, and when the schedule has run out. */
+/** The screen before launch: the first puzzle's date, a countdown, and stats from a replay. */
 export function showNotice(
   root: HTMLElement,
-  kind: "before-launch" | "no-puzzle",
   store: Store,
   onReplayTutorial: () => void,
 ): Screen {
@@ -35,13 +33,9 @@ export function showNotice(
   const heading = el(
     "h2",
     { class: "notice-title" },
-    kind === "before-launch" ? `First puzzle on ${formatLongDate(LAUNCH_DATE)}` : "No puzzle today",
+    `First puzzle on ${formatLongDate(LAUNCH_DATE)}`,
   );
-  const line = el(
-    "p",
-    { class: "notice" },
-    kind === "no-puzzle" ? "New puzzles are on the way." : "",
-  );
+  const line = el("p", { class: "notice" });
   const stats = createStatsView();
   const statsSection = el("section", { class: "notice-stats", "aria-label": "Your stats" });
 
@@ -54,14 +48,11 @@ export function showNotice(
   }
 
   root.replaceChildren(header.element, info.element, heading, line, statsSection);
-  // Maybe only this copy of the site is out of puzzles.
-  if (kind === "no-puzzle") checkForNewVersion();
   let lastDate: CalendarDate | undefined;
   return {
     tick(now, today) {
       lastDate = today;
       render(today);
-      if (kind !== "before-launch") return;
       const days = daysBetween(today, LAUNCH_DATE);
       line.textContent = days > 1
         ? `Starts in ${days} days`

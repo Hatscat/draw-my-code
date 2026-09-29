@@ -1,5 +1,11 @@
 import assert from "node:assert/strict";
-import { displayCode, levelId, numberingErrors, sourceErrors } from "./level-source.ts";
+import {
+  displayCode,
+  levelId,
+  numberingErrors,
+  sourceErrors,
+  specialDate,
+} from "./level-source.ts";
 
 const level = (...body: string[]) => ["int f(int x, int y) {", ...body, "}", ""].join("\n");
 
@@ -16,6 +22,14 @@ Deno.test("levelId rejects names outside the patterns", () => {
   }
   for (const name of ["1.c", "00001.c", "0000.c", "0001.txt", "0001-x.c", "abcd.c"]) {
     assert.equal(levelId("daily", name), undefined, name);
+  }
+});
+
+Deno.test("specialDate reads MM-DD-name.c, Feb 29 included", () => {
+  assert.deepEqual(specialDate("10-31-halloween.c"), { month: 10, day: 31, name: "halloween" });
+  assert.deepEqual(specialDate("02-29-leap-day.c"), { month: 2, day: 29, name: "leap-day" });
+  for (const name of ["13-01-x.c", "02-30-x.c", "04-31-x.c", "1-01-x.c", "10-31.c", "10-31-X.c"]) {
+    assert.equal(specialDate(name), undefined, name);
   }
 });
 

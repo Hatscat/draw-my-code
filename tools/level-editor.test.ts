@@ -9,9 +9,10 @@ import {
   isTrusted,
   levelPath,
   listLevels,
+  openLevels,
   plainText,
 } from "./level-editor.ts";
-import { preview } from "./level-output.ts";
+import { type LevelSet, preview, renderGenerated } from "./level-output.ts";
 
 const TOOLS = fileURLToPath(new URL(".", import.meta.url));
 const LAUNCH = { y: 2026, m: 11, d: 1 };
@@ -66,6 +67,12 @@ Deno.test("levelPath accepts level files only, and never leaves levels/", () => 
     levelPath("/repo", "levels/tutorial/01-one-cell.c"),
     "/repo/levels/tutorial/01-one-cell.c",
   );
+  assert.equal(
+    levelPath("/repo", "levels/special/10-31-ghost.c"),
+    "/repo/levels/special/10-31-ghost.c",
+  );
+  assert.equal(levelPath("/repo", "levels/special/02-30-never.c"), undefined);
+  assert.equal(levelPath("/repo", "levels/special/0001.c"), undefined);
   for (
     const path of [
       "",
@@ -85,20 +92,50 @@ Deno.test("levelPath accepts level files only, and never leaves levels/", () => 
   }
 });
 
-Deno.test("listLevels lists tutorial then dailies in order, with dates and what went live", async () => {
+const puzzle = { code: "", solution: [] };
+const SCHEDULE: LevelSet = {
+  tutorial: [],
+  daily: [{ id: 1, ...puzzle }, { id: 2, ...puzzle }],
+  special: [{ month: 11, day: 3, name: "flag", ...puzzle }],
+  epochs: [{ from: 1, size: 2, start: 0 }],
+};
+
+Deno.test("listLevels lists tutorial, daily pool and specials, marking what players can open", async () => {
   const root = await repo();
   try {
+    await Deno.mkdir(`${root}/levels/special`);
+    await Deno.writeTextFile(`${root}/levels/special/11-03-flag.c`, body("x"));
+    await Deno.writeTextFile(`${root}/src/levels/generated.ts`, renderGenerated(SCHEDULE));
+    // Nov 1 is puzzle 1: only pool level 1 has been shown.
     const levels = await listLevels(root, LAUNCH, { y: 2026, m: 11, d: 1 });
     assert.deepEqual(levels, [
       { path: "levels/tutorial/01-return-x.c", kind: "tutorial", id: 1, published: false },
       { path: "levels/daily/0001.c", kind: "daily", id: 1, live: "2026-11-01", published: true },
       { path: "levels/daily/0002.c", kind: "daily", id: 2, live: "2026-11-02", published: false },
+      {
+        path: "levels/special/11-03-flag.c",
+        kind: "special",
+        id: 0,
+        live: "11-03",
+        published: false,
+      },
     ]);
     await Deno.remove(`${root}/levels/tutorial`, { recursive: true });
-    assert.equal((await listLevels(root, LAUNCH, LAUNCH)).length, 2);
+    assert.equal((await listLevels(root, LAUNCH, LAUNCH)).length, 3);
   } finally {
     await Deno.remove(root, { recursive: true });
   }
+});
+
+Deno.test("openLevels: the levels today's and the past week's puzzles show", () => {
+  // Nov 4 is puzzle 4: puzzles 1 to 4 show pool 1, pool 2, the Nov 3 special, pool 2.
+  assert.deepEqual([...openLevels(SCHEDULE, LAUNCH, { y: 2026, m: 11, d: 4 })].sort(), [
+    "daily:1",
+    "daily:2",
+    "special:11-03",
+  ]);
+  assert.deepEqual([...openLevels(SCHEDULE, LAUNCH, { y: 2026, m: 10, d: 1 })], []);
+  assert.deepEqual([...openLevels({ ...SCHEDULE, epochs: [] }, LAUNCH, LAUNCH)], []);
 });
 
 Deno.test("checkSource checks like the level pipeline, naming the author's file", async () => {

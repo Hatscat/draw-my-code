@@ -4,12 +4,12 @@
  * "Levels".
  */
 
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { LAUNCH_DATE } from "../src/core/config.ts";
-import { type CalendarDate, daysBetween, formatIsoDate } from "../src/core/date.ts";
-import { puzzleDate } from "../src/core/schedule.ts";
-import type { Level } from "../src/levels/types.ts";
+import { CATCH_UP_DAYS, LAUNCH_DATE } from "../src/core/config.ts";
+import { type CalendarDate, formatIsoDate } from "../src/core/date.ts";
+import { growEpochs, levelFor, puzzleDate, puzzleNumber } from "../src/core/schedule.ts";
+import type { Level, Puzzle, SpecialLevel } from "../src/levels/types.ts";
 import { compileLevel, gccVersion, prepareToolchain, type Toolchain } from "./level-compile.ts";
 import {
   denoFmt,
@@ -18,7 +18,6 @@ import {
   readGenerated,
   renderGenerated,
   sameLevel,
-  schedule,
   toRows,
 } from "./level-output.ts";
 import {
@@ -29,6 +28,8 @@ import {
   type LevelKind,
   numberingErrors,
   sourceErrors,
+  SPECIAL_NAME_HELP,
+  specialDate,
 } from "./level-source.ts";
 
 export interface Options {
@@ -36,15 +37,11 @@ export interface Options {
   readonly root: string;
   /** Compare instead of writing. */
   readonly check: boolean;
-  /** Fail, instead of warning, when fewer than 7 days of daily puzzles remain. */
-  readonly strict: boolean;
-  /** Allow changing a daily puzzle whose date has come. */
+  /** Allow changing what a puzzle players can still open shows: today's or the past week's. */
   readonly allowPublishedEdit: boolean;
   /** Today in UTC+14, the first time zone to reach each date. */
   readonly today: CalendarDate;
   readonly launch: CalendarDate;
-  /** Emit GitHub Actions annotations. */
-  readonly annotate: boolean;
 }
 
 export interface Report {
@@ -54,27 +51,25 @@ export interface Report {
 
 const KINDS: readonly LevelKind[] = ["tutorial", "daily"];
 const OUTPUT = "src/levels/generated.ts";
-const LOW_SCHEDULE_DAYS = 7;
-// GitHub disables scheduled workflows after 60 days without a commit.
-const SCHEDULE_REMINDER_DAYS = 50;
 
-interface LevelFile {
-  readonly kind: LevelKind;
-  readonly id: number;
-  readonly path: string;
-  /** Path relative to the root, for messages. */
-  readonly label: string;
-}
+type LevelFile =
+  | { readonly kind: LevelKind; readonly id: number; readonly path: string; readonly label: string }
+  | {
+    readonly kind: "special";
+    readonly month: number;
+    readonly day: number;
+    readonly name: string;
+    readonly path: string;
+    readonly label: string;
+  };
 
 export async function generate(options: Options): Promise<Report> {
   const lines: string[] = [];
   const errors: string[] = [];
-  const annotate = (level: "warning" | "error", message: string) =>
-    options.annotate ? `::${level} title=Puzzle schedule::${message}` : message;
 
   const files = await findLevelFiles(options.root, errors);
   const workDir = await Deno.makeTempDir({ prefix: "dmc-levels-" });
-  let levels: LevelSet;
+  const built: { file: LevelFile; puzzle: Puzzle }[] = [];
   try {
     lines.push(await gccVersion());
     const toolchain = await prepareToolchain(join(options.root, "tools"), workDir);
@@ -83,51 +78,55 @@ export async function generate(options: Options): Promise<Report> {
       navigator.hardwareConcurrency || 4,
       (file) => buildLevel(file, toolchain, options.root),
     );
-    const failed = results.filter((result) => "errors" in result);
-    for (const result of failed) errors.push(...result.errors);
-    levels = {
-      tutorial: results.filter((r) => "level" in r && r.kind === "tutorial").map(levelOf),
-      daily: results.filter((r) => "level" in r && r.kind === "daily").map(levelOf),
-    };
+    for (const result of results) {
+      if ("errors" in result) errors.push(...result.errors);
+      else built.push(result);
+    }
   } finally {
     await Deno.remove(workDir, { recursive: true });
   }
   if (errors.length > 0) return { ok: false, lines: [...lines, ...errors] };
 
+  const numbered = (kind: LevelKind): Level[] =>
+    built.flatMap(({ file, puzzle }) =>
+      file.kind === kind && "id" in file ? [{ id: file.id, ...puzzle }] : []
+    );
+  const special: SpecialLevel[] = built.flatMap(({ file, puzzle }) =>
+    file.kind === "special" && "month" in file
+      ? [{ month: file.month, day: file.day, name: file.name, ...puzzle }]
+      : []
+  ).sort((a, b) => a.month - b.month || a.day - b.day);
+  const daily = numbered("daily");
+  if (daily.length === 0) {
+    return { ok: false, lines: [...lines, "levels/daily: add a level: the daily pool is empty"] };
+  }
+
   const outputPath = join(options.root, OUTPUT);
+  const previous = await readGenerated(outputPath);
+  const today = puzzleNumber(options.launch, options.today);
+  const levels: LevelSet = {
+    tutorial: numbered("tutorial"),
+    daily,
+    special,
+    // A new pool size applies from tomorrow, anywhere: today and before keep their levels.
+    epochs: growEpochs(previous.epochs, daily.length, today + 1),
+  };
   const generated = await denoFmt(renderGenerated(levels), options.root);
   const existing = await readTextOr(outputPath, "");
-  const previous = await readGenerated(outputPath);
   const changes = diff(previous, levels);
 
   if (!options.allowPublishedEdit) {
-    for (const { kind, id } of changes.changed.concat(changes.removed)) {
-      if (kind !== "daily") continue;
-      const live = puzzleDate(options.launch, id);
-      if (daysBetween(live, options.today) >= 0) {
-        errors.push(
-          `levels/daily/${formatId(kind, id)}.c went live on ${formatIsoDate(live)}: changing a ` +
-            "published puzzle changes results players already have. Re-run with " +
-            "--allow-published-edit if you really mean it.",
-        );
-      }
-    }
+    errors.push(...openPuzzleChanges(previous, levels, options.launch, today));
   }
 
   if (options.check) {
     if (generated !== existing) {
       errors.push(`${OUTPUT} is out of date: run \`deno task levels\``);
-      for (const { kind, id, what } of changes.all) {
-        errors.push(`  ${what}: levels/${kind}/${formatId(kind, id)}`);
-      }
+      for (const { title } of changes) errors.push(`  ${title}`);
     }
   } else if (errors.length === 0) {
-    for (const { kind, id, what } of changes.all) {
-      const level = levels[kind].find((l) => l.id === id);
-      const title = kind === "daily"
-        ? `${what}: daily #${id}, live on ${formatIsoDate(puzzleDate(options.launch, id))}`
-        : `${what}: tutorial level ${id}`;
-      lines.push("", level ? preview(title, level) : title);
+    for (const { title, puzzle } of changes) {
+      lines.push("", puzzle ? preview(title, puzzle) : title);
     }
     if (generated !== existing) {
       await Deno.writeTextFile(outputPath, generated);
@@ -135,29 +134,46 @@ export async function generate(options: Options): Promise<Report> {
     }
   }
 
-  lines.push("", `${levels.tutorial.length} tutorial levels, ${levels.daily.length} daily puzzles`);
-  const { line, daysLeft } = schedule(options.launch, levels.daily.length, options.today);
-  lines.push(line);
-  if (daysLeft < LOW_SCHEDULE_DAYS) {
-    const message = `Fewer than ${LOW_SCHEDULE_DAYS} days of daily puzzles left: add levels to ` +
-      "levels/daily/";
-    if (options.strict) errors.push(annotate("error", message));
-    else lines.push(annotate("warning", message));
-  } else if (daysLeft > SCHEDULE_REMINDER_DAYS) {
-    lines.push(
-      "Reminder: GitHub disables scheduled workflows after 60 days without a commit, and the " +
-        "daily check is what warns you before puzzles run out.",
+  lines.push(
+    "",
+    `${levels.tutorial.length} tutorial levels, ${daily.length} daily levels (one loop every ` +
+      `${daily.length} days), ${special.length} special dates`,
+    today >= 1
+      ? `Today, in UTC+14: puzzle #${today}`
+      : `Puzzle #1 on ${formatIsoDate(options.launch)}`,
+  );
+  return { ok: errors.length === 0, lines: [...lines, ...errors] };
+}
+
+/**
+ * Changes to what a puzzle players can still open shows: today's and the past week's, which a
+ * player may be playing right now or come back to.
+ */
+function openPuzzleChanges(
+  before: LevelSet,
+  after: LevelSet,
+  launch: CalendarDate,
+  today: number,
+): string[] {
+  // Nothing generated yet: nothing was shown.
+  if (before.daily.length === 0 || before.epochs.length === 0) return [];
+  const errors: string[] = [];
+  for (let n = Math.max(1, today - CATCH_UP_DAYS); n <= today; n++) {
+    if (sameLevel(levelFor(before, launch, n), levelFor(after, launch, n))) continue;
+    errors.push(
+      `puzzle #${n} (${formatIsoDate(puzzleDate(launch, n))}) would change, and players can ` +
+        `still open it: today's and the past ${CATCH_UP_DAYS} days' puzzles are frozen. Re-run ` +
+        "with --allow-published-edit if you really mean it.",
     );
   }
-
-  return { ok: errors.length === 0, lines: [...lines, ...errors] };
+  return errors;
 }
 
 async function findLevelFiles(root: string, errors: string[]): Promise<LevelFile[]> {
   const files: LevelFile[] = [];
   for (const kind of KINDS) {
     const dir = join(root, "levels", kind);
-    const found: LevelFile[] = [];
+    const found: { kind: LevelKind; id: number; path: string; label: string }[] = [];
     for (const entry of await readDirOr(dir)) {
       if (entry.name.startsWith(".")) continue;
       const label = `levels/${kind}/${entry.name}`;
@@ -173,59 +189,94 @@ async function findLevelFiles(root: string, errors: string[]): Promise<LevelFile
     }
     files.push(...found.sort((a, b) => a.id - b.id));
   }
+  const dates = new Map<string, string>();
+  for (const entry of await readDirOr(join(root, "levels", "special"))) {
+    if (entry.name.startsWith(".")) continue;
+    const label = `levels/special/${entry.name}`;
+    const date = entry.isFile ? specialDate(entry.name) : undefined;
+    if (!date) {
+      errors.push(`${label}: name special levels ${SPECIAL_NAME_HELP}, with a real date`);
+      continue;
+    }
+    const key = entry.name.slice(0, 5);
+    const other = dates.get(key);
+    if (other) errors.push(`${label}: ${other} already has this date`);
+    dates.set(key, label);
+    files.push({
+      kind: "special",
+      ...date,
+      path: join(root, "levels", "special", entry.name),
+      label,
+    });
+  }
   return files;
 }
 
-type Built =
-  | { readonly kind: LevelKind; readonly level: Level }
-  | { readonly kind: LevelKind; readonly errors: readonly string[] };
-
-function levelOf(built: Built): Level {
-  if ("level" in built) return built.level;
-  throw new Error("internal error: a failed level reached the output");
-}
+type Built = { readonly file: LevelFile; readonly puzzle: Puzzle } | {
+  readonly file: LevelFile;
+  readonly errors: readonly string[];
+};
 
 async function buildLevel(file: LevelFile, toolchain: Toolchain, root: string): Promise<Built> {
   const source = await Deno.readTextFile(file.path);
   const fail = (messages: readonly string[]): Built => ({
-    kind: file.kind,
+    file,
     errors: [`✗ ${file.label}`, ...messages.map((m) => indent(m.replaceAll(`${root}/`, "")))],
   });
   const problems = sourceErrors(source);
   if (problems.length > 0) return fail(problems);
-  const result = await compileLevel(file.path, `${file.kind}-${file.id}`, toolchain);
+  // Unique per file: two specials may share a date (an error, but both still get compiled).
+  const workName = "id" in file
+    ? `${file.kind}-${file.id}`
+    : `special-${basename(file.path, ".c")}`;
+  const result = await compileLevel(file.path, workName, toolchain);
   if (!result.ok) return fail(result.errors);
-  return {
-    kind: file.kind,
-    level: { id: file.id, code: displayCode(source), solution: toRows(result.values) },
-  };
+  return { file, puzzle: { code: displayCode(source), solution: toRows(result.values) } };
 }
 
 interface Change {
-  readonly kind: LevelKind;
-  readonly id: number;
-  readonly what: "new" | "changed" | "removed";
+  readonly title: string;
+  /** Absent for a removed level. */
+  readonly puzzle?: Puzzle;
 }
 
-function diff(before: LevelSet, after: LevelSet) {
-  const all: Change[] = [];
-  for (const kind of KINDS) {
-    for (const level of after[kind]) {
-      const old = before[kind].find((l) => l.id === level.id);
-      if (!old) all.push({ kind, id: level.id, what: "new" });
-      else if (!sameLevel(old, level)) all.push({ kind, id: level.id, what: "changed" });
-    }
-    for (const old of before[kind]) {
-      if (!after[kind].some((l) => l.id === old.id)) {
-        all.push({ kind, id: old.id, what: "removed" });
+/** New, changed and removed levels, with a title for each, in file order. */
+function diff(before: LevelSet, after: LevelSet): Change[] {
+  const changes: Change[] = [];
+  const compare = <T extends Puzzle>(
+    old: readonly T[],
+    now: readonly T[],
+    key: (level: T) => string,
+    name: (level: T) => string,
+  ) => {
+    for (const level of now) {
+      const was = old.find((o) => key(o) === key(level));
+      if (!was) changes.push({ title: `new: ${name(level)}`, puzzle: level });
+      else if (!sameLevel(was, level)) {
+        changes.push({ title: `changed: ${name(level)}`, puzzle: level });
       }
     }
-  }
-  return {
-    all,
-    changed: all.filter((c) => c.what === "changed"),
-    removed: all.filter((c) => c.what === "removed"),
+    for (const level of old) {
+      if (!now.some((n) => key(n) === key(level))) {
+        changes.push({ title: `removed: ${name(level)}` });
+      }
+    }
   };
+  compare(before.tutorial, after.tutorial, (l) => String(l.id), (l) => `tutorial level ${l.id}`);
+  compare(
+    before.daily,
+    after.daily,
+    (l) => String(l.id),
+    (l) => `levels/daily/${formatId("daily", l.id)}.c`,
+  );
+  compare(
+    before.special,
+    after.special,
+    (l) => `${l.month}-${l.day}`,
+    (l) =>
+      `special ${String(l.month).padStart(2, "0")}-${String(l.day).padStart(2, "0")} (${l.name})`,
+  );
+  return changes;
 }
 
 function indent(message: string): string {
@@ -275,7 +326,7 @@ export function todayInUtcPlus14(): CalendarDate {
 }
 
 if (import.meta.main) {
-  const flags = ["--check", "--strict", "--allow-published-edit"];
+  const flags = ["--check", "--allow-published-edit"];
   const unknown = Deno.args.filter((arg) => !flags.includes(arg));
   if (unknown.length > 0) {
     console.error(`Unknown option ${unknown.join(" ")}. Options: ${flags.join(" ")}`);
@@ -284,11 +335,9 @@ if (import.meta.main) {
   const report = await generate({
     root: fileURLToPath(new URL("..", import.meta.url)).replace(/\/$/, ""),
     check: Deno.args.includes("--check"),
-    strict: Deno.args.includes("--strict"),
     allowPublishedEdit: Deno.args.includes("--allow-published-edit"),
     today: todayInUtcPlus14(),
     launch: LAUNCH_DATE,
-    annotate: Deno.env.get("GITHUB_ACTIONS") === "true",
   });
   for (const line of report.lines) console.log(line);
   if (!report.ok) Deno.exit(1);

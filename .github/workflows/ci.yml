@@ -4,9 +4,6 @@ on:
   pull_request:
   push:
     branches: [main]
-  schedule:
-    # Daily, off the hour. Scheduled runs only run `check`.
-    - cron: "17 6 * * *"
 
 permissions: {}
 
@@ -30,11 +27,9 @@ jobs:
           cache: true
       - run: deno install --frozen
       - run: deno task check
-      # Scheduled runs fail when fewer than 7 days of puzzles remain, so GitHub emails the owner.
-      - run: deno task levels:check ${{ github.event_name == 'schedule' && '--strict' || '' }}
+      - run: deno task levels:check
 
   build:
-    if: github.event_name != 'schedule'
     runs-on: ubuntu-26.04
     permissions:
       contents: read

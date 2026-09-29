@@ -15,7 +15,6 @@ export interface ResultView {
 
 export type Next =
   | { readonly kind: "countdown"; readonly text: string }
-  | { readonly kind: "none" }
   | { readonly kind: "play"; readonly number: number };
 
 export interface ResultPanelHandlers {
@@ -114,12 +113,7 @@ export function createResultPanel(handlers: ResultPanelHandlers): ResultPanel {
         const play = el("button", { type: "button", class: "play-next" }, `Play #${value.number}`);
         play.addEventListener("click", () => handlers.onPlayNext());
         next.replaceChildren(play);
-      } else {
-        const text = value.kind === "countdown"
-          ? `Next puzzle in ${value.text}`
-          : "New puzzles are on the way";
-        next.replaceChildren(el("p", {}, text));
-      }
+      } else next.replaceChildren(el("p", {}, `Next puzzle in ${value.text}`));
     },
     showManualCopy(text) {
       manualCopy.value = text;

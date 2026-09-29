@@ -1,7 +1,8 @@
 import { expect, type Locator, type Page, test as base } from "@playwright/test";
 import { LAUNCH_DATE } from "../../src/core/config.ts";
-import { puzzleDate } from "../../src/core/schedule.ts";
-import { daily } from "../../src/levels/generated.ts";
+import { levelFor, type Levels, puzzleDate } from "../../src/core/schedule.ts";
+import { daily, epochs, special } from "../../src/levels/generated.ts";
+import type { Puzzle } from "../../src/levels/types.ts";
 import { siteUrl } from "../../tools/site-url.ts";
 
 /**
@@ -65,11 +66,34 @@ export async function cellCenter(page: Page, x: number, y: number) {
   return { clientX: box.x + box.width / 2, clientY: box.y + box.height / 2 };
 }
 
+export const LEVELS: Levels = { daily, special, epochs };
+
+/** Puzzle #n's level, as the game schedules it: its date's special, or the pool's. */
+export function levelOf(n: number): Puzzle {
+  return levelFor(LEVELS, LAUNCH_DATE, n);
+}
+
 /** Puzzle #n's solution: 8 rows of 8 digits, from the generated levels. */
 export function solutionOf(n: number): readonly string[] {
-  const level = daily.find((l) => l.id === n);
-  if (!level) throw new Error(`no daily #${n}`);
-  return level.solution;
+  return levelOf(n).solution;
+}
+
+/** The code the code panel shows, without its line numbers. */
+export function shownCode(page: Page): Promise<string> {
+  return page.locator(".code").evaluate((pre) =>
+    [...pre.querySelectorAll(".code-line")].map((line) =>
+      [...line.childNodes]
+        .filter((node) => !(node instanceof HTMLElement && node.classList.contains("code-number")))
+        .map((node) => node.textContent)
+        .join("")
+    ).join("\n")
+  );
+}
+
+/** The first puzzle that shows `level`. */
+export function numberShowing(level: Puzzle): number {
+  for (let n = 1; n <= 5000; n++) if (levelOf(n) === level) return n;
+  throw new Error("no puzzle shows this level");
 }
 
 /** Paints `rows` (8 rows of 8 digits) onto a blank grid, one color at a time. */

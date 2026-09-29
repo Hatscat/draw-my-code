@@ -3,6 +3,8 @@
  * format players see, and the C constructs a level may use. gcc and nm check the rest.
  */
 
+import { isValidDate } from "../src/core/date.ts";
+
 export type LevelKind = "tutorial" | "daily";
 
 /** Longest line and line count that still fit a 320 px screen at the 11 px minimum code size. */
@@ -19,6 +21,21 @@ export const FILE_NAME_HELP = {
   tutorial: "NN-name.c (e.g. 01-one-cell.c)",
   daily: "NNNN.c (e.g. 0001.c)",
 } as const;
+
+const SPECIAL_NAME = /^(\d{2})-(\d{2})-([a-z0-9]+(?:-[a-z0-9]+)*)\.c$/;
+export const SPECIAL_NAME_HELP = "MM-DD-name.c (e.g. 10-31-halloween.c)";
+
+/** A special level's date and name from its file name; undefined if it isn't one, or no date. */
+export function specialDate(
+  fileName: string,
+): { readonly month: number; readonly day: number; readonly name: string } | undefined {
+  const match = SPECIAL_NAME.exec(fileName);
+  if (!match) return undefined;
+  const [month, day] = [Number(match[1]), Number(match[2])];
+  // A leap year, so Feb 29 is a date: its special shows in leap years only.
+  if (!isValidDate({ y: 2028, m: month, d: day })) return undefined;
+  return { month, day, name: match[3] ?? "" };
+}
 
 /** The level number encoded in a file name, or undefined if the name doesn't follow the pattern. */
 export function levelId(kind: LevelKind, fileName: string): number | undefined {

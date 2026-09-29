@@ -1,8 +1,19 @@
 import { LAUNCH_DATE } from "../../src/core/config.ts";
 import { formatIsoDate } from "../../src/core/date.ts";
-import { puzzleDate } from "../../src/core/schedule.ts";
-import { daily } from "../../src/levels/generated.ts";
-import { cell, dayOf, expect, openPuzzle, paintRows, solutionOf, test } from "./fixtures.ts";
+import { puzzleDate, puzzleNumber } from "../../src/core/schedule.ts";
+import { daily, special } from "../../src/levels/generated.ts";
+import {
+  cell,
+  dayOf,
+  expect,
+  levelOf,
+  numberShowing,
+  openPuzzle,
+  paintRows,
+  shownCode,
+  solutionOf,
+  test,
+} from "./fixtures.ts";
 
 const submit = { name: "Submit" } as const;
 
@@ -127,12 +138,24 @@ test("a missed day resets the current streak", async ({ page }) => {
   await expect(page.locator(".stat", { hasText: "Played" }).locator("dd")).toHaveText("2");
 });
 
-test("no puzzle today once the schedule has run out", async ({ page }) => {
-  await page.clock.install({ time: dayOf(daily.length + 1) });
-  await page.goto("./");
-  await expect(page.getByRole("heading", { name: "No puzzle today" })).toBeVisible();
-  await expect(page.getByText("New puzzles are on the way.")).toBeVisible();
-  await expect(page.getByRole("grid")).toHaveCount(0);
+test("after the pool's last level, the loop starts over", async ({ page }) => {
+  // The first day after the pool's first pass that isn't a special date.
+  let n = daily.length + 1;
+  while (levelOf(n) !== daily[(n - 1) % daily.length]) n++;
+  await openPuzzle(page, n);
+  await expect(page.locator(".header-label")).toHaveText(`#${n}`);
+  expect(await shownCode(page)).toBe(levelOf(n).code);
+});
+
+test("a special date shows its special level, year after year", async ({ page }) => {
+  const [first] = special;
+  test.skip(!first, "no special level");
+  if (!first) return;
+  // A year after its first showing: the same date, whatever the pool shows around it.
+  const { y, m, d } = puzzleDate(LAUNCH_DATE, numberShowing(first));
+  const nextYear = puzzleNumber(LAUNCH_DATE, { y: y + 1, m, d });
+  await openPuzzle(page, nextYear);
+  expect(await shownCode(page)).toBe(first.code);
 });
 
 test("before launch: the first puzzle's date and a countdown", async ({ page }) => {
@@ -160,19 +183,6 @@ test("production builds ignore the ?date= override", async ({ page }) => {
   // Puzzle #3's date: honoured, it would show #3.
   await page.goto(`./?date=${formatIsoDate(puzzleDate(LAUNCH_DATE, 3))}`);
   await expect(page.locator(".header-label")).toHaveText("#1");
-});
-
-test("the no-puzzle screen still shows the player's stats", async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "draw-my-code",
-      JSON.stringify({ v: 1, tutorial: { done: true, next: 1 }, results: { 1: 1, 2: 2, 3: "X" } }),
-    );
-  });
-  await page.clock.install({ time: dayOf(daily.length + 1) });
-  await page.goto("./");
-  await expect(page.getByRole("heading", { name: "No puzzle today" })).toBeVisible();
-  await expect(page.locator(".stat", { hasText: "Played" }).locator("dd")).toHaveText("3");
 });
 
 test("the day before launch counts down, then the first puzzle opens at midnight", async ({ page }) => {

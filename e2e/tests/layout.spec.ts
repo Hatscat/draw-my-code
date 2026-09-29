@@ -1,6 +1,14 @@
 import type { Page } from "@playwright/test";
 import { daily } from "../../src/levels/generated.ts";
-import { cell, expect, openPuzzle, paintRows, solutionOf, test } from "./fixtures.ts";
+import {
+  cell,
+  expect,
+  numberShowing,
+  openPuzzle,
+  paintRows,
+  solutionOf,
+  test,
+} from "./fixtures.ts";
 
 // The daily with the most code: the seed schedule includes one at the limit (12 lines, 36 columns).
 const largest = [...daily].sort((a, b) => {
@@ -29,7 +37,7 @@ test.describe("at 320 px wide", () => {
       "keep one daily at 12 lines with a 36-character line",
     ).toEqual([12, 36]);
 
-    await openPuzzle(page, largest.id);
+    await openPuzzle(page, numberShowing(largest));
     await page.evaluate(() => document.fonts.ready);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       320,

@@ -41,6 +41,8 @@ const fileName = (level: EditorLevel) => level.path.split("/").at(-1) ?? "level.
 const gameFileName = (level: EditorLevel | undefined) =>
   level?.kind === "tutorial"
     ? `tutorial_${level.id}.c`
+    : level?.kind === "special"
+    ? fileName(level)
     : `daily_${String(level?.id ?? 0).padStart(4, "0")}.c`;
 
 function start(root: HTMLElement) {
@@ -222,13 +224,16 @@ function start(root: HTMLElement) {
         { value: level.path },
         level.kind === "tutorial"
           ? `Tutorial ${level.id} · ${fileName(level)}`
-          : `#${level.id} · ${level.live}${level.published ? " · live" : ""}`,
+          : level.kind === "special"
+          ? `${fileName(level)}${level.published ? " · open" : ""}`
+          : `#${level.id} · ${level.live}${level.published ? " · open" : ""}`,
       );
+    const groups = { tutorial: "Tutorial", daily: "Daily pool", special: "Special dates" };
     picker.replaceChildren(
-      ...(["tutorial", "daily"] as const).map((kind) =>
+      ...(["tutorial", "daily", "special"] as const).map((kind) =>
         el(
           "optgroup",
-          { label: kind === "tutorial" ? "Tutorial" : "Daily" },
+          { label: groups[kind] },
           ...levels.filter((level) => level.kind === kind).map(option),
         )
       ),
@@ -262,8 +267,8 @@ function start(root: HTMLElement) {
     picker.value = level.path;
     history.replaceState(null, "", `?level=${encodeURIComponent(level.path)}`);
     published.hidden = !level.published;
-    published.textContent = `⚠ Daily #${level.id} went live on ${level.live}: players already ` +
-      "have results for it, so Update the game refuses to change it.";
+    published.textContent = "⚠ Today's or one of the past week's puzzles shows this level, and " +
+      "players can still open it: Update the game refuses to change it.";
     report.hidden = true;
     edited();
   }
