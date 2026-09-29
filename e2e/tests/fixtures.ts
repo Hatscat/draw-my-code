@@ -146,6 +146,29 @@ export function confettiBursts(page: Page): Promise<number> {
   return page.evaluate(() => (window as unknown as { confetti: number }).confetti);
 }
 
+/**
+ * Fires the event Chromium sends when the app can be installed; headless Chromium never does.
+ * Its prompt() records the call in window.installPrompted.
+ */
+export async function offerInstall(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const event = Object.assign(new Event("beforeinstallprompt", { cancelable: true }), {
+      prompt: () => {
+        (window as unknown as { installPrompted: boolean }).installPrompted = true;
+        return Promise.resolve();
+      },
+      userChoice: Promise.resolve({ outcome: "accepted", platform: "web" }),
+    });
+    dispatchEvent(event);
+  });
+}
+
+export function installPrompted(page: Page): Promise<boolean> {
+  return page.evaluate(() =>
+    (window as unknown as { installPrompted?: boolean }).installPrompted === true
+  );
+}
+
 export function sharedTexts(page: Page) {
   return page.evaluate(() => {
     const record = window as unknown as { shared: string[]; copied: string[]; attempts: number };

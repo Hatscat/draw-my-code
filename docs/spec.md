@@ -62,6 +62,7 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
 - A `Show digits` switch (off by default, saved): prints each cell's value in the corner, like the
   swatches, for players who can't tell some colors apart.
 - A `Replay tutorial` button, hidden during the tutorial.
+- An `Install app` button while the browser can install the game (see PWA).
 - The page may scroll while the panel is open.
 
 ## Result panel
@@ -304,6 +305,14 @@ Level design. The generator can't check these; they apply when a level is writte
   host other games). `skipWaiting` + `clients.claim`: a new version takes over on the next load,
   with no update prompt.
 - Fully playable offline after the first visit (levels ship in the bundle).
+- Installing: finishing the tutorial for the first time (not Skip, not a replay) opens a dialog
+  inviting the player to install the game. Chromium browsers get an `Install` button that opens the
+  browser's own prompt (`beforeinstallprompt`, whose default mini-infobar is suppressed); iOS and
+  iPadOS get the Share, then Add to Home Screen steps, and a note that the home screen app keeps its
+  own progress (iOS gives it separate storage); Safari on macOS gets File, then Add to Dock. Other
+  browsers, and the installed app itself, get no dialog. The info panel's `Install app` button opens
+  the same dialog. The dialog is a modal `<dialog>`: Escape or `Not now`/`Got it` closes it and puts
+  the focus back.
 - Base path and site URL come from the GitHub Pages configuration at build time, never hard-coded,
   so a custom domain later needs no code change. Local builds default to
   `http://127.0.0.1:4173/draw-my-code/`, so they also run under a sub-path. The site URL is used in

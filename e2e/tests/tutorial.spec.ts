@@ -1,5 +1,15 @@
 import { tutorial } from "../../src/levels/generated.ts";
-import { cell, confettiBursts, countConfetti, dayOf, expect, paintRows, test } from "./fixtures.ts";
+import {
+  cell,
+  confettiBursts,
+  countConfetti,
+  dayOf,
+  expect,
+  installPrompted,
+  offerInstall,
+  paintRows,
+  test,
+} from "./fixtures.ts";
 
 test.use({ tutorialDone: false });
 
@@ -135,4 +145,56 @@ test("midnight doesn't interrupt the tutorial; its end leads to today's puzzle",
   await expect(cell(page, 0, 0)).toHaveAccessibleName("x 0, y 0: 1 white");
   await page.getByRole("button", { name: "Skip tutorial" }).click();
   await expect(label(page)).toHaveText("#2");
+});
+
+/** Opens the tutorial at its last level, as a player who solved all the others. */
+async function openLastLevel(page: Page) {
+  await page.addInitScript((next) => {
+    if (localStorage.getItem("draw-my-code") !== null) return;
+    localStorage.setItem("draw-my-code", JSON.stringify({ v: 1, tutorial: { done: false, next } }));
+  }, tutorial.length);
+  await page.clock.install({ time: dayOf(1) });
+  await page.goto("./");
+  await expect(label(page)).toHaveText(`Tutorial ${tutorial.length}/${tutorial.length}`);
+}
+
+async function finishLastLevel(page: Page) {
+  const last = tutorial.at(-1);
+  if (!last) throw new Error("no tutorial levels");
+  await paintRows(page, last.solution);
+  await page.getByRole("button", { name: "Submit" }).click();
+  await page.getByRole("button", { name: "Done", exact: true }).click();
+}
+
+test("finishing the tutorial offers to install the app", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "only Chromium offers an install prompt");
+  await openLastLevel(page);
+  await offerInstall(page);
+  await finishLastLevel(page);
+  const dialog = page.getByRole("dialog", { name: "Install Draw my code" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Install" })).toBeFocused();
+  await dialog.getByRole("button", { name: "Install" }).click();
+  await expect.poll(() => installPrompted(page)).toBe(true);
+  await expect(dialog).toBeHidden();
+  await expect(label(page)).toHaveText("#1");
+});
+
+test("on an iPhone, the end of the tutorial explains Add to Home Screen", async ({ page, browserName }) => {
+  test.skip(browserName !== "webkit", "the iPhone project runs on WebKit");
+  await openLastLevel(page);
+  await finishLastLevel(page);
+  const dialog = page.getByRole("dialog", { name: "Install Draw my code" });
+  await expect(dialog).toContainText("Add to Home Screen");
+  await dialog.getByRole("button", { name: "Got it" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("button", { name: "Submit" })).toBeFocused();
+});
+
+test("skipping the tutorial offers nothing", async ({ page }) => {
+  await openLastLevel(page);
+  await offerInstall(page);
+  await page.getByRole("button", { name: "Skip tutorial" }).click();
+  await expect(label(page)).toHaveText("#1");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 });

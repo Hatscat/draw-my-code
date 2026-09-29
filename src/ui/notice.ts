@@ -4,6 +4,7 @@ import { setShowDigits } from "../core/player.ts";
 import { puzzleNumber } from "../core/schedule.ts";
 import { computeStats } from "../core/stats.ts";
 import { formatCountdown, formatLongDate, msUntilNextDay } from "./clock.ts";
+import { installButton } from "./install-dialog.ts";
 import { replayButton } from "./replay.ts";
 import type { Screen } from "./screen.ts";
 import { el } from "./dom.ts";
@@ -30,7 +31,7 @@ export function showNotice(
     const state = setShowDigits(store.read(), on);
     store.write(state);
     info.setShowDigits(on);
-  }, [replayButton(onReplayTutorial)]);
+  }, [replayButton(onReplayTutorial), installButton()]);
   const heading = el(
     "h2",
     { class: "notice-title" },

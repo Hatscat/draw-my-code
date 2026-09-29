@@ -11,6 +11,7 @@ import { computeStats } from "../core/stats.ts";
 import type { PlayerState } from "../core/storage.ts";
 import type { Level } from "../levels/types.ts";
 import { formatCountdown, msUntilNextDay } from "./clock.ts";
+import { installButton } from "./install-dialog.ts";
 import { showPuzzleView } from "./puzzle-view.ts";
 import { replayButton } from "./replay.ts";
 import { createResultPanel, type Shown } from "./result-panel.ts";
@@ -42,7 +43,7 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
     fileName: `daily_${String(n).padStart(4, "0")}.c`,
     code: options.level.code,
     attempts: `You have ${ATTEMPTS} attempts.`,
-    infoActions: [replayButton(options.onReplayTutorial)],
+    infoActions: [replayButton(options.onReplayTutorial), installButton()],
     // Every action applies to freshly read storage: another tab may have played meanwhile.
     onPaint: (index, color) => save(paintDaily(store.read(), n, solution, index, color)),
     onSubmit() {

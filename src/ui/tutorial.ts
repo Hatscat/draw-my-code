@@ -14,6 +14,7 @@ import { recordTutorialComplete } from "../core/sent.ts";
 import { skipTutorial, tutorialSolved } from "../core/tutorial.ts";
 import type { Level } from "../levels/types.ts";
 import { el } from "./dom.ts";
+import { installButton } from "./install-dialog.ts";
 import { showPuzzleView } from "./puzzle-view.ts";
 import type { Screen } from "./screen.ts";
 import type { Store } from "./storage.ts";
@@ -25,8 +26,8 @@ export interface TutorialOptions {
   readonly start: number;
   /** A replay from the info panel never saves progress: the tutorial is already done. */
   readonly replay: boolean;
-  /** Called after the last level or Skip. */
-  onDone(): void;
+  /** Called after the last level (`finished`) or Skip. */
+  onDone(finished: boolean): void;
 }
 
 /** The tutorial: unlimited attempts, no stats, no share. Its drawings are never saved. */
@@ -51,7 +52,7 @@ export function showTutorial(
     );
     skip.addEventListener("click", () => {
       if (!options.replay) store.write(skipTutorial(store.read()));
-      options.onDone();
+      options.onDone(false);
     });
 
     const levelView = showPuzzleView(root, {
@@ -59,6 +60,7 @@ export function showTutorial(
       fileName: `tutorial_${number}.c`,
       code: level.code,
       attempts: "Unlimited attempts.",
+      infoActions: [installButton()],
       footerActions: [skip],
       onPaint(cell, color) {
         play = paint(play, cell, color);
@@ -124,7 +126,7 @@ export function showTutorial(
   function next() {
     view.destroy();
     if (index + 1 >= levels.length) {
-      options.onDone();
+      options.onDone(true);
       return;
     }
     index++;

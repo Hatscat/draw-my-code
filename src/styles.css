@@ -690,6 +690,62 @@ h1 {
   font-weight: 700;
 }
 
+/* The install invitation: a panel over the dimmed game. */
+.dialog {
+  width: min(360px, 100% - 32px);
+  /* Centered: the reset at the top zeroes the margin modal dialogs center with. */
+  margin: auto;
+  padding: 20px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+
+.dialog h2 {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0.08em;
+}
+
+.dialog p,
+.dialog ol {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.dialog ol {
+  padding-left: 20px;
+}
+
+.dialog-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.dialog-primary {
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--button);
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
 .text-button {
   padding: 4px 10px;
   border: 1px solid var(--help-border);

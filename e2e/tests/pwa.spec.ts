@@ -1,4 +1,4 @@
-import { cell, expect, openPuzzle, test } from "./fixtures.ts";
+import { cell, expect, installPrompted, offerInstall, openPuzzle, test } from "./fixtures.ts";
 
 test("the game plays offline after the first visit", async ({ page, context, browserName }) => {
   test.skip(browserName !== "chromium", "Playwright supports service workers in Chromium only");
@@ -33,4 +33,19 @@ test("the manifest and all its icons are served", async ({ request, baseURL }) =
     expect(image.ok(), icon.src).toBe(true);
     expect(image.headers()["content-type"]).toBe("image/png");
   }
+});
+
+test("the info panel offers to install the app when the browser can", async ({ page, browserName, isMobile }) => {
+  test.skip(browserName !== "chromium" || isMobile, "desktop Chromium, with and without an offer");
+  await openPuzzle(page, 1);
+  await page.getByRole("button", { name: "How to play and settings" }).click();
+  const install = page.getByRole("button", { name: "Install app" });
+  await expect(install).toBeHidden();
+  await offerInstall(page);
+  await install.click();
+  const dialog = page.getByRole("dialog", { name: "Install Draw my code" });
+  await dialog.getByRole("button", { name: "Install" }).click();
+  await expect.poll(() => installPrompted(page)).toBe(true);
+  // A prompt can be shown once: the offer is gone.
+  await expect(install).toBeHidden();
 });

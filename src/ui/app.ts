@@ -8,6 +8,7 @@ import { tutorialLevelToShow } from "../core/tutorial.ts";
 import { daily, tutorial } from "../levels/generated.ts";
 import { dateOverride, localDate } from "./clock.ts";
 import { showDaily } from "./daily.ts";
+import { offerInstall } from "./install-dialog.ts";
 import { showNotice } from "./notice.ts";
 import type { Screen } from "./screen.ts";
 import { openStore, type Store } from "./storage.ts";
@@ -45,7 +46,12 @@ export function startApp(root: HTMLElement): void {
 
   function showTutorialFrom(start: number, replay: boolean) {
     inTutorial = true;
-    show(() => showTutorial(root, { store, levels: tutorial, start, replay, onDone: showMain }));
+    const onDone = (finished: boolean) => {
+      showMain();
+      // The end of a first tutorial: the moment to suggest playing every day from an app.
+      if (finished && !replay) offerInstall();
+    };
+    show(() => showTutorial(root, { store, levels: tutorial, start, replay, onDone }));
   }
 
   /** The tutorial until it is done or skipped, then today's daily or a notice. */
