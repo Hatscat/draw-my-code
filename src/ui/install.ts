@@ -42,9 +42,11 @@ export function installWay(): InstallWay | undefined {
   if (offer) return "prompt";
   const agent = navigator.userAgent;
   // iPadOS reports itself as a Mac, but a touch screen gives it away.
-  if (/iPhone|iPad|iPod/.test(agent) || (/Macintosh/.test(agent) && navigator.maxTouchPoints > 1)) {
-    return "ios";
-  }
+  const apple = /iPhone|iPad|iPod/.test(agent) ||
+    (/Macintosh/.test(agent) && navigator.maxTouchPoints > 1);
+  // Safari, Chrome, Firefox and Edge all say Safari/ on iOS. Most in-app browsers, such as
+  // Instagram's or Facebook's, leave it out: they have no Add to Home Screen.
+  if (apple && /Safari\//.test(agent)) return "ios";
   if (/Macintosh/.test(agent) && /Version\/[\d.]+ Safari\//.test(agent)) return "mac-safari";
   return undefined;
 }

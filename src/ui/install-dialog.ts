@@ -4,9 +4,9 @@ import { installWay, onInstallChange, promptInstall } from "./install.ts";
 /**
  * Invites the player to install the app, in a modal dialog: the browser's own prompt where there
  * is one, otherwise where to find it in the browser's menu. Does nothing if this browser can't
- * install the app, or already has.
+ * install the app, or already has. `opener`: the button that opened it, if any.
  */
-export function offerInstall(): void {
+export function offerInstall(opener?: HTMLElement): void {
   const way = installWay();
   if (!way) return;
   const title = el("h2", { id: "install-title" }, "Install Draw my code");
@@ -52,8 +52,13 @@ export function offerInstall(): void {
     ...how,
     actions,
   );
-  // Closing a modal dialog puts the focus back where it was.
-  dialog.addEventListener("close", () => dialog.remove());
+  dialog.addEventListener("close", () => {
+    dialog.remove();
+    // Closing a modal dialog puts the focus back on its opener, unless the prompt just spent
+    // hid it: then on the first control beside it.
+    const beside = opener?.parentElement?.querySelector<HTMLElement>(":scope > :not([hidden])");
+    if (opener?.hidden) beside?.focus();
+  });
   document.body.append(dialog);
   dialog.showModal();
 }
@@ -61,7 +66,7 @@ export function offerInstall(): void {
 /** The info panel's Install app button: shown only while this browser can install the app. */
 export function installButton(): HTMLElement {
   const button = el("button", { type: "button", class: "text-button" }, "Install app");
-  button.addEventListener("click", offerInstall);
+  button.addEventListener("click", () => offerInstall(button));
   const update = () => (button.hidden = installWay() === undefined);
   const unsubscribe = onInstallChange(() => {
     // The screen that held the button is gone: stop listening.

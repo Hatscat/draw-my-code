@@ -124,6 +124,7 @@ export function showTutorial(
   }
 
   function next() {
+    const keyboard = document.activeElement?.matches(":focus-visible") === true;
     view.destroy();
     if (index + 1 >= levels.length) {
       options.onDone(true);
@@ -131,8 +132,11 @@ export function showTutorial(
     }
     index++;
     view = showLevel();
-    // The Next button just pressed is gone: the new level's Submit takes its place.
-    view.focusSubmit();
+    // The new level reads from the top, whatever the scroll that reached Next.
+    scrollTo(0, 0);
+    // The Next button just pressed is gone: for keyboard users, the new Submit takes its place.
+    // Not after a tap: the focus would scroll a small screen back down.
+    if (keyboard) view.focusSubmit();
   }
 
   return {

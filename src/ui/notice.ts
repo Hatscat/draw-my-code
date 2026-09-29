@@ -43,7 +43,7 @@ export function showNotice(
     const state = store.read();
     info.setShowDigits(state.showDigits);
     const values = computeStats(state.results, puzzleNumber(LAUNCH_DATE, today));
-    stats.render(values, undefined);
+    stats.render(values);
     statsSection.replaceChildren(...(values.played > 0 ? [stats.element] : []));
   }
 

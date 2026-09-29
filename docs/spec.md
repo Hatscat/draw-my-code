@@ -41,8 +41,8 @@ them renumbers or reinterprets every stored result.
   `Skip tutorial` link). Replayable from the info panel.
 - Unlimited attempts, no stats, no share. After a wrong submit the status line shows `N wrong` (no
   attempt count). After a solve it says `Right!` and Submit becomes `Next` (`Done` on the last
-  level), which leads on to the daily (or the pre-launch screen). Keyboard focus follows onto the
-  new level.
+  level), which leads on to the daily (or the pre-launch screen). The new level shows from the top
+  of the page; keyboard focus follows onto it.
 - A reload resumes at the current tutorial level with a blank grid. A replay starts at level 1 and
   never touches the daily's state.
 - Analytics: only `tutorial_complete`, the first time the last level is solved (never on skip).
@@ -74,7 +74,8 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
 - Solved: "Solved in N/3". Failed: "X/3", plus a toggle `Solution` (default) / `Your drawing`. Both
   are shown plain, with no per-cell marks: toggling is how the player compares them.
 - Stats (played, win %, current streak, max streak, distribution 1/2/3/X). Distribution bars show
-  their counts; today's bar is highlighted by more than color.
+  their counts; the bar of the result on screen is highlighted by more than color, and screen
+  readers hear whose it is: `In 2: 5, today`, or `In 2: 5, #10` for a missed puzzle.
 - Share button, `Next puzzle in HH:MM:SS` (or a `Play #N` button when the puzzle was finished after
   midnight), optional `Follow for new games` link (hidden when `FOLLOW_URL` is empty).
 
@@ -136,8 +137,10 @@ distribution are derived from them.
   from `{ y, m, d }` only: no timestamps, no DST bugs.
 - Midnight while the page stays open: the date is re-checked on every countdown tick and whenever
   the app comes back to the foreground. A finished or untouched puzzle then reloads to today's. An
-  in-progress puzzle stays until finished, and its result counts for its own number. The tutorial is
-  never interrupted: if the day changed meanwhile, its end leads to today's puzzle.
+  in-progress puzzle stays until finished, and its result counts for its own number; its result
+  panel keeps its streak and missed puzzles current through later midnights. The tutorial is never
+  interrupted: if the day changed meanwhile, its end leads to today's puzzle without a reload, so a
+  first tutorial's install invitation still shows.
 - Before `LAUNCH_DATE`: tutorial on the first visit, then "First puzzle on <Month D, YYYY>" (e.g.
   "First puzzle on October 1, 2026") and a countdown: `Starts in N days`, then `Starts in HH:MM:SS`
   on the last day. On both screens the header shows only "?".
@@ -202,6 +205,9 @@ Additions:
   off. No font CDN.
 - Screens that weren't designed (result panel, tutorial controls, toast, pre-launch) reuse the
   design's tokens.
+- A new screen (the tutorial's next level, a missed puzzle, back to today's) shows from the top of
+  the page. Keyboard focus moves into it only when a key pressed the button (`:focus-visible`):
+  after a tap, focusing Submit would scroll a small screen down, away from the code.
 - Solving a daily or a tutorial level bursts confetti in the palette's colors (not black) out of the
   grid, for 3 s, over the page: a canvas that never takes input. Not on a failure, not when a solved
   puzzle is reopened, and never with `prefers-reduced-motion`: the result text says it all.
@@ -329,20 +335,22 @@ Level design. The generator can't check these; they apply when a level is writte
   encoder (CompressionStream + CRC32), committed to `public/icons/`. No image library. Also a 32 px
   favicon and an opaque 180 px apple-touch-icon (iOS ignores maskable icons).
 - Service worker, hand-written, no Workbox or PWA plugin. A small custom Vite plugin injects the
-  list of built assets and a build hash. Precache the app shell on install, cache-first for hashed
-  assets, network-first with a timeout and cache fallback for navigations, same-origin GET only.
-  Cache names start with `draw-my-code-`; on activate, delete only those old caches (the origin may
-  host other games). `skipWaiting` + `clients.claim`: a new version takes over on the next load,
-  with no update prompt.
+  list of built assets and a build hash. Precache the app shell on install (not `og.png`: only
+  link-preview crawlers fetch it), cache-first for hashed assets, network-first with a timeout and
+  cache fallback for navigations, same-origin GET only. Cache names start with `draw-my-code-`; on
+  activate, delete only those old caches (the origin may host other games). `skipWaiting` +
+  `clients.claim`: a new version takes over on the next load, with no update prompt.
 - Fully playable offline after the first visit (levels ship in the bundle).
 - Installing: finishing the tutorial for the first time (not Skip, not a replay) opens a dialog
   inviting the player to install the game. Chromium browsers get an `Install` button that opens the
-  browser's own prompt (`beforeinstallprompt`, whose default mini-infobar is suppressed); iOS and
-  iPadOS get the Share, then Add to Home Screen steps, and a note that the home screen app keeps its
-  own progress (iOS gives it separate storage); Safari on macOS gets File, then Add to Dock. Other
-  browsers, and the installed app itself, get no dialog. The info panel's `Install app` button opens
-  the same dialog. The dialog is a modal `<dialog>`: Escape or `Not now`/`Got it` closes it and puts
-  the focus back.
+  browser's own prompt (`beforeinstallprompt`, whose default mini-infobar is suppressed); browsers
+  on iOS and iPadOS (Safari, Chrome, Firefox, Edge: their user agents say `Safari/`) get the Share,
+  then Add to Home Screen steps, and a note that the home screen app keeps its own progress (iOS
+  gives it separate storage); Safari on macOS gets File, then Add to Dock. Other browsers, in-app
+  browsers such as Instagram's (no `Safari/`, no Add to Home Screen), and the installed app itself
+  get no dialog. The info panel's `Install app` button opens the same dialog. The dialog is a modal
+  `<dialog>`: Escape or `Not now`/`Got it` closes it and puts the focus back on its opener, or, when
+  the prompt just spent hid that button, on the first control beside it.
 - Base path and site URL come from the GitHub Pages configuration at build time, never hard-coded,
   so a custom domain later needs no code change. Local builds default to
   `http://127.0.0.1:4173/draw-my-code/`, so they also run under a sub-path. The site URL is used in
@@ -395,8 +403,12 @@ browser build, whose text metrics match real devices; time zone and locale pinne
 - Reload mid-puzzle restores state; a finished puzzle stays finished; midnight while open; next day
   (`page.clock`) → new puzzle and updated streak; after the pool's last level, the first again; a
   special date's level; catching up a missed puzzle joins the streak, leaving it keeps its drawing,
-  and a puzzle older than a week isn't offered.
-- Offline reload after the first visit (Chromium only).
+  and a puzzle older than a week isn't offered; the list of missed puzzles stays current across
+  midnights.
+- At 320×568, tapping a missed puzzle or the tutorial's Next shows the new screen from the top.
+- The install dialog: at the end of a first tutorial, also past midnight; its iOS steps, and none in
+  an in-app browser; from the info panel, with the focus kept on a control still there.
+- Offline reload after the first visit (Chromium only); the precache leaves `og.png` out.
 - 320 px wide: no horizontal scroll, every control reachable; a 12-line, 36-column level at 320×568
   keeps the grid at least 250 px wide.
 - A two-line status and the result panel (solved, and failed at 320 px) leave the grid exactly where

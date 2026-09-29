@@ -59,6 +59,21 @@ test("a wrong submit shows only the count; a solve moves on with Next", async ({
   await expect(label(page)).toHaveText(`Tutorial 2/${tutorial.length}`);
 });
 
+test.describe("on a small phone screen", () => {
+  test.use({ viewport: { width: 320, height: 568 } });
+
+  test("Next opens the next level at the top of the page", async ({ page }) => {
+    await page.clock.install({ time: dayOf(1) });
+    await page.goto("./");
+    await solveLevel1(page);
+    await page.getByRole("button", { name: "Submit" }).click();
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(label(page)).toHaveText(`Tutorial 2/${tutorial.length}`);
+    // The new code starts right under the header: both must be in view.
+    await expect(label(page)).toBeInViewport({ ratio: 1 });
+  });
+});
+
 test("a reload resumes at the current tutorial level", async ({ page }) => {
   await page.clock.install({ time: dayOf(1) });
   await page.goto("./");
@@ -188,7 +203,7 @@ test("on an iPhone, the end of the tutorial explains Add to Home Screen", async 
   await expect(dialog).toContainText("Add to Home Screen");
   await dialog.getByRole("button", { name: "Got it" }).click();
   await expect(dialog).toBeHidden();
-  await expect(page.getByRole("button", { name: "Submit" })).toBeFocused();
+  await expect(label(page)).toHaveText("#1");
 });
 
 test("skipping the tutorial offers nothing", async ({ page }) => {
@@ -197,4 +212,33 @@ test("skipping the tutorial offers nothing", async ({ page }) => {
   await page.getByRole("button", { name: "Skip tutorial" }).click();
   await expect(label(page)).toHaveText("#1");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("finishing the first tutorial after midnight still offers to install", async ({ page, browserName }) => {
+  await openLastLevel(page);
+  const untilMidnight = await page.evaluate(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime();
+  });
+  await page.clock.fastForward(untilMidnight + 5_000);
+  await page.clock.runFor(5_000);
+  if (browserName === "chromium") await offerInstall(page);
+  await finishLastLevel(page);
+  await expect(page.getByRole("dialog", { name: "Install Draw my code" })).toBeVisible();
+  await expect(label(page)).toHaveText("#2");
+});
+
+test.describe("in an iOS app's own browser, such as Instagram's", () => {
+  test.use({
+    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 " +
+      "(KHTML, like Gecko) Mobile/15E148 Instagram 350.0.0.0.0",
+  });
+
+  test("finishing the tutorial offers no install steps it can't follow", async ({ page, browserName }) => {
+    test.skip(browserName !== "webkit", "the iPhone project");
+    await openLastLevel(page);
+    await finishLastLevel(page);
+    await expect(label(page)).toHaveText("#1");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  });
 });

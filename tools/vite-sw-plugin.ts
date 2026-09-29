@@ -29,7 +29,11 @@ export function serviceWorker(entry: string): Plugin {
     },
     async generateBundle(_options, bundle) {
       const built = Object.keys(bundle).filter((file) => !file.endsWith(".map")).sort();
-      const copied = config.publicDir ? (await listFiles(config.publicDir)).sort() : [];
+      // og.png is only for link-preview crawlers, which never go through the service worker: not in
+      // the precache, nor in the hash (a new preview image alone doesn't make players re-download).
+      const copied = config.publicDir
+        ? (await listFiles(config.publicDir)).filter((file) => file !== "og.png").sort()
+        : [];
 
       // The hash changes whenever any file does, so each deploy gets a fresh cache.
       const hash = createHash("sha256");

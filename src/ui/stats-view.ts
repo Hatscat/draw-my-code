@@ -3,8 +3,8 @@ import { el } from "./dom.ts";
 
 export interface StatsView {
   readonly element: HTMLElement;
-  /** `today`: the distribution slot of today's result, highlighted. */
-  render(stats: Stats, today: number | undefined): void;
+  /** `current`: the result on screen, highlighted in the distribution and named by `puzzle`. */
+  render(stats: Stats, current?: { readonly slot: number; readonly puzzle: string }): void;
 }
 
 /** Played, win %, streaks, and the 1/2/3/X distribution as bars with their counts. */
@@ -23,23 +23,23 @@ export function createStatsView(): StatsView {
   );
   return {
     element,
-    render(stats, today) {
+    render(stats, current) {
       const numbers = [stats.played, stats.winPercent, stats.currentStreak, stats.maxStreak];
       values.forEach(({ value }, i) => (value.textContent = String(numbers[i] ?? 0)));
       const highest = Math.max(1, ...stats.distribution);
       const failedSlot = stats.distribution.length - 1;
       bars.replaceChildren(...stats.distribution.map((count, slot) => {
         const label = slot === failedSlot ? "X" : String(slot + 1);
-        const isToday = slot === today;
+        const isCurrent = slot === current?.slot;
         const bar = el("span", { class: "bar" }, String(count));
         bar.style.setProperty("--share", String(count / highest));
         return el(
           "li",
           {
-            class: isToday ? "today" : undefined,
-            "aria-current": isToday ? "true" : undefined,
+            class: isCurrent ? "current" : undefined,
+            "aria-current": isCurrent ? "true" : undefined,
             "aria-label": `${slot === failedSlot ? "Failed" : `In ${label}`}: ${count}` +
-              (isToday ? ", today" : ""),
+              (isCurrent ? `, ${current.puzzle}` : ""),
           },
           el("span", { class: "bar-label", "aria-hidden": "true" }, label),
           bar,

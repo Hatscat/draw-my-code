@@ -589,14 +589,14 @@ h1 {
   font-weight: 500;
 }
 
-/* Today's result: filled, bold and marked, not just recolored. */
-.distribution .today .bar {
+/* The result on screen: filled, bold and marked, not just recolored. */
+.distribution .current .bar {
   background: var(--ink);
   color: var(--bg);
   font-weight: 700;
 }
 
-.distribution .today .bar-label::before {
+.distribution .current .bar-label::before {
   content: "▸ ";
 }
 

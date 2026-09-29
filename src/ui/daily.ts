@@ -1,6 +1,5 @@
 import { completionEvent, isTracking, track } from "../analytics.ts";
 import { ATTEMPTS, LAUNCH_DATE } from "../core/config.ts";
-import type { CalendarDate } from "../core/date.ts";
 import { canSubmit, lastWrongCount, nextAttempt } from "../core/game.ts";
 import { gridFromRows } from "../core/grid.ts";
 import {
@@ -57,8 +56,8 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
   back.addEventListener("click", () => options.onToday());
   const solution = gridFromRows(options.level.solution);
   let shown: Shown = "solution";
-  // The date the app last reported: today's number may be past n after midnight.
-  let lastToday: CalendarDate | undefined;
+  // Today's puzzle number, as the app last reported it: it moves on at midnight.
+  let current = Math.max(n, options.today);
 
   const view = showPuzzleView(root, {
     label: missed ? missedLabel(n) : `#${n}`,
@@ -147,24 +146,20 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
     view.setGridName(drawing ? "Your last drawing" : "The solution");
     result.render({
       result: outcome,
-      stats: computeStats(state.results, todayNumber()),
+      stats: computeStats(state.results, current),
+      puzzle: missed ? `#${n}` : "today",
       shown: toggle,
       canShare: play.submissions.length > 0,
     });
     result.setMissed(
-      missedPuzzles(state, todayNumber())
+      missedPuzzles(state, current)
         .filter((k) => k !== n)
         .map((k) => ({ number: k, label: missedLabel(k) })),
     );
     view.showResult(result);
   }
 
-  function todayNumber(): number {
-    return lastToday ? Math.max(n, puzzleNumber(LAUNCH_DATE, lastToday)) : n;
-  }
-
   function updateNext(now: Date) {
-    const current = todayNumber();
     result.setNext(
       missed
         ? { kind: "today", number: current }
@@ -177,8 +172,12 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
   render(store.read());
   return {
     tick(now, today) {
-      lastToday = today;
-      if (isFinished(store.read(), n)) updateNext(now);
+      const before = current;
+      current = Math.max(n, puzzleNumber(LAUNCH_DATE, today));
+      if (!isFinished(store.read(), n)) return;
+      // Past midnight, the streak and the missed puzzles move on too.
+      if (current !== before) render(store.read());
+      updateNext(now);
     },
     refresh: () => render(store.read()),
     destroy: () => view.destroy(),

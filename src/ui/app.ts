@@ -24,12 +24,14 @@ export function startApp(root: HTMLElement): void {
   const toast = createToast();
   document.body.append(toast.element);
 
-  const shown = dailyFor(LAUNCH_DATE, today(), LEVELS);
+  let shown = dailyFor(LAUNCH_DATE, today(), LEVELS);
   // The puzzle on screen: today's, or a missed one being caught up.
   let viewing = shown.kind === "puzzle" ? shown.number : 0;
   let screen: Screen | undefined;
   // The midnight reload waits while the tutorial is on screen: it would wipe the level in play.
   let inTutorial = false;
+  // A puzzle in progress at midnight stays on screen, and the reload is off until the next one.
+  let stayed = false;
 
   // Only a page someone is looking at counts as a visit: not a tab reloaded in the background.
   const pageview = countPageview(store);
@@ -39,8 +41,10 @@ export function startApp(root: HTMLElement): void {
   countVisit();
 
   function show(next: () => Screen) {
-    // Replacing the screen removes the focused control: keep keyboard users in place.
-    const hadFocus = root.contains(document.activeElement);
+    // Replacing the screen removes the focused control: keep keyboard users in place. Not after
+    // a tap: moving the focus would scroll a small screen down, away from the code.
+    const active = document.activeElement;
+    const hadFocus = active !== null && root.contains(active) && active.matches(":focus-visible");
     screen?.destroy();
     screen = next();
     screen.tick(new Date(), today());
@@ -66,11 +70,10 @@ export function startApp(root: HTMLElement): void {
       return;
     }
     inTutorial = false;
-    // The day changed during the tutorial: start over on today's puzzle.
-    if (changed(shown, dailyFor(LAUNCH_DATE, today(), LEVELS))) {
-      location.reload();
-      return;
-    }
+    // The day may have changed during the tutorial or a missed puzzle. No reload: it would drop
+    // the install invitation that follows a first tutorial.
+    shown = dailyFor(LAUNCH_DATE, today(), LEVELS);
+    stayed = false;
     show(() =>
       shown.kind === "puzzle" ? dailyScreen(shown.number) : showNotice(root, store, replay)
     );
@@ -100,8 +103,7 @@ export function startApp(root: HTMLElement): void {
   showMain();
 
   // Midnight while the page stays open, or an app resumed the next morning. A puzzle in progress
-  // then stays for good: once finished, its result panel offers the new puzzle instead.
-  let stayed = false;
+  // then stays: once finished, its result panel offers the new puzzle instead.
   const check = () => {
     const date = today();
     if (!inTutorial && !stayed && changed(shown, dailyFor(LAUNCH_DATE, date, LEVELS))) {

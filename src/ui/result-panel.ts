@@ -8,6 +8,8 @@ export type Shown = "solution" | "drawing";
 export interface ResultView {
   readonly result: Result;
   readonly stats: Stats;
+  /** Which puzzle's result this is, for screen readers: "today", or "#2" for a missed one. */
+  readonly puzzle: string;
   /** For a failed puzzle whose drawing is kept: which one the grid shows. */
   readonly shown: Shown | undefined;
   readonly canShare: boolean;
@@ -117,7 +119,7 @@ export function createResultPanel(handlers: ResultPanelHandlers): ResultPanel {
       for (const { shown, button } of showButtons) {
         button.setAttribute("aria-pressed", String(view.shown === shown));
       }
-      stats.render(view.stats, distributionSlot(view.result));
+      stats.render(view.stats, { slot: distributionSlot(view.result), puzzle: view.puzzle });
       share.hidden = !view.canShare;
     },
     setNext(value) {

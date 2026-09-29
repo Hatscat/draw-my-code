@@ -46,6 +46,14 @@ test("the info panel offers to install the app when the browser can", async ({ p
   const dialog = page.getByRole("dialog", { name: "Install Draw my code" });
   await dialog.getByRole("button", { name: "Install" }).click();
   await expect.poll(() => installPrompted(page)).toBe(true);
-  // A prompt can be shown once: the offer is gone.
+  // A prompt can be shown once: the offer is gone, and the focus moved to a control still there.
   await expect(install).toBeHidden();
+  await expect(page.getByRole("switch", { name: "Show digits" })).toBeFocused();
+});
+
+test("the service worker leaves the link preview image out of the offline cache", async ({ request, baseURL }) => {
+  const script = await (await request.get(new URL("sw.js", baseURL).href)).text();
+  expect(script).toContain("manifest.webmanifest");
+  // Only link-preview crawlers fetch it, never the game.
+  expect(script).not.toContain("og.png");
 });
