@@ -295,9 +295,11 @@ Content:
 - Tutorial, one idea per level, reworked by the owner after a playtest: one red cell (the axes, and
   numbers as colors) · `x` · integer division · `%` · `max` (the prelude's helpers) · a comparison
   as 0 or 1 · an array lookup · a bit mask. The files in `levels/tutorial/` are the reference.
-- Daily puzzles: `levels/daily/`, curated by the owner. Unscheduled candidates wait in
-  `levels/pool/` (its README lists them); `docs/puzzle-pool.html` shows every candidate of the
-  2026-09-28 design round with its grid and notes.
+- Daily puzzles: a pool of 196 levels in `levels/daily/` (a loop of 28 weeks), curated by the owner,
+  and 7 special dates in `levels/special/`: New Year, Valentine's Day, Pi Day, April Fools' Day,
+  Programmers' Day (Sep 13, the 256th day), Halloween and Christmas. Unscheduled candidates wait in
+  `levels/pool/` (its README lists them); `docs/puzzle-pool.html` shows the loop, the special dates
+  and every candidate of the 2026-09-28 and 2026-09-29 design rounds with its grid and notes.
 
 Level design. The generator can't check these; they apply when a level is written or reviewed.
 
@@ -323,8 +325,10 @@ Level design. The generator can't check these; they apply when a level is writte
 - Traps: one or two a week, never on consecutive days, a new mechanism each time. Bitwise levels: at
   most two a week, never on consecutive days. Circles: at most one every two weeks. Levels with the
   same skeleton (Minesweeper and Life, a sieve and a buggy sieve) at least four weeks apart.
-- Holidays: Halloween is #27, Christmas #82, Valentine's Day #133 (`levels/pool/ready/rle-heart.c`
-  is kept for it), Pi Day #161.
+- Holidays and other yearly dates are specials, never pool levels: a pool position falls on a given
+  date only once. Their players are casual: difficulty 2 or 3, instantly recognizable once painted.
+  The spacing rules count them in the first loop (Pi Day's pie is a circle, the April Fools' fish a
+  trap); later years put them next to other pool levels.
 
 ## PWA
 

@@ -1,10 +1,10 @@
 int f(int x, int y) {
-  int w = abs(2*x - 7);
-  if (y == 7)
-    return w == 1 ? 3 : 0;
-  if (w > y + 1)
+  int u = abs(2*x - 7);
+  if (y > 2)
+    goto https;
+  return y ? u == 5 : u < 5;
+https://drawmycode.lonebee.games
+  if (u < 2 && (y == 4 || y == 5))
     return 0;
-  if (y == 0)
-    return 4;
-  return (x + 2*y) % 5 ? 5 : 2;
+  return 4;
 }

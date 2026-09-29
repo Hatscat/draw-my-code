@@ -45,7 +45,7 @@ tools/            Level generator and editor server, harness.c, prelude.h, icons
 e2e/              Playwright specs, own package.json (Node)
 design/           UI reference from Claude Design
 docs/spec.md      Product spec
-docs/puzzle-pool.html  Catalogue of the level design round (a generated snapshot)
+docs/puzzle-pool.html  Level catalogue: the loop, the specials, both design rounds (a generated snapshot)
 ```
 
 ## Hard rules

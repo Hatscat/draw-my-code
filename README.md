@@ -43,7 +43,7 @@ days, at local midnight) shows `levels/daily/NNNN.c`. A level for a date that co
 a holiday say, goes in `levels/special/MM-DD-name.c` instead (e.g. `10-31-halloween.c`): it replaces
 the pool's level on that date.
 
-1. Create `levels/daily/NNNN.c` with the next number (`0085.c` after `0084.c`, no gaps), or a
+1. Create `levels/daily/NNNN.c` with the next number (`0197.c` after `0196.c`, no gaps), or a
    special.
 2. Write the function exactly as players will see it:
 
