@@ -1,4 +1,4 @@
-import { ATTEMPTS } from "./config.ts";
+import { ATTEMPTS, CATCH_UP_DAYS } from "./config.ts";
 
 /** A finished daily: solved in that many attempts (1 to ATTEMPTS), or "X" for failed. */
 export type Result = number | "X";
@@ -26,8 +26,10 @@ export function isResult(value: unknown): value is Result {
 }
 
 /**
- * Stats for the result panel. `today` is today's puzzle number: the current streak survives an
- * unplayed today, so it doesn't read 0 all morning, and breaks on any older miss or failure.
+ * Stats for the result panel. `today` is today's puzzle number. The current streak is the run of
+ * solved puzzles up to the latest one, and it survives the puzzles after it while they can still
+ * be caught up (CATCH_UP_DAYS): an unplayed today doesn't read 0 all morning, and a missed day
+ * doesn't break it until that puzzle closes. A failure breaks it.
  */
 export function computeStats(results: Results, today: number): Stats {
   const entries = Object.entries(results).map(([n, result]) => ({ n: Number(n), result }));
@@ -41,10 +43,14 @@ export function computeStats(results: Results, today: number): Stats {
   }
 
   // Results dated after today only exist if the clock moved back; they don't count as current.
-  const latest = Math.max(...entries.filter((e) => e.n <= today).map((e) => e.n));
+  const current = entries.filter((e) => e.n <= today);
+  const latestSolved = Math.max(...current.filter((e) => e.result !== "X").map((e) => e.n));
+  const failedSince = current.some((e) => e.n > latestSolved && e.result === "X");
+  // The first puzzle after the run is unplayed: it must still be open.
+  const stillOpen = latestSolved + 1 >= today - CATCH_UP_DAYS;
   let currentStreak = 0;
-  if (latest >= today - 1) {
-    for (let n = latest; solved.has(n); n--) currentStreak++;
+  if (!failedSince && stillOpen) {
+    for (let n = latestSolved; solved.has(n); n--) currentStreak++;
   }
 
   let maxStreak = 0;

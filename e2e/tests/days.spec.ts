@@ -125,7 +125,7 @@ test("Play #2 keeps the keyboard focus while the seconds tick", async ({ page })
   await expect(page.locator(".header-label")).toHaveText("#2");
 });
 
-test("a missed day resets the current streak", async ({ page }) => {
+test("until a missed day is caught up, the current streak counts from after it", async ({ page }) => {
   await openPuzzle(page, 1);
   await paintRows(page, solutionOf(1));
   await page.getByRole("button", submit).click();

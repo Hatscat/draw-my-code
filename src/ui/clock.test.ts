@@ -3,6 +3,7 @@ import {
   dateOverride,
   formatCountdown,
   formatLongDate,
+  formatShortDate,
   localDate,
   msUntilNextDay,
 } from "./clock.ts";
@@ -72,6 +73,15 @@ Deno.test("dateOverride reads ?date=YYYY-MM-DD and ignores anything else", () =>
   assert.equal(dateOverride(""), undefined);
   assert.equal(dateOverride("?date=2026-02-30"), undefined);
   assert.equal(dateOverride("?date=tomorrow"), undefined);
+});
+
+Deno.test("formatShortDate abbreviates the month, whatever the time zone", () => {
+  inZone("Pacific/Honolulu", () => {
+    assert.equal(formatShortDate({ y: 2026, m: 10, d: 14 }), "Oct 14");
+  });
+  inZone("Asia/Tokyo", () => {
+    assert.equal(formatShortDate({ y: 2027, m: 1, d: 1 }), "Jan 1");
+  });
 });
 
 Deno.test("formatLongDate spells the date in English, whatever the time zone", () => {

@@ -3,7 +3,7 @@
  * storage and saves the result, so two tabs can't multiply attempts.
  */
 
-import { ATTEMPTS } from "./config.ts";
+import { ATTEMPTS, CATCH_UP_DAYS } from "./config.ts";
 import { paint, type Play, startPlay, status, submit } from "./game.ts";
 import { type Color, type Grid, sameGrid } from "./grid.ts";
 import type { PlayerState } from "./storage.ts";
@@ -75,16 +75,28 @@ export function submitDaily(state: PlayerState, n: number, solution: Grid): Play
   return { ...next, results: { ...next.results, [n]: result } };
 }
 
+/** Whether puzzle #n can be played on puzzle day `today`: today's, or a missed one still open. */
+export function isPlayable(n: number, today: number): boolean {
+  return n >= 1 && n <= today && n >= today - CATCH_UP_DAYS;
+}
+
+/** The past puzzles still open that the player hasn't finished, oldest first. */
+export function missedPuzzles(state: PlayerState, today: number): number[] {
+  const missed: number[] = [];
+  for (let n = Math.max(1, today - CATCH_UP_DAYS); n < today; n++) {
+    if (!isFinished(state, n)) missed.push(n);
+  }
+  return missed;
+}
+
 /**
- * Saves puzzle #n's play and drops the ones no longer needed: finished plays older than
- * yesterday's (after midnight, yesterday's may still be shared), and unfinished plays after a week
- * (one may still be open in another tab, which must not get fresh attempts).
+ * Saves puzzle #n's play and drops the ones whose puzzle has closed. The others stay, finished
+ * or not: a finished one shows its result and share text when reopened, an unfinished one keeps
+ * its attempts (another tab may still have it open).
  */
 function withPlay(state: PlayerState, n: number, play: Play): PlayerState {
-  const kept = Object.entries(state.plays).filter(([key]) => {
-    const k = Number(key);
-    return k >= n - 1 || (!isFinished(state, k) && k >= n - 7);
-  });
+  // Relative to the puzzle being played: catching up an old one never drops a newer one.
+  const kept = Object.entries(state.plays).filter(([key]) => Number(key) >= n - CATCH_UP_DAYS);
   const { solution, drawing, submissions } = play;
   return {
     ...state,

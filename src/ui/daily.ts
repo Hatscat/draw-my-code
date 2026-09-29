@@ -3,14 +3,22 @@ import { ATTEMPTS, LAUNCH_DATE } from "../core/config.ts";
 import type { CalendarDate } from "../core/date.ts";
 import { canSubmit, lastWrongCount, nextAttempt } from "../core/game.ts";
 import { gridFromRows } from "../core/grid.ts";
-import { dailyPlay, isFinished, paintDaily, setShowDigits, submitDaily } from "../core/player.ts";
-import { puzzleNumber } from "../core/schedule.ts";
+import {
+  dailyPlay,
+  isFinished,
+  missedPuzzles,
+  paintDaily,
+  setShowDigits,
+  submitDaily,
+} from "../core/player.ts";
+import { puzzleDate, puzzleNumber } from "../core/schedule.ts";
 import { recordShare } from "../core/sent.ts";
 import { shareText } from "../core/share.ts";
 import { computeStats } from "../core/stats.ts";
 import type { PlayerState } from "../core/storage.ts";
 import type { Puzzle } from "../levels/types.ts";
-import { formatCountdown, msUntilNextDay } from "./clock.ts";
+import { formatCountdown, formatShortDate, msUntilNextDay } from "./clock.ts";
+import { el } from "./dom.ts";
 import { installButton } from "./install-dialog.ts";
 import { showPuzzleView } from "./puzzle-view.ts";
 import { replayButton } from "./replay.ts";
@@ -26,22 +34,39 @@ export interface DailyOptions {
   readonly level: Puzzle;
   readonly siteUrl: string;
   readonly toast: Toast;
+  /** Today's puzzle number when the screen opened: `number` is a missed puzzle when lower. */
+  readonly today: number;
   onReplayTutorial(): void;
+  /** Opens a missed puzzle. */
+  onOpen(n: number): void;
+  /** Back to today's puzzle. */
+  onToday(): void;
 }
+
+/** "#10 · Oct 14": a missed puzzle's number and date. */
+const missedLabel = (n: number) => `#${n} · ${formatShortDate(puzzleDate(LAUNCH_DATE, n))}`;
 
 export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
   const { store, number: n, toast } = options;
+  const missed = n < options.today;
+  const back = el(
+    "button",
+    { type: "button", class: "text-button skip" },
+    "Back to today's puzzle",
+  );
+  back.addEventListener("click", () => options.onToday());
   const solution = gridFromRows(options.level.solution);
   let shown: Shown = "solution";
   // The date the app last reported: today's number may be past n after midnight.
   let lastToday: CalendarDate | undefined;
 
   const view = showPuzzleView(root, {
-    label: `#${n}`,
+    label: missed ? missedLabel(n) : `#${n}`,
     fileName: `daily_${String(n).padStart(4, "0")}.c`,
     code: options.level.code,
     attempts: `You have ${ATTEMPTS} attempts.`,
     infoActions: [replayButton(options.onReplayTutorial), installButton()],
+    footerActions: missed ? [back] : [],
     // Every action applies to freshly read storage: another tab may have played meanwhile.
     onPaint: (index, color) => save(paintDaily(store.read(), n, solution, index, color)),
     onSubmit() {
@@ -53,8 +78,9 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
       if (outcome !== "X") view.celebrate();
       updateNext(new Date());
       result.focus();
-      // Without persistent storage a reload could replay and count the puzzle again.
-      if (store.persistent()) track(completionEvent(outcome));
+      // Without persistent storage a reload could replay and count the puzzle again. Missed
+      // puzzles don't count: catching up a week in one day would blow the daily event budget.
+      if (store.persistent() && !missed) track(completionEvent(outcome));
     },
     onShowDigits: (on) => save(setShowDigits(store.read(), on)),
   });
@@ -74,12 +100,15 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
       render(store.read());
     },
     onPlayNext: () => location.reload(),
+    onToday: () => options.onToday(),
+    onOpen: (k) => options.onOpen(k),
   });
 
   /** One share event per puzzle, however many times the player shares. */
   let shareQueued = false;
   function countShare() {
-    if (!isTracking() || !store.persistent() || shareQueued) return;
+    // Today's puzzle only, like completions.
+    if (!isTracking() || !store.persistent() || shareQueued || missed) return;
     const state = store.read();
     if (recordShare(state, n) === state) return;
     shareQueued = true;
@@ -122,6 +151,11 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
       shown: toggle,
       canShare: play.submissions.length > 0,
     });
+    result.setMissed(
+      missedPuzzles(state, todayNumber())
+        .filter((k) => k !== n)
+        .map((k) => ({ number: k, label: missedLabel(k) })),
+    );
     view.showResult(result);
   }
 
@@ -132,7 +166,9 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
   function updateNext(now: Date) {
     const current = todayNumber();
     result.setNext(
-      current > n
+      missed
+        ? { kind: "today", number: current }
+        : current > n
         ? { kind: "play", number: current }
         : { kind: "countdown", text: formatCountdown(msUntilNextDay(now)) },
     );

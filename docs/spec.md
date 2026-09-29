@@ -111,11 +111,24 @@ Stored locally as per-puzzle results (1, 2, 3 or X), never pruned; played, win %
 distribution are derived from them.
 
 - Played = finished dailies. Win % = floor(100 × solved / played), 0 when nothing was played.
-- Current streak: let h be the highest finished puzzle number. If h ≥ today − 1, it is the run of
-  consecutive solved numbers ending at h, otherwise 0. So an unplayed today doesn't show 0 all
-  morning; a failed or missed puzzle resets it.
+- Current streak: let h be the highest solved puzzle number. It is the run of consecutive solved
+  numbers ending at h, as long as no puzzle after h failed and the first puzzle after h is still
+  open (h + 1 ≥ today − `CATCH_UP_DAYS`); otherwise 0. So an unplayed today doesn't show 0 all
+  morning, and a missed day doesn't break the streak until it closes: catching it up joins the runs.
+  A failed puzzle breaks it.
 - Max streak: the longest run over all results. Results numbered after today (the device clock moved
   back) count for played and max streak, not for the current streak.
+
+## Catching up
+
+- A missed puzzle stays open for `CATCH_UP_DAYS` (7) days: on puzzle day T, puzzles T − 7 to T can
+  be played, and count like any other.
+- Once a puzzle is over, its result panel lists the missed puzzles still open ("Missed this week:
+  solve them to keep your streak.", then buttons such as `#10 · Oct 14`), oldest first.
+- A missed puzzle's screen shows `#10 · Oct 14` in the header and a `Back to today's puzzle` link
+  under Submit. Once over, its result panel offers `Back to #T` in place of the countdown.
+- Only today's puzzle sends analytics: catching up a week in one day would blow the daily event
+  budget.
 
 ## Dates
 
@@ -144,8 +157,9 @@ distribution are derived from them.
   tabs can't multiply attempts.
 - If a stored in-progress solution differs from the bundle's (a level was edited), that play state
   is dropped. A finished puzzle keeps its play and its own solution, so its result and share text
-  stay true. Finished plays are kept for today and yesterday, unfinished ones for a week (one may be
-  open in another tab).
+  stay true. Plays, finished or not, are kept while their puzzle is open: today's and the past
+  `CATCH_UP_DAYS` days' (a finished one shows its result and share text again; an unfinished one may
+  be open in another tab).
 - localStorage unavailable: the game still works, in memory (and sends no analytics).
 - Known limits, accepted: an installed iOS app doesn't share storage with Safari, and Safari clears
   site data after 7 days without a visit. Installed apps call `navigator.storage.persist()`.
@@ -334,8 +348,9 @@ Level design. The generator can't check these; they apply when a level is writte
   Budget: at most 4 events per player per day, so no event has properties:
   - `pageview`: sent manually, at most once per local date, and only while the page is visible (not
     for a tab reloaded in the background at midnight).
-  - `puzzle_complete_1`, `_2`, `_3` or `_x`: when a daily finishes.
-  - `share`: once per puzzle, after a successful share or copy.
+  - `puzzle_complete_1`, `_2`, `_3` or `_x`: when today's daily finishes (not a missed one caught
+    up).
+  - `share`: once per puzzle, after a successful share or copy of today's puzzle.
   - `tutorial_complete`: once per player.
 - Dedupe markers are saved only once Umami has the event, so a failed script load doesn't use up the
   day's pageview. Without persistent storage (blocked, full, a newer version's data) nothing is
@@ -348,8 +363,10 @@ Unit (`deno task test`, assertions from the built-in `node:assert/strict`):
 
 - core: puzzle number (month and year boundaries, leap years, DST dates), grid diff, attempt state
   machine (a wrong submit yields only the wrong count; an unchanged grid can't be resubmitted),
-  share text (exact), stats and streaks (missed day, failed day, today unplayed, win % rounding,
-  nothing played), storage load, migration, corrupted and newer-version data.
+  share text (exact), stats and streaks (missed day still open or closed, catching up, failed day,
+  today unplayed, win % rounding, nothing played), the looping schedule (specials, Feb 29, a pool
+  that grows after launch), open puzzles and play retention, storage load, migration, corrupted and
+  newer-version data.
 - ui: the local-date and next-midnight helpers, under several time zones; the highlighter tokenizer.
 - tools: every rejection case with fixtures (format, forbidden constructs, out of range, UB
   overflow, compile error, timeout, crash, numbering gap, line too long); deterministic output.
@@ -366,7 +383,8 @@ browser build, whose text metrics match real devices; time zone and locale pinne
 - 3 failed attempts → solution revealed, X/3.
 - Reload mid-puzzle restores state; a finished puzzle stays finished; midnight while open; next day
   (`page.clock`) → new puzzle and updated streak; after the pool's last level, the first again; a
-  special date's level.
+  special date's level; catching up a missed puzzle joins the streak, leaving it keeps its drawing,
+  and a puzzle older than a week isn't offered.
 - Offline reload after the first visit (Chromium only).
 - 320 px wide: no horizontal scroll, every control reachable; a 12-line, 36-column level at 320×568
   keeps the grid at least 250 px wide.
@@ -395,8 +413,8 @@ browser build, whose text metrics match real devices; time zone and locale pinne
 
 ## Out of scope for v1
 
-Accounts, backend, leaderboards, global stats, hints, puzzle archive, push notifications, newsletter
-form, i18n, light theme, sound.
+Accounts, backend, leaderboards, global stats, hints, an archive beyond the past week, push
+notifications, newsletter form, i18n, light theme, sound.
 
 ## Milestones
 

@@ -627,6 +627,21 @@ h1 {
   resize: none;
 }
 
+/* Missed puzzles still open: a row of small buttons under the share button. */
+.missed {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.missed-list {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
 .next {
   min-height: 48px;
   margin-top: 12px;

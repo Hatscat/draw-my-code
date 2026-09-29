@@ -39,8 +39,22 @@ Deno.test("an unplayed today keeps yesterday's streak", () => {
   assert.equal(computeStats({ 3: 1, 4: 2 }, 5).currentStreak, 2);
 });
 
-Deno.test("a missed day resets the current streak", () => {
-  assert.equal(computeStats({ 1: 1, 2: 1, 3: 1 }, 5).currentStreak, 0);
+Deno.test("a missed day keeps the streak while it can still be caught up", () => {
+  // Today is 12: puzzles 5 to 11 are still open.
+  assert.equal(computeStats({ 1: 1, 2: 1, 3: 1, 4: 1 }, 12).currentStreak, 4);
+  // Catching up the missed puzzles joins the runs.
+  const caughtUp = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1 };
+  assert.equal(computeStats(caughtUp, 12).currentStreak, 12);
+});
+
+Deno.test("a missed day older than the catch-up window resets the streak", () => {
+  // Today is 13: puzzle 5 closed yesterday.
+  assert.equal(computeStats({ 1: 1, 2: 1, 3: 1, 4: 1 }, 13).currentStreak, 0);
+  assert.equal(computeStats({ 1: 1, 2: 1, 3: 1 }, 5).currentStreak, 3);
+});
+
+Deno.test("with a missed day, the current streak counts from the latest solved puzzle", () => {
+  // Puzzle 3 is still open: until it's played, the current run is 4 and 5.
   assert.equal(computeStats({ 1: 1, 2: 1, 4: 1, 5: 1 }, 5).currentStreak, 2);
 });
 
@@ -52,7 +66,9 @@ Deno.test("a failed day resets the current streak", () => {
 Deno.test("the max streak is the longest run of consecutive solved puzzles", () => {
   const results: Results = { 1: 1, 2: 1, 3: 1, 4: "X", 5: 2, 7: 1, 8: 1, 9: 1, 10: 1 };
   assert.equal(computeStats(results, 12).maxStreak, 4);
-  assert.equal(computeStats(results, 12).currentStreak, 0);
+  // 11 is still open, so the run 7 to 10 is alive; once 11 closes, it's over.
+  assert.equal(computeStats(results, 12).currentStreak, 4);
+  assert.equal(computeStats(results, 19).currentStreak, 0);
 });
 
 Deno.test("results dated after today (clock moved back) don't count as the current streak", () => {

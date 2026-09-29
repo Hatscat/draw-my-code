@@ -36,6 +36,15 @@ export function formatLongDate({ y, m, d }: CalendarDate): string {
   });
 }
 
+/** "Oct 14", for a missed puzzle's date, whatever the player's time zone. */
+export function formatShortDate({ y, m, d }: CalendarDate): string {
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 /** "05:12:33": hours, minutes and seconds left, rounded up so it never shows 00:00:00 early. */
 export function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000));

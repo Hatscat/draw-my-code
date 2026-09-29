@@ -5,7 +5,9 @@ import {
   canMoveOn,
   dailyPlay,
   isFinished,
+  isPlayable,
   isUntouched,
+  missedPuzzles,
   paintDaily,
   setShowDigits,
   submitDaily,
@@ -87,24 +89,42 @@ Deno.test("an edited level drops its in-progress play but keeps finished results
   assert.equal(submitDaily(solved, 5, edited), solved);
 });
 
-Deno.test("finished plays are kept for today and yesterday only", () => {
+Deno.test("plays are kept while their puzzle can be played: today and the past week", () => {
   let state = INITIAL_STATE;
   for (const n of [1, 2, 3]) {
     state = submitDaily(paintDaily(state, n, SOLUTION, TARGET, 1), n, SOLUTION);
   }
-  state = paintDaily(state, 4, SOLUTION, 0, 1);
-  assert.deepEqual(Object.keys(state.plays), ["3", "4"]);
-  // Finishing yesterday's puzzle after midnight doesn't drop today's.
-  state = submitDaily(paintDaily(state, 3, SOLUTION, 1, 1), 3, SOLUTION);
-  assert.deepEqual(Object.keys(state.plays).sort(), ["3", "4"]);
+  state = wrongSubmit(state, 5, 2);
+  state = paintDaily(state, 10, SOLUTION, 0, 1);
+  // 10 - 7 = 3: puzzles 3 to 10 are still open, finished or not.
+  assert.deepEqual(Object.keys(state.plays), ["3", "5", "10"]);
+  assert.equal(dailyPlay(state, 5, SOLUTION).submissions.length, 1);
+  // Catching up puzzle 4 on day 10 drops nothing that is still open.
+  state = submitDaily(paintDaily(state, 4, SOLUTION, TARGET, 1), 4, SOLUTION);
+  assert.deepEqual(Object.keys(state.plays), ["3", "4", "5", "10"]);
+  // Day 13: puzzles before 6 have closed.
+  state = paintDaily(state, 13, SOLUTION, 0, 1);
+  assert.deepEqual(Object.keys(state.plays), ["10", "13"]);
 });
 
-Deno.test("an unfinished play is kept for a week: a tab left open keeps its attempts", () => {
-  let state = wrongSubmit(INITIAL_STATE, 5, 2);
-  state = paintDaily(state, 8, SOLUTION, 0, 1);
-  assert.equal(dailyPlay(state, 5, SOLUTION).submissions.length, 1);
-  state = paintDaily(state, 13, SOLUTION, 0, 1);
-  assert.equal(state.plays[5], undefined);
+Deno.test("isPlayable: today and the past week, never the future or before puzzle 1", () => {
+  assert.deepEqual([2, 3, 9, 10, 11].map((n) => isPlayable(n, 10)), [
+    false,
+    true,
+    true,
+    true,
+    false,
+  ]);
+  assert.deepEqual([0, 1, 2].map((n) => isPlayable(n, 2)), [false, true, true]);
+});
+
+Deno.test("missedPuzzles lists the open past puzzles not finished yet, oldest first", () => {
+  let state = submitDaily(paintDaily(INITIAL_STATE, 4, SOLUTION, TARGET, 1), 4, SOLUTION);
+  state = wrongSubmit(state, 6, 2);
+  // Today is 10: 3 to 9 are open; 4 is solved; 6 is in progress; today doesn't count.
+  assert.deepEqual(missedPuzzles(state, 10), [3, 5, 6, 7, 8, 9]);
+  assert.deepEqual(missedPuzzles(state, 1), []);
+  assert.deepEqual(missedPuzzles(INITIAL_STATE, 3), [1, 2]);
 });
 
 Deno.test("a finished puzzle keeps its play and its own solution when its level is edited", () => {

@@ -1,8 +1,8 @@
 import { isTracking, track } from "../analytics.ts";
 import { LAUNCH_DATE } from "../core/config.ts";
 import { type CalendarDate, formatIsoDate } from "../core/date.ts";
-import { canMoveOn } from "../core/player.ts";
-import { type Daily, dailyFor, type Levels } from "../core/schedule.ts";
+import { canMoveOn, isPlayable } from "../core/player.ts";
+import { type Daily, dailyFor, levelFor, type Levels, puzzleNumber } from "../core/schedule.ts";
 import { recordPageview } from "../core/sent.ts";
 import { tutorialLevelToShow } from "../core/tutorial.ts";
 import { daily, epochs, special, tutorial } from "../levels/generated.ts";
@@ -25,6 +25,8 @@ export function startApp(root: HTMLElement): void {
   document.body.append(toast.element);
 
   const shown = dailyFor(LAUNCH_DATE, today(), LEVELS);
+  // The puzzle on screen: today's, or a missed one being caught up.
+  let viewing = shown.kind === "puzzle" ? shown.number : 0;
   let screen: Screen | undefined;
   // The midnight reload waits while the tutorial is on screen: it would wipe the level in play.
   let inTutorial = false;
@@ -69,19 +71,30 @@ export function startApp(root: HTMLElement): void {
       location.reload();
       return;
     }
-    const replay = () => showTutorialFrom(1, true);
     show(() =>
-      shown.kind === "puzzle"
-        ? showDaily(root, {
-          store,
-          number: shown.number,
-          level: shown.level,
-          siteUrl: import.meta.env.VITE_SITE_URL,
-          toast,
-          onReplayTutorial: replay,
-        })
-        : showNotice(root, store, replay)
+      shown.kind === "puzzle" ? dailyScreen(shown.number) : showNotice(root, store, replay)
     );
+  }
+
+  const replay = () => showTutorialFrom(1, true);
+
+  function dailyScreen(n: number): Screen {
+    viewing = n;
+    const todayNumber = shown.kind === "puzzle" ? shown.number : 0;
+    return showDaily(root, {
+      store,
+      number: n,
+      level: levelFor(LEVELS, LAUNCH_DATE, n),
+      siteUrl: import.meta.env.VITE_SITE_URL,
+      toast,
+      today: todayNumber,
+      onReplayTutorial: replay,
+      onOpen(k) {
+        // Only a missed puzzle still open: the list may have been drawn before midnight.
+        if (isPlayable(k, puzzleNumber(LAUNCH_DATE, today()))) show(() => dailyScreen(k));
+      },
+      onToday: showMain,
+    });
   }
 
   showMain();
@@ -92,7 +105,7 @@ export function startApp(root: HTMLElement): void {
   const check = () => {
     const date = today();
     if (!inTutorial && !stayed && changed(shown, dailyFor(LAUNCH_DATE, date, LEVELS))) {
-      if (shown.kind !== "puzzle" || canMoveOn(store.read(), shown.number)) {
+      if (shown.kind !== "puzzle" || canMoveOn(store.read(), viewing)) {
         location.reload();
         return;
       }

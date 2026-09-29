@@ -32,7 +32,7 @@ export interface PlayerState {
   /** `next`: the tutorial level (from 1) a reload resumes at. */
   readonly tutorial: { readonly done: boolean; readonly next: number };
   readonly results: Results;
-  /** By puzzle number: finished ones for today and yesterday, unfinished ones for a week. */
+  /** By puzzle number, while the puzzle is open: today's and the past week's. */
   readonly plays: Readonly<Record<number, StoredPlay>>;
   readonly sent: Sent;
   readonly showDigits: boolean;
