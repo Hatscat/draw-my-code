@@ -63,6 +63,10 @@ test("solving shows the result, the stats and the exact share text", async ({ pa
   }
   await expect(page.getByRole("listitem", { name: "In 2: 1, today" })).toBeVisible();
   await expect(page.locator(".next")).toContainText(/Next puzzle in \d\d:\d\d:\d\d/);
+  // The author's itch.io page, where players can follow for new games, in a new tab.
+  const follow = page.getByRole("link", { name: "Follow for new games" });
+  await expect(follow).toHaveAttribute("href", "https://lone-bee.itch.io/");
+  await expect(follow).toHaveAttribute("target", "_blank");
 
   // A blank first attempt: black cells were right from attempt 1, colored ones from attempt 2.
   const rows = SOLUTION.map((row) => [...row].map((d) => (d === "0" ? "🟩" : "🟨")).join(""));

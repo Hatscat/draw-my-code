@@ -13,4 +13,4 @@ export const ATTEMPTS = 3;
 export const CATCH_UP_DAYS = 7;
 
 /** Shown as "Follow for new games" in the result panel; hidden when empty. */
-export const FOLLOW_URL = "";
+export const FOLLOW_URL = "https://lone-bee.itch.io/";

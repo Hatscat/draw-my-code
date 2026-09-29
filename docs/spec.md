@@ -77,7 +77,8 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
   their counts; the bar of the result on screen is highlighted by more than color, and screen
   readers hear whose it is: `In 2: 5, today`, or `In 2: 5, #10` for a missed puzzle.
 - Share button, `Next puzzle in HH:MM:SS` (or a `Play #N` button when the puzzle was finished after
-  midnight), optional `Follow for new games` link (hidden when `FOLLOW_URL` is empty).
+  midnight), a `Follow for new games` link to the author's itch.io page, in a new tab (`FOLLOW_URL`;
+  hidden when empty).
 
 ## Share
 
@@ -401,8 +402,8 @@ browser build, whose text metrics match real devices; time zone and locale pinne
 - Painting: tap, drag (mouse, and touch via pointer events with `pointerType: "touch"`), keyboard,
   keys 0–7. Dragging never scrolls the page.
 - Wrong submit → count line and no per-cell indication on the grid; Submit disabled until the grid
-  changes, keyboard focus kept; painting keeps the count line; solve → result panel, stats, exact
-  share text (Web Share and clipboard stubs, including a cancelled share).
+  changes, keyboard focus kept; painting keeps the count line; solve → result panel, stats, the
+  follow link, exact share text (Web Share and clipboard stubs, including a cancelled share).
 - 3 failed attempts → solution revealed, X/3.
 - Reload mid-puzzle restores state; a finished puzzle stays finished; midnight while open; next day
   (`page.clock`) → new puzzle and updated streak; after the pool's last level, the first again; a
