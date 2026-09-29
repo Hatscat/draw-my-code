@@ -57,7 +57,7 @@ export const tutorial: readonly Level[] = [{
   ],
 }, {
   id: 5,
-  code: "int f(int x, int y) {\n  // available: max, min, abs\n  return max(x, y);\n}",
+  code: "int f(int x, int y) {\n  return max(x, y); // x > y ? x : y\n}",
   solution: [
     "01234567",
     "11234567",
