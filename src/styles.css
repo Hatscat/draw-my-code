@@ -25,10 +25,15 @@
   /* Axis and domain labels: lighter than the design's #5d626c and #6b707a, for WCAG AA. */
   --faint: #7a808b;
   --line-number: #3d424c;
-  --help-border: #3a3f48;
+  /* Outlined controls: their edge, and the brighter edge of one that is hovered or open. */
+  --control-border: #3a3f48;
+  --control-strong: #d9dbe0;
   /* Inner grid lines: the design's border color, so they reach 3:1 against black cells. */
   --grid-line: #545a66;
+  /* Filled buttons: lit on hover, darker while pressed. */
   --button: #ecebe4;
+  --button-hover: #ffffff;
+  --button-pressed: #d3d2ca;
   --error: #ff7a7a;
   --focus: #8fb4ff;
   --tok-text: #d6d9e0;
@@ -137,16 +142,16 @@ h1 {
   width: 32px;
   height: 32px;
   flex: none;
-  border: 1px solid var(--help-border);
+  border: 1px solid var(--control-border);
   border-radius: 50%;
   background: transparent;
-  color: #d9dbe0;
+  color: var(--control-strong);
   font-size: 13px;
   font-weight: 700;
 }
 
 .help[aria-expanded="true"] {
-  border-color: #d9dbe0;
+  border-color: var(--control-strong);
 }
 
 .panel {
@@ -239,7 +244,7 @@ h1 {
 
 .switch {
   padding: 4px 10px;
-  border: 1px solid var(--help-border);
+  border: 1px solid var(--control-border);
   border-radius: 4px;
   background: transparent;
   color: var(--ink);
@@ -506,7 +511,7 @@ h1 {
 .toggle {
   margin-top: 8px;
   display: inline-flex;
-  border: 1px solid var(--help-border);
+  border: 1px solid var(--control-border);
   border-radius: 5px;
   overflow: hidden;
 }
@@ -756,7 +761,7 @@ h1 {
 
 .text-button {
   padding: 4px 10px;
-  border: 1px solid var(--help-border);
+  border: 1px solid var(--control-border);
   border-radius: 4px;
   background: transparent;
   color: var(--ink);
@@ -769,4 +774,48 @@ h1 {
   border-color: transparent;
   color: var(--muted);
   text-decoration: underline;
+}
+
+/*
+ * Interaction states, the same for every button of a kind. Hover only where a mouse can hover:
+ * on touch screens it would stick after a tap. Pressed comes last, so it wins over hover. Disabled
+ * Submit (aria-disabled) shows neither.
+ */
+:is(.submit, .share, .play-next, .dialog-primary) {
+  transition:
+    background-color 0.12s ease,
+    transform 0.08s ease;
+}
+
+@media (hover: hover) {
+  :is(.submit, .share, .play-next, .dialog-primary):not([aria-disabled="true"]):hover {
+    background: var(--button-hover);
+  }
+
+  :is(.text-button, .switch, .help):not(.skip):hover {
+    border-color: var(--control-strong);
+  }
+
+  .toggle button[aria-pressed="false"]:hover,
+  .skip:hover {
+    color: var(--ink);
+  }
+
+  .swatch[aria-checked="false"]:hover {
+    box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.55);
+  }
+}
+
+:is(.submit, .share, .play-next, .dialog-primary):not([aria-disabled="true"]):active {
+  background: var(--button-pressed);
+  transform: translateY(1px);
+}
+
+:is(.text-button, .switch, .help):active,
+.toggle button[aria-pressed="false"]:active {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.swatch[aria-checked="false"]:active {
+  transform: scale(0.94);
 }

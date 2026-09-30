@@ -97,7 +97,8 @@ docs/puzzle-pool.html  Level catalogue: the loop, the specials, both design roun
 - Match `design/`. Works from 320 px wide: no horizontal scroll, and painting gestures never scroll
   or zoom the page.
 - Pointer Events only. Find the cell under the pointer from coordinates, not `event.target`: touch
-  pointers stay captured by the element where the touch started.
+  pointers stay captured by the element where the touch started. The one exception, an empty passive
+  `touchstart` listener, handles nothing: it only lets iOS Safari show pressed states.
 - Everything works with the keyboard alone. Never convey state by color alone.
 - Respect `prefers-reduced-motion`.
 

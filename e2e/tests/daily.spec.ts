@@ -42,6 +42,25 @@ test("a wrong submit only tells the count; Submit waits for a change", async ({ 
   await expect(submit).toHaveAttribute("aria-disabled", "false");
 });
 
+test("Submit answers the mouse: hovering lights it, pressing pushes it in", async ({ page, isMobile }) => {
+  test.skip(isMobile, "hover needs a mouse");
+  // No transitions: each state's style applies at once.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openPuzzle(page, 1);
+  const submit = page.getByRole("button", { name: "Submit" });
+  const color = () => submit.evaluate((button) => getComputedStyle(button).backgroundColor);
+  await page.mouse.move(0, 0);
+  const rest = await color();
+  await submit.hover();
+  const hovered = await color();
+  expect(hovered).not.toBe(rest);
+  await page.mouse.down();
+  // Pressed wins over hovered, and the button sinks a pixel.
+  expect(await color()).not.toBe(hovered);
+  expect(await submit.evaluate((button) => getComputedStyle(button).transform)).not.toBe("none");
+  await page.mouse.up();
+});
+
 test("solving shows the result, the stats and the exact share text", async ({ page, isMobile }) => {
   await stubShare(page);
   await countConfetti(page);
