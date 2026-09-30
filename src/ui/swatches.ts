@@ -46,10 +46,14 @@ export function createSwatches(onSelect: (color: Color) => void): Swatches {
   return {
     element: group,
     select(color) {
+      // Keys 0-7 can change the selection while a swatch has the focus: the focus follows it, so
+      // it never stays on a swatch that is unchecked and out of the Tab order.
+      const focused = group.contains(document.activeElement);
       buttons.forEach((button, value) => {
         button.setAttribute("aria-checked", String(value === color));
         button.tabIndex = value === color ? 0 : -1;
       });
+      if (focused) buttons[color]?.focus();
     },
   };
 }

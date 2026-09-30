@@ -182,6 +182,10 @@ test("the swatches are one radio group driven by arrow keys", async ({ page }) =
     "aria-checked",
     "true",
   );
+  // A color key moves the selection, and the focus follows it: it never stays on a swatch that is
+  // no longer checked, out of the Tab order.
+  await page.keyboard.press("4");
+  await expect(page.getByRole("radio", { name: "4 yellow" })).toBeFocused();
 });
 
 test("hovering or focusing a cell shows its call, never its value", async ({ page, isMobile }) => {
