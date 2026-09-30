@@ -136,7 +136,7 @@ test("a cancelled share sheet does nothing", async ({ page, isMobile }) => {
   await expect(page.locator(".toast")).not.toHaveText("Copied");
 });
 
-test("3 wrong attempts fail: X/3, the solution, and a toggle to the last drawing", async ({ page }) => {
+test("3 wrong attempts fail: X/3, the solution, and a toggle to your drawing", async ({ page }) => {
   await stubShare(page);
   await countConfetti(page);
   await openPuzzle(page, 1);
@@ -164,7 +164,7 @@ test("3 wrong attempts fail: X/3, the solution, and a toggle to the last drawing
   await expect(colored).toHaveCount(COLORED);
 
   await page.getByRole("button", { name: "Your drawing" }).click();
-  await expect(page.getByRole("grid", { name: /^Your last drawing/ })).toBeVisible();
+  await expect(page.getByRole("grid", { name: /^Your drawing/ })).toBeVisible();
   await expect(page.getByRole("gridcell", { name: /: 1 white$/ })).toHaveCount(2);
   await expect(page.getByRole("button", { name: "Your drawing" })).toBeFocused();
   // Nothing clips the focused side's ring: keyboard players see which side has the focus.

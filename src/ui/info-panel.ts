@@ -30,7 +30,12 @@ export function createInfoPanel(
   });
   const element = el(
     "section",
-    { id: "info", class: "panel info-panel", "aria-label": "How to play", hidden: true },
+    {
+      id: "info",
+      class: "panel info-panel",
+      "aria-label": "How to play and settings",
+      hidden: true,
+    },
     el(
       "p",
       {},

@@ -143,7 +143,7 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
     // play.solution, not the bundle's: a level edited after the fact doesn't rewrite history.
     const drawing = toggle === "drawing" && last;
     view.render(drawing ? last : play.solution, { editable: false, showDigits: state.showDigits });
-    view.setGridName(drawing ? "Your last drawing" : "The solution");
+    view.setGridName(drawing ? "Your drawing" : "The solution");
     result.render({
       result: outcome,
       stats: computeStats(state.results, current),
@@ -162,7 +162,7 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
   function updateNext(now: Date) {
     result.setNext(
       missed
-        ? { kind: "today", number: current }
+        ? { kind: "today" }
         : current > n
         ? { kind: "play", number: current }
         : { kind: "countdown", text: formatCountdown(msUntilNextDay(now)) },

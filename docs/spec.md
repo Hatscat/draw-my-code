@@ -128,7 +128,8 @@ distribution are derived from them.
 - Once a puzzle is over, its result panel lists the missed puzzles still open ("Missed this week:
   solve them to keep your streak.", then buttons such as `#10 · Oct 14`), oldest first.
 - A missed puzzle's screen shows `#10 · Oct 14` in the header and a `Back to today's puzzle` link
-  under Submit. Once over, its result panel offers `Back to #T` in place of the countdown.
+  under Submit. Once over, its result panel offers a `Back to today's puzzle` button in place of the
+  countdown.
 - Only today's puzzle sends analytics: catching up a week in one day would blow the daily event
   budget.
 

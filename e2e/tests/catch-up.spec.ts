@@ -46,7 +46,7 @@ test("a missed puzzle stays open for a week, and catching it up joins the streak
   await expect(page.getByRole("listitem", { name: "In 1: 3, #2" })).toBeVisible();
   await expect(page.locator(".missed")).toBeHidden();
 
-  await page.getByRole("button", { name: "Back to #3" }).click();
+  await page.getByRole("button", { name: "Back to today's puzzle" }).click();
   await expect(page.locator(".header-label")).toHaveText("#3");
   await expect(streak(page)).toHaveText("3");
 });

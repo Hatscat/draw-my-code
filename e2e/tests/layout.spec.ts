@@ -114,7 +114,8 @@ test("opening the info panel pushes the page down instead of shrinking the grid"
   await openPuzzle(page, 1);
   const before = (await page.getByRole("grid").boundingBox())?.width;
   await page.getByRole("button", { name: "How to play and settings" }).click();
-  await expect(page.getByRole("region", { name: "How to play" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "How to play and settings", exact: true }))
+    .toBeVisible();
   expect((await page.getByRole("grid").boundingBox())?.width).toBe(before);
 });
 

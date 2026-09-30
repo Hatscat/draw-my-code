@@ -19,7 +19,7 @@ export type Next =
   | { readonly kind: "countdown"; readonly text: string }
   | { readonly kind: "play"; readonly number: number }
   /** From a missed puzzle: back to today's. */
-  | { readonly kind: "today"; readonly number: number };
+  | { readonly kind: "today" };
 
 /** A missed puzzle still open, as the result panel offers it. */
 export interface Missed {
@@ -123,7 +123,7 @@ export function createResultPanel(handlers: ResultPanelHandlers): ResultPanel {
       share.hidden = !view.canShare;
     },
     setNext(value) {
-      const key = value.kind === "countdown" ? value.kind : `${value.kind} ${value.number}`;
+      const key = value.kind === "play" ? `play ${value.number}` : value.kind;
       if (key === nextKey) {
         // Same kind as a second ago: only the countdown's text changes. Rebuilding would drop
         // the focus of a keyboard user, and swallow a click in progress.
@@ -137,7 +137,7 @@ export function createResultPanel(handlers: ResultPanelHandlers): ResultPanel {
         next.replaceChildren(el("p", {}, `Next puzzle in ${value.text}`));
         return;
       }
-      const label = value.kind === "play" ? `Play #${value.number}` : `Back to #${value.number}`;
+      const label = value.kind === "play" ? `Play #${value.number}` : "Back to today's puzzle";
       const button = el("button", { type: "button", class: "play-next" }, label);
       button.addEventListener(
         "click",
