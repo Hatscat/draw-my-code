@@ -104,8 +104,8 @@ both fail, the text is shown in a read-only field to copy by hand.
 
 Link previews, for the URL in shared texts: the page's description, Open Graph and Twitter card tags
 (`summary_large_image`) with absolute URLs built from the site URL, and `public/og.png` (1200×630:
-the title in a pixel font, `int f(int x, int y)` and puzzle #1's disc), drawn by `deno task icons`
-like the icons.
+the title in a pixel font, `int f(int x, int y)` and the red disc of the last tutorial level), drawn
+by `deno task icons` like the icons.
 
 ## Stats and streaks
 

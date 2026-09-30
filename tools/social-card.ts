@@ -1,7 +1,7 @@
 /**
  * The link preview image (Open Graph and Twitter cards), written to public/og.png by
  * `deno task icons`: the title in a pixel font, the function signature in the game's syntax
- * colors, and puzzle #1's disc as the icons draw it.
+ * colors, and the red disc of the last tutorial level as the icons draw it.
  */
 
 import { BACKGROUND, type Canvas, createCanvas, fillRect, paintGrid } from "./pixel-art.ts";

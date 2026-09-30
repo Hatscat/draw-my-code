@@ -1,11 +1,11 @@
 /**
  * Pixel art for the images in public/ (tools/icons.ts, tools/social-card.ts): a canvas of RGB
- * pixels and puzzle #1's disc drawn like the game's grid.
+ * pixels and the red disc of the last tutorial level, drawn like the game's grid.
  */
 
 import { PALETTE } from "../src/ui/palette.ts";
 
-/** The disc of puzzle #1, as the game's grid shows it. */
+/** The red disc of the last tutorial level, as the game's grid shows it. */
 const PIXELS = [
   "00000000",
   "00222200",
@@ -53,7 +53,7 @@ export function fillRect(
   }
 }
 
-/** Puzzle #1's disc with its grid lines, its top-left corner at (left, top). */
+/** The red disc with its grid lines, its top-left corner at (left, top). */
 export function paintGrid(canvas: Canvas, left: number, top: number, cell: number, gap: number) {
   const board = 8 * cell + 7 * gap;
   fillRect(canvas, left, top, board, board, GRID_LINES);

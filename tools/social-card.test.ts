@@ -11,7 +11,7 @@ const pixel = (
 const INK = [0xf3, 0xf2, 0xec];
 const RED = [0xff, 0x3b, 0x3b];
 
-Deno.test("the social card is 1200×630 with puzzle #1's disc on the right", () => {
+Deno.test("the social card is 1200×630 with the red disc on the right", () => {
   const card = renderSocialCard();
   assert.equal(card.width, SOCIAL_CARD.width);
   assert.equal(card.height, SOCIAL_CARD.height);
