@@ -202,7 +202,8 @@ Additions:
   over.
 - Buttons show their state. Filled buttons light up on hover and sink a pixel, darker, while
   pressed; outlined ones brighten their edge on hover and fill faintly while pressed; an unselected
-  swatch gets a ring on hover and shrinks while pressed. Hover only where a mouse can hover. iOS
+  swatch lifts on hover and shrinks while pressed. Hover only where a mouse can hover. A disabled
+  Submit shows in its fill, never by fading the whole button, and nothing clips a focus ring. iOS
   Safari needs an empty `touchstart` listener to show pressed states.
 - Code font scales so the longest line fits without horizontal scroll, never below 11 px.
 - Syntax highlighting with a tiny hand-written tokenizer (keywords, types, function name, numbers,

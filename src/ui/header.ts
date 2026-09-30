@@ -7,7 +7,7 @@ export interface Header {
   focusHelp(): void;
 }
 
-/** Title, the puzzle's name (`#12`, `Tutorial 2/5`) and the "?" button of the info panel. */
+/** Title, the puzzle's name (`#12`, `Tutorial 2/9`) and the "?" button of the info panel. */
 export function createHeader(onHelp: () => void): Header {
   const label = el("span", { class: "header-label" });
   const help = el("button", {

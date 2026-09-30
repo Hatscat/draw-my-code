@@ -8,7 +8,7 @@ import { createInfoPanel } from "./info-panel.ts";
 import { createSwatches } from "./swatches.ts";
 
 export interface PuzzleViewOptions {
-  /** Header right: `#12` or `Tutorial 2/5`. */
+  /** Header right: `#12` or `Tutorial 2/9`. */
   readonly label: string;
   readonly fileName: string;
   readonly code: string;

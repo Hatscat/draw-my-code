@@ -30,6 +30,8 @@ test("a wrong submit only tells the count; Submit waits for a change", async ({ 
   expect(await grid.evaluate((element) => element.outerHTML)).toBe(before);
   await expect(submit).toHaveAttribute("aria-disabled", "true");
   await expect(submit).toBeFocused();
+  // Disabled shows in the fill, not by fading the whole button: that would fade its focus ring too.
+  expect(await submit.evaluate((button) => getComputedStyle(button).opacity)).toBe("1");
 
   // Pressing it again does nothing: still attempt 2.
   await page.keyboard.press("Enter");
@@ -59,6 +61,11 @@ test("Submit answers the mouse: hovering lights it, pressing pushes it in", asyn
   expect(await color()).not.toBe(hovered);
   expect(await submit.evaluate((button) => getComputedStyle(button).transform)).not.toBe("none");
   await page.mouse.up();
+
+  // An unselected swatch lifts under the mouse: a ring would vanish on the white and yellow ones.
+  const yellow = page.getByRole("radio", { name: "4 yellow" });
+  await yellow.hover();
+  expect(await yellow.evaluate((swatch) => getComputedStyle(swatch).transform)).not.toBe("none");
 });
 
 test("solving shows the result, the stats and the exact share text", async ({ page, isMobile }) => {
@@ -96,6 +103,9 @@ test("solving shows the result, the stats and the exact share text", async ({ pa
   } else {
     await expect.poll(async () => (await sharedTexts(page)).copied).toEqual([expected]);
     await expect(page.locator(".toast")).toHaveText("Copied");
+    // Above the confetti (z-index 10), which may still be falling.
+    const layer = await page.locator(".toast").evaluate((toast) => getComputedStyle(toast).zIndex);
+    expect(Number(layer)).toBeGreaterThan(10);
   }
   // The confetti, drawn over the page all along, never got in the way, and is gone after a while.
   await expect(page.locator(".confetti")).toHaveCount(0);
@@ -157,6 +167,9 @@ test("3 wrong attempts fail: X/3, the solution, and a toggle to the last drawing
   await expect(page.getByRole("grid", { name: /^Your last drawing/ })).toBeVisible();
   await expect(page.getByRole("gridcell", { name: /: 1 white$/ })).toHaveCount(2);
   await expect(page.getByRole("button", { name: "Your drawing" })).toBeFocused();
+  // Nothing clips the focused side's ring: keyboard players see which side has the focus.
+  expect(await page.locator(".toggle").evaluate((group) => getComputedStyle(group).overflow))
+    .toBe("visible");
 
   // Never right: every colored cell, plus the two black cells painted white later on.
   const whitened = (x: number, y: number) => [first, second].some((c) => c[0] === x && c[1] === y);

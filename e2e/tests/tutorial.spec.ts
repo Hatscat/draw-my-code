@@ -74,6 +74,20 @@ test.describe("on a small phone screen", () => {
   });
 });
 
+test("Skip tutorial looks like a link, even while pressed", async ({ page, isMobile }) => {
+  test.skip(isMobile, "pressing with a mouse");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.clock.install({ time: dayOf(1) });
+  await page.goto("./");
+  const skip = page.getByRole("button", { name: "Skip tutorial" });
+  await skip.hover();
+  await page.mouse.down();
+  expect(await skip.evaluate((link) => getComputedStyle(link).backgroundColor)).toBe(
+    "rgba(0, 0, 0, 0)",
+  );
+  await page.mouse.up();
+});
+
 test("a reload resumes at the current tutorial level", async ({ page }) => {
   await page.clock.install({ time: dayOf(1) });
   await page.goto("./");

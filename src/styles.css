@@ -34,6 +34,8 @@
   --button: #ecebe4;
   --button-hover: #ffffff;
   --button-pressed: #d3d2ca;
+  /* Disabled: the fill at 45% over bg, as a color, so the focus ring keeps its full strength. */
+  --button-disabled: #71716f;
   --error: #ff7a7a;
   --focus: #8fb4ff;
   --tok-text: #d6d9e0;
@@ -480,7 +482,7 @@ h1 {
 
 /* Disabled but focusable (keyboard focus stays put); the status line says why. */
 .submit[aria-disabled="true"] {
-  opacity: 0.45;
+  background: var(--button-disabled);
   cursor: not-allowed;
 }
 
@@ -513,7 +515,15 @@ h1 {
   display: inline-flex;
   border: 1px solid var(--control-border);
   border-radius: 5px;
-  overflow: hidden;
+}
+
+/* The ends follow the group's corners: clipping them instead would cut the focus ring. */
+.toggle button:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.toggle button:last-child {
+  border-radius: 0 4px 4px 0;
 }
 
 .toggle button {
@@ -682,6 +692,8 @@ h1 {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.15s ease;
+  /* Above the confetti. */
+  z-index: 11;
 }
 
 .toast.visible {
@@ -801,8 +813,9 @@ h1 {
     color: var(--ink);
   }
 
+  /* A lift, not a ring: a light ring would vanish on the white and yellow swatches. */
   .swatch[aria-checked="false"]:hover {
-    box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.55);
+    transform: translateY(-2px);
   }
 }
 
@@ -811,7 +824,7 @@ h1 {
   transform: translateY(1px);
 }
 
-:is(.text-button, .switch, .help):active,
+:is(.text-button, .switch, .help):not(.skip):active,
 .toggle button[aria-pressed="false"]:active {
   background: rgb(255 255 255 / 0.08);
 }
