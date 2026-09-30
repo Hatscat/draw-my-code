@@ -61,9 +61,10 @@ html {
 }
 
 /*
- * Where scrollbars take room (desktop Chrome on Linux or Windows), keep it from the start: the
- * scrollbar the result's stats bring would otherwise move the grid. Only from 495 px, where the
- * column keeps its full 448 px anyway: narrower, the room is worth more to the code and the grid.
+ * Where scrollbars take room (desktop Chrome on Linux or Windows), keep it from the start: a
+ * scrollbar that came with the result's stats would otherwise narrow the column, and the grid that
+ * spans it. Only from 495 px, where the column keeps its full 448 px anyway: narrower, the room is
+ * worth more to the code and the grid, and the page is taller than the window from the start.
  */
 @media (min-width: 495px) {
   html {
@@ -91,7 +92,7 @@ button {
   outline-offset: 2px;
 }
 
-/* One column that fills the screen, so the board can take whatever height is left. */
+/* One column, at most 448 px wide: the grid spans it, and the page scrolls when it must. */
 main {
   width: min(448px, 100% - 32px);
   min-height: 100svh;
@@ -318,24 +319,16 @@ h1 {
   outline-offset: 7px;
 }
 
-/*
- * Takes the height left over, so the grid fits one screen when it can. A zero flex basis matters:
- * with `auto`, Chromium resolves the container units below against the pre-flex height.
- */
+/* The grid spans the column, however long the code: the page scrolls instead of shrinking it. */
 .board {
   margin-top: var(--gap);
-  flex: 1 1 0;
-  /* 250 px of grid plus the axis labels, or the size it was frozen at. */
-  min-height: calc(var(--frozen-side, 250px) + 20px);
-  container-type: size;
+  flex: none;
+  container-type: inline-size;
 }
 
-/* A frozen grid still never gets wider than the page, should the window narrow. */
+/* The column's width less the y axis labels: 266 px at 320 px wide, 426 px at most. */
 .board-inner {
-  --side: min(
-    var(--frozen-side, clamp(250px, min(100cqw - 22px, 100cqh - 20px), 426px)),
-    100cqw - 22px
-  );
+  --side: calc(100cqw - 22px);
   width: calc(var(--side) + 22px);
   margin: 0 auto;
   display: grid;

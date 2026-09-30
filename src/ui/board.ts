@@ -17,8 +17,6 @@ export interface Board {
   /** Highlights the axis labels of a cell. */
   setPointed(index: number | undefined): void;
   setName(name: string): void;
-  /** Keeps the grid at its current size (while the info panel is open), or lets it fit again. */
-  freeze(frozen: boolean): void;
   /** Where the grid is in the viewport. */
   rect(): DOMRect;
 }
@@ -190,11 +188,6 @@ export function createBoard(handlers: BoardHandlers): Board {
     },
     setName(what) {
       name(what);
-    },
-    freeze(frozen) {
-      if (frozen) {
-        element.style.setProperty("--frozen-side", `${grid.getBoundingClientRect().width}px`);
-      } else element.style.removeProperty("--frozen-side");
     },
     rect() {
       return grid.getBoundingClientRect();

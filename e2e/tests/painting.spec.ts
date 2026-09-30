@@ -86,20 +86,18 @@ test.describe("on a screen short enough to scroll", () => {
     expect(await grid.evaluate((element) => getComputedStyle(element).touchAction)).toBe("none");
     await page.evaluate(() => scrollTo(0, 20));
     await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
+    // The finger's path, measured first: measuring brings the grid into view, and may scroll.
+    const path = [];
+    for (const y of [5, 4, 3, 2]) path.push(await cellCenter(page, 1, y));
     const scrollBefore = await page.evaluate(() => scrollY);
 
     // Playwright has no touch drag: dispatch touch pointer events as the browser would, all
     // targeted at the grid even as the finger moves (implicit capture).
     const touch = { pointerType: "touch", pointerId: 2, isPrimary: true, button: 0, buttons: 1 };
-    await grid.dispatchEvent("pointerdown", { ...touch, ...(await cellCenter(page, 1, 5)) });
-    for (const y of [4, 3, 2]) {
-      await grid.dispatchEvent("pointermove", { ...touch, ...(await cellCenter(page, 1, y)) });
-    }
-    await grid.dispatchEvent("pointerup", {
-      ...touch,
-      buttons: 0,
-      ...(await cellCenter(page, 1, 2)),
-    });
+    const [start, ...moves] = path;
+    await grid.dispatchEvent("pointerdown", { ...touch, ...start });
+    for (const point of moves) await grid.dispatchEvent("pointermove", { ...touch, ...point });
+    await grid.dispatchEvent("pointerup", { ...touch, buttons: 0, ...moves.at(-1) });
     for (const y of [5, 4, 3, 2]) {
       await expect(cell(page, 1, y)).toHaveAccessibleName(`x 1, y ${y}: 6 blue`);
     }

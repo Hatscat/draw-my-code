@@ -18,11 +18,6 @@ const largest = [...daily].sort((a, b) => {
   return size(b.code) - size(a.code);
 })[0];
 
-// The daily with the fewest lines. A short level leaves the whole grid on screen; a long one pushes
-// it down, and the page scrolls.
-const shortest =
-  [...daily].sort((a, b) => a.code.split("\n").length - b.code.split("\n").length)[0];
-
 /** The grid's box in page coordinates: scrolling doesn't move it, layout changes do. */
 const gridBox = (page: Page) =>
   page.getByRole("grid").evaluate((grid) => {
@@ -100,17 +95,19 @@ test.describe("at 320 px wide", () => {
   });
 });
 
-test("a short level's grid fits the screen on each device", async ({ page }) => {
-  if (!shortest) throw new Error("no daily levels");
-  await openPuzzle(page, numberShowing(shortest));
+test("the grid spans the column on each device, even for the longest level", async ({ page }) => {
+  if (!largest) throw new Error("no daily levels");
+  await openPuzzle(page, numberShowing(largest));
   await page.evaluate(() => document.fonts.ready);
   const width = page.viewportSize()?.width ?? 0;
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     width,
   );
+  // However long the code: the page scrolls instead of shrinking the grid. The axis labels take
+  // 22 px on the left.
+  const column = await page.locator("main").evaluate((main) => main.getBoundingClientRect().width);
   const grid = await page.getByRole("grid").boundingBox();
-  expect(grid?.width).toBeGreaterThanOrEqual(250);
-  await expect(page.getByRole("grid")).toBeInViewport({ ratio: 1 });
+  expect(Math.round(grid?.width ?? 0)).toBe(Math.round(column - 22));
 });
 
 test("opening the info panel pushes the page down instead of shrinking the grid", async ({ page }) => {

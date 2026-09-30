@@ -52,15 +52,10 @@ export interface PuzzleView {
 export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): PuzzleView {
   let selected: Color = 1;
   let infoOpen = false;
-  let finished = false;
   const listeners = new AbortController();
-  // The grid keeps its size while the info panel is open, which pushes the page down as in the
-  // design, and once the result's stats take the place of Submit.
-  const freeze = () => board.freeze(infoOpen || finished);
 
   const header = createHeader(() => {
     infoOpen = !infoOpen;
-    freeze();
     info.setOpen(infoOpen);
     header.setHelpOpen(infoOpen);
   });
@@ -132,9 +127,7 @@ export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): P
       submit.setAttribute("aria-disabled", String(!enabled));
     },
     showResult(panels) {
-      finished = panels !== undefined;
-      // Measured before the result's panels change the layout.
-      freeze();
+      const finished = panels !== undefined;
       controls.style.visibility = finished ? "hidden" : "";
       footer.hidden = finished;
       // Re-inserting a panel that is already shown would drop the keyboard focus inside it.

@@ -184,11 +184,13 @@ Follow `design/`. What was designed:
 - Keys 0–7 select a color (not with Ctrl, Meta or Alt). Hovering a cell (fine pointers) or focusing
   it shows the call `f(3, 4)`, never its value, in the code panel header in place of `x,y ∈ [0,7]`,
   and highlights both axis labels.
-- The grid is at least 250 px wide. When the content doesn't fit one screen (long levels, short
-  screens, open info panel) the page scrolls; painting gestures never scroll or zoom it. Tighter
-  spacing below about 700 px of viewport height.
-- The grid never moves or changes size within a puzzle: the status line always has room for its two
-  lines, and the info panel and the result panel keep the grid at the size it had.
+- The grid spans the column's full width, however long the code: 266 px at 320 px wide, 426 px at
+  most. When the content doesn't fit one screen (long levels, short screens, open info panel) the
+  page scrolls; painting gestures never scroll or zoom it. Tighter spacing below about 700 px of
+  viewport height.
+- The grid never moves or changes size within a puzzle: its size depends only on the column's width,
+  the status line always has room for its two lines, and the result covers the controls instead of
+  pushing the grid.
 
 Additions:
 
@@ -419,7 +421,8 @@ browser build, whose text metrics match real devices; time zone and locale pinne
   an in-app browser; from the info panel, with the focus kept on a control still there.
 - Offline reload after the first visit (Chromium only); the precache leaves `og.png` out.
 - 320 px wide: no horizontal scroll, every control reachable; a 12-line, 36-column level at 320×568
-  keeps the grid at least 250 px wide.
+  keeps the grid at least 250 px wide. On every device, the grid spans the column, even for the
+  longest level.
 - A two-line status and the result panel (solved, and failed at 320 px) leave the grid exactly where
   and as large as it was, also with the classic scrollbars of desktop Chrome, which appear with the
   result (reserved in windows from 495 px wide, where they never narrow the column).

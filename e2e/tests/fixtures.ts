@@ -61,6 +61,9 @@ export function cell(page: Page, x: number, y: number): Locator {
 
 /** The center of cell (x, y) in viewport coordinates. */
 export async function cellCenter(page: Page, x: number, y: number) {
+  // The whole grid, not just the cell: the centers of several cells, taken for one drag, stay
+  // valid. With a long level, part of the grid starts below the fold.
+  await page.getByRole("grid").scrollIntoViewIfNeeded();
   const box = await cell(page, x, y).boundingBox();
   if (!box) throw new Error(`cell ${x}, ${y} is not visible`);
   return { clientX: box.x + box.width / 2, clientY: box.y + box.height / 2 };
