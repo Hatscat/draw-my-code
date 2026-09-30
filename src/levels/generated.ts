@@ -97,7 +97,7 @@ export const tutorial: readonly Level[] = [{
 }, {
   id: 8,
   code:
-    'int f(int x, int y) {\n  // do not calculate, it is visual\n  // 1 is at position x in the int,\n  // notice the direction\n  int b = 1 << x;\n  // hexadecimal mask of 8 bits,\n  // same as the number of columns\n  int mask = 0xB0; // 10110000\n  // "&" keeps the "1" bits in both\n  return b & mask ? 1 : 0;\n}',
+    'int f(int x, int y) {\n  // do not calculate, it is visual\n  // 1 is at position x in the int,\n  // notice the direction\n  int b = 1 << x;\n  // hexadecimal mask of 8 bits,\n  // same as the number of columns\n  int mask = 0xB0; // 10110000\n  // "&" filters "1" bits in both\n  return b & mask ? 1 : 0;\n}',
   solution: [
     "00001101",
     "00001101",

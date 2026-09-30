@@ -6,6 +6,6 @@ int f(int x, int y) {
   // hexadecimal mask of 8 bits,
   // same as the number of columns
   int mask = 0xB0; // 10110000
-  // "&" keeps the "1" bits in both
+  // "&" filters "1" bits in both
   return b & mask ? 1 : 0;
 }
