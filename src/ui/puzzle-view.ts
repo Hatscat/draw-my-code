@@ -82,7 +82,7 @@ export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): P
   const top = el("div", { class: "top" }, controls, resultTop);
   const resultBottom = el("div", { class: "result-slot" });
   const status = el("p", { class: "status", role: "status" });
-  const submit = el("button", { type: "button", class: "submit" }, "Submit");
+  const submit = el("button", { type: "button", class: "button submit" }, "Submit");
   submit.addEventListener("click", () => {
     if (submit.getAttribute("aria-disabled") !== "true") options.onSubmit();
   });

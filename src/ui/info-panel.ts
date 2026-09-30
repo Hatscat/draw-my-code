@@ -19,7 +19,7 @@ export function createInfoPanel(
     {
       type: "button",
       role: "switch",
-      class: "switch",
+      class: "text-button switch",
       "aria-checked": "false",
     },
     mark,

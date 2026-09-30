@@ -221,6 +221,11 @@ Additions:
   grid, for 3 s, over the page: a canvas that never takes input. Not on a failure, not when a solved
   puzzle is reopened, and never with `prefers-reduced-motion`: the result text says it all.
 - Dark theme only in v1.
+- Design tokens: every color, font size, spacing, radius, size, duration and layer is a custom
+  property in the `:root` block of `src/styles.css`, and every other rule uses them. Buttons come in
+  two kinds: filled (`.button`, with Submit's height following the screen's and `.button-small` in
+  dialogs) and outlined (`.text-button`, with `.skip` reading as a link); headings share `.heading`.
+  The design system published on claude.ai mirrors these tokens and components.
 
 ## Levels
 
@@ -403,9 +408,10 @@ Unit (`deno task test`, assertions from the built-in `node:assert/strict`):
   that grows or shrinks after launch), open puzzles and play retention, storage load, migration,
   corrupted and newer-version data.
 - ui: the local-date and next-midnight helpers, under several time zones; the highlighter tokenizer.
-- tools: every rejection case with fixtures (format, forbidden constructs, out of range, UB
-  overflow, compile error, timeout, crash, numbering gap, line too long); deterministic output; the
-  freeze (open puzzles back to UTC−12, against `--base`), an unreadable `generated.ts` after launch.
+- tools: the stylesheet uses its tokens (no raw color or size outside `:root`); every rejection case
+  with fixtures (format, forbidden constructs, out of range, UB overflow, compile error, timeout,
+  crash, numbering gap, line too long); deterministic output; the freeze (open puzzles back to
+  UTC−12, against `--base`), an unreadable `generated.ts` after launch.
 
 E2E (Playwright; projects: Desktop Chrome, Pixel 7, iPhone 14 on WebKit; Chromium runs the full
 browser build, whose text metrics match real devices; time zone and locale pinned):

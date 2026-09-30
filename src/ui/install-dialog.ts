@@ -9,7 +9,7 @@ import { installWay, onInstallChange, promptInstall } from "./install.ts";
 export function offerInstall(opener?: HTMLElement): void {
   const way = installWay();
   if (!way) return;
-  const title = el("h2", { id: "install-title" }, "Install Draw my code");
+  const title = el("h2", { id: "install-title", class: "heading" }, "Install Draw my code");
   const done = el("button", { type: "button", class: "text-button" }, "Got it");
   const how = way === "prompt"
     ? [el("p", {}, "Play from your home screen or desktop, like an app. It works offline too.")]
@@ -31,7 +31,7 @@ export function offerInstall(opener?: HTMLElement): void {
     done.textContent = "Not now";
     const install = el(
       "button",
-      { type: "button", class: "dialog-primary", autofocus: true },
+      { type: "button", class: "button button-small", autofocus: true },
       "Install",
     );
     install.addEventListener("click", () => {

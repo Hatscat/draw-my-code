@@ -52,7 +52,7 @@ export interface ResultPanel {
 
 /** Shown once the daily is over, in place of the swatches and of Submit. */
 export function createResultPanel(handlers: ResultPanelHandlers): ResultPanel {
-  const heading = el("h2", { id: "result-title", tabindex: -1 });
+  const heading = el("h2", { id: "result-title", class: "heading", tabindex: -1 });
   const showButtons = (["solution", "drawing"] as const).map((shown) => {
     const button = el(
       "button",
@@ -70,7 +70,7 @@ export function createResultPanel(handlers: ResultPanelHandlers): ResultPanel {
   const top = el("div", { class: "result-top" }, heading, toggle);
 
   const stats = createStatsView();
-  const share = el("button", { type: "button", class: "share" }, "Share");
+  const share = el("button", { type: "button", class: "button share" }, "Share");
   share.addEventListener("click", () => handlers.onShare());
   const manualCopy = el("textarea", {
     class: "manual-copy",
@@ -138,7 +138,7 @@ export function createResultPanel(handlers: ResultPanelHandlers): ResultPanel {
         return;
       }
       const label = value.kind === "play" ? `Play #${value.number}` : "Back to today's puzzle";
-      const button = el("button", { type: "button", class: "play-next" }, label);
+      const button = el("button", { type: "button", class: "button play-next" }, label);
       button.addEventListener(
         "click",
         () => (value.kind === "play" ? handlers.onPlayNext() : handlers.onToday()),

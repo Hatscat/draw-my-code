@@ -32,7 +32,7 @@ export function showNotice(
   }, [replayButton(onReplayTutorial), installButton()]);
   const heading = el(
     "h2",
-    { class: "notice-title" },
+    { class: "heading notice-title" },
     `First puzzle on ${formatLongDate(LAUNCH_DATE)}`,
   );
   const line = el("p", { class: "notice" });

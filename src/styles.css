@@ -10,24 +10,31 @@
   font-display: swap;
 }
 
-/* Colors and sizes measured from design/. Palette colors come from src/ui/palette.ts. */
+/*
+ * The design tokens, measured from design/, and the design system's source: every rule below uses
+ * them through var(). tools/styles.test.ts fails on a raw color or size outside this block, so a
+ * new value joins the tokens first. Palette colors come from src/ui/palette.ts.
+ */
 :root {
   color-scheme: dark;
-  --font: "JetBrains Mono", ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace;
+
+  /* Color */
   --bg: #0c0d0f;
   --glow: #15171b;
   --panel: #121418;
   --panel-border: #23262d;
   --panel-divider: #1e2127;
   --ink: #f3f2ec;
+  /* Text on light fills: filled buttons, swatches, cells, the toast, the current result's bar. */
   --ink-dark: #0a0a0a;
   --muted: #a7abb4;
   /* Axis and domain labels: lighter than the design's #5d626c and #6b707a, for WCAG AA. */
   --faint: #7a808b;
   --line-number: #3d424c;
-  /* Outlined controls: their edge, and the brighter edge of one that is hovered or open. */
+  /* Outlined controls: their edge, the edge of one hovered or open, their fill while pressed. */
   --control-border: #3a3f48;
   --control-strong: #d9dbe0;
+  --control-pressed: rgb(255 255 255 / 0.08);
   /* Inner grid lines: the design's border color, so they reach 3:1 against black cells. */
   --grid-line: #545a66;
   /* Filled buttons: lit on hover, darker while pressed. */
@@ -38,6 +45,7 @@
   --button-disabled: #71716f;
   --error: #ff7a7a;
   --focus: #8fb4ff;
+  --backdrop: rgb(0 0 0 / 0.6);
   --tok-text: #d6d9e0;
   --tok-operator: #8a93a3;
   --tok-type: #7fd3d0;
@@ -45,11 +53,106 @@
   --tok-function: #8fb4ff;
   --tok-number: #f2a36b;
   --tok-comment: #7a808b;
+  --page: radial-gradient(900px 310px at 50% 0, var(--glow), var(--bg)) no-repeat, var(--bg);
+
+  /* Shadows: only the swatches have any. The edge makes black and white swatches read. */
+  --swatch-edge: inset 0 0 0 1px rgb(255 255 255 / 0.24);
+  --swatch-ring: 0 0 0 3px var(--ink-dark), 0 0 0 5px var(--ink);
+  --swatch-lift: 0 6px 16px rgb(0 0 0 / 0.5);
+
+  /* Type: one family, a size scale, and tracking for uppercase text. */
+  --font: "JetBrains Mono", ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --text-xs: 10px;
+  --text-sm: 11px;
+  --text-md: 12px;
+  --text-lg: 13px;
+  --text-xl: 14px;
+  --text-2xl: 16px;
+  --text-3xl: 20px;
+  /* The code's largest size: it shrinks down to --text-sm so its longest line fits. */
+  --text-code: 14px;
+  --tracking-title: 0.22em;
+  --tracking-button: 0.18em;
+  --tracking-heading: 0.08em;
+  --tracking-label: 0.06em;
+  --leading-none: 1;
+  /* One line of UI text: status lines, outlined buttons, the toggle. */
+  --leading-line: 16px;
+  --leading-instruction: 17px;
+  --leading-heading: 20px;
+  --leading-copy: 1.4;
+  --leading-body: 1.6;
+  --leading-code: 1.6667;
+
+  /* Spacing: the steps the design uses. */
+  --space-1: 1px;
+  --space-2: 2px;
+  --space-3: 3px;
+  --space-4: 4px;
+  --space-5: 5px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-40: 40px;
+
   /*
-   * Spacing shrinks smoothly from the design's values at 800 px of viewport height to compact ones
-   * at 700 px, so the grid keeps as much room as it can without a jump at a breakpoint.
+   * Sizes that follow the screen's height: the design's values from 800 px of viewport height,
+   * easing to compact ones at 700 px, so a short screen keeps room without a jump at a breakpoint.
    */
   --gap: clamp(10px, 100svh * 0.08 - 46px, 18px);
+  --page-top: clamp(12px, 100svh * 0.1 - 58px, 22px);
+  --code-pad-y: clamp(6px, 100svh * 0.048 - 27.6px, 10.8px);
+  --status-height: clamp(40px, 100svh * 0.08 - 16px, 48px);
+  --status-top: clamp(8px, 100svh * 0.08 - 48px, 16px);
+  --submit-height: clamp(44px, 100svh * 0.08 - 12px, 52px);
+  --swatch-gap: clamp(4px, 2%, 9px);
+
+  /* Radii, by role. */
+  --radius-grid: 2px;
+  --radius-control: 5px;
+  --radius-panel: 6px;
+  --radius-dialog: 8px;
+  --radius-round: 50%;
+
+  /* Sizes */
+  --column: 448px;
+  --gutter: 16px;
+  --axis-y: 22px;
+  --axis-x: 20px;
+  --hairline: 1px;
+  --header-height: 32px;
+  --panel-head-height: 27px;
+  --round-control: 32px;
+  --button-height: 48px;
+  --button-small-height: 40px;
+  --dialog-width: 360px;
+  --stats-width: 320px;
+  --bar-label: 28px;
+  --bar-min: 22px;
+  --focus-width: 2px;
+  --focus-offset: 2px;
+  --focus-offset-button: 3px;
+  --focus-offset-cell: 1px;
+  --focus-offset-swatch: 7px;
+  /* A hovered swatch rises, a pressed button sinks. */
+  --lift: -2px;
+  --sink: 1px;
+
+  /* Motion: short, and off under prefers-reduced-motion. */
+  --duration-press: 0.08s;
+  --duration-hover: 0.12s;
+  --duration-fade: 0.15s;
+
+  /* Layers */
+  --layer-raised: 1;
+  --layer-confetti: 10;
+  --layer-toast: 11;
 }
 
 * {
@@ -80,7 +183,7 @@ html {
 }
 
 body {
-  background: radial-gradient(900px 310px at 50% 0, var(--glow), var(--bg)) no-repeat, var(--bg);
+  background: var(--page);
   color: var(--ink);
   font-family: var(--font);
   font-variant-ligatures: none;
@@ -95,33 +198,33 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
 }
 
 /* One column, at most 448 px wide: the grid spans it, and the page scrolls when it must. */
 main {
-  width: min(448px, 100% - 32px);
+  width: min(var(--column), 100% - 2 * var(--gutter));
   min-height: 100svh;
   margin: 0 auto;
-  padding: clamp(12px, 100svh * 0.1 - 58px, 22px) 0 14px;
+  padding: var(--page-top) 0 var(--space-14);
   display: flex;
   flex-direction: column;
 }
 
 .header {
-  height: 32px;
+  height: var(--header-height);
   flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-12);
 }
 
 h1 {
-  font-size: 13px;
+  font-size: var(--text-lg);
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: var(--tracking-title);
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -129,26 +232,90 @@ h1 {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-12);
 }
 
 .header-label {
-  font-size: 12px;
+  font-size: var(--text-md);
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-label);
   color: var(--muted);
   white-space: nowrap;
 }
 
+/* Headings: the result, a dialog's title, the pre-launch date. */
+.heading {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-heading);
+  font-weight: 700;
+  letter-spacing: var(--tracking-heading);
+}
+
+/*
+ * Filled buttons: the one main action of a screen or a dialog (Submit, Share, Play #N, Back to
+ * today's puzzle, Install). Uppercase and tracked, 48 px tall; Submit's height follows the screen's,
+ * and a dialog's is small.
+ */
+.button {
+  height: var(--button-height);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--button);
+  color: var(--ink-dark);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: var(--tracking-button);
+  text-transform: uppercase;
+  transition:
+    background-color var(--duration-hover) ease,
+    transform var(--duration-press) ease;
+}
+
+.button:focus-visible {
+  outline-offset: var(--focus-offset-button);
+}
+
+/* Disabled but focusable (keyboard focus stays put); the status line says why. */
+.button[aria-disabled="true"] {
+  background: var(--button-disabled);
+  cursor: not-allowed;
+}
+
+.button-small {
+  height: var(--button-small-height);
+  padding: 0 var(--space-18);
+  font-size: var(--text-lg);
+}
+
+/* Outlined buttons: secondary actions and settings (Replay tutorial, Install app, Show digits). */
+.text-button {
+  padding: var(--space-4) var(--space-10);
+  border: var(--hairline) solid var(--control-border);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--text-md);
+  line-height: var(--leading-line);
+}
+
+/* The one way out of a screen, under Submit: an outlined button that reads as a link. */
+.skip {
+  display: block;
+  margin: var(--space-10) auto 0;
+  border-color: transparent;
+  color: var(--muted);
+  text-decoration: underline;
+}
+
 .help {
-  width: 32px;
-  height: 32px;
+  width: var(--round-control);
+  height: var(--round-control);
   flex: none;
-  border: 1px solid var(--control-border);
-  border-radius: 50%;
+  border: var(--hairline) solid var(--control-border);
+  border-radius: var(--radius-round);
   background: transparent;
   color: var(--control-strong);
-  font-size: 13px;
+  font-size: var(--text-lg);
   font-weight: 700;
 }
 
@@ -157,21 +324,21 @@ h1 {
 }
 
 .panel {
-  margin-top: calc(var(--gap) - 2px);
+  margin-top: calc(var(--gap) - var(--space-2));
   flex: none;
   background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 6px;
+  border: var(--hairline) solid var(--panel-border);
+  border-radius: var(--radius-panel);
 }
 
 .panel-head {
-  height: 27px;
-  padding: 0 12px;
+  height: var(--panel-head-height);
+  padding: 0 var(--space-12);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--panel-divider);
-  font-size: 11px;
+  border-bottom: var(--hairline) solid var(--panel-divider);
+  font-size: var(--text-sm);
   color: var(--muted);
 }
 
@@ -193,13 +360,24 @@ h1 {
  * the design's 14px.
  */
 .code {
-  padding: clamp(6px, 100svh * 0.048 - 27.6px, 10.8px) 12px;
+  --code-pad-x: var(--space-12);
+  padding: var(--code-pad-y) var(--code-pad-x);
   font-family: inherit;
-  font-size: clamp(11px, (100cqi - 24px) / ((var(--chars) + 1.5) * 0.6), 14px);
-  line-height: 1.6667;
+  font-size: clamp(
+    var(--text-sm),
+    (100cqi - 2 * var(--code-pad-x)) / ((var(--chars) + 1.5) * 0.6),
+    var(--text-code)
+  );
+  line-height: var(--leading-code);
   color: var(--tok-text);
   white-space: pre;
   overflow-x: auto;
+}
+
+@media (max-width: 360px) {
+  .code {
+    --code-pad-x: var(--space-10);
+  }
 }
 
 .code-number {
@@ -231,26 +409,22 @@ h1 {
 }
 
 .info-panel {
-  padding: 10px 12px;
-  font-size: 12px;
-  line-height: 1.6;
+  padding: var(--space-10) var(--space-12);
+  font-size: var(--text-md);
+  line-height: var(--leading-body);
   color: var(--muted);
 }
 
-.info-actions {
-  margin-top: 8px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+/* One sentence per line, as in the design. */
+.info-line {
+  display: block;
 }
 
-.switch {
-  padding: 4px 10px;
-  border: 1px solid var(--control-border);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--ink);
-  font-size: 12px;
+.info-actions {
+  margin-top: var(--space-8);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
 }
 
 /* The result's heading covers the instruction and swatches, so the grid below never moves. */
@@ -270,39 +444,39 @@ h1 {
 
 .instruction {
   text-align: center;
-  font-size: 13px;
-  line-height: 17px;
+  font-size: var(--text-lg);
+  line-height: var(--leading-instruction);
   color: var(--muted);
 }
 
 .notice {
-  margin-top: 40px;
+  margin-top: var(--space-40);
   text-align: center;
-  font-size: 13px;
+  font-size: var(--text-lg);
   color: var(--muted);
 }
 
 .swatches {
   margin-top: var(--gap);
-  padding: 0 2px;
+  padding: 0 var(--space-2);
   flex: none;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  column-gap: clamp(4px, 2%, 9px);
+  column-gap: var(--swatch-gap);
 }
 
 .swatch {
   aspect-ratio: 1;
-  padding: 0 0 4px 6px;
+  padding: 0 0 var(--space-4) var(--space-6);
   display: flex;
   align-items: flex-end;
   border: 0;
-  border-radius: 5px;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.24);
+  border-radius: var(--radius-control);
+  box-shadow: var(--swatch-edge);
   color: var(--ink-dark);
-  font-size: clamp(11px, 3.2vw, 14px);
-  line-height: 1;
-  transition: transform 0.12s ease;
+  font-size: clamp(var(--text-sm), 3.2vw, var(--text-xl));
+  line-height: var(--leading-none);
+  transition: transform var(--duration-hover) ease;
 }
 
 .swatch[data-value="0"] {
@@ -312,18 +486,14 @@ h1 {
 /* Selected: ring, larger and bold, never color alone. */
 .swatch[aria-checked="true"] {
   position: relative;
-  z-index: 1;
+  z-index: var(--layer-raised);
   transform: scale(1.1);
   font-weight: 700;
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.24),
-    0 0 0 3px #0a0b0d,
-    0 0 0 5px var(--ink),
-    0 6px 16px rgb(0 0 0 / 0.5);
+  box-shadow: var(--swatch-edge), var(--swatch-ring), var(--swatch-lift);
 }
 
 .swatch:focus-visible {
-  outline-offset: 7px;
+  outline-offset: var(--focus-offset-swatch);
 }
 
 /* The grid spans the column, however long the code: the page scrolls instead of shrinking it. */
@@ -335,26 +505,26 @@ h1 {
 
 /* The column's width less the y axis labels: 266 px at 320 px wide, 426 px at most. */
 .board-inner {
-  --side: calc(100cqw - 22px);
-  width: calc(var(--side) + 22px);
+  --side: calc(100cqw - var(--axis-y));
+  width: calc(var(--side) + var(--axis-y));
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 22px var(--side);
-  grid-template-rows: 20px var(--side);
+  grid-template-columns: var(--axis-y) var(--side);
+  grid-template-rows: var(--axis-x) var(--side);
 }
 
 .axis {
   display: grid;
-  gap: 2px;
-  font-size: 10px;
-  line-height: 1;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  line-height: var(--leading-none);
   color: var(--faint);
 }
 
 .axis-x {
   grid-column: 2;
   grid-template-columns: repeat(8, 1fr);
-  padding: 0 3px;
+  padding: 0 var(--space-3);
   align-items: center;
   text-align: center;
 }
@@ -362,7 +532,7 @@ h1 {
 .axis-y {
   grid-row: 2;
   grid-template-rows: repeat(8, 1fr);
-  padding: 3px 6px 3px 0;
+  padding: var(--space-3) var(--space-6) var(--space-3) 0;
   align-items: center;
   text-align: right;
 }
@@ -377,11 +547,11 @@ h1 {
   grid-column: 2;
   display: grid;
   grid-template-rows: repeat(8, 1fr);
-  gap: 2px;
-  padding: 2px;
+  gap: var(--space-2);
+  padding: var(--space-2);
   background: var(--grid-line);
-  border: 1px solid var(--grid-line);
-  border-radius: 2px;
+  border: var(--hairline) solid var(--grid-line);
+  border-radius: var(--radius-grid);
   /* Painting gestures never scroll, zoom or select. */
   touch-action: none;
   user-select: none;
@@ -400,16 +570,16 @@ h1 {
 .grid-row {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  gap: 2px;
+  gap: var(--space-2);
 }
 
 .cell {
   position: relative;
-  padding: 0 0 2px 4px;
+  padding: 0 0 var(--space-2) var(--space-4);
   display: flex;
   align-items: flex-end;
-  font-size: 11px;
-  line-height: 1;
+  font-size: var(--text-sm);
+  line-height: var(--leading-none);
   color: var(--ink-dark);
 }
 
@@ -418,90 +588,42 @@ h1 {
 }
 
 .cell:focus-visible {
-  z-index: 1;
-  outline-offset: 1px;
-}
-
-/* Always room for two lines: a longer message never takes height from the grid. */
-.status {
-  height: clamp(40px, 100svh * 0.08 - 16px, 48px);
-  padding-top: clamp(8px, 100svh * 0.08 - 48px, 16px);
-  flex: none;
-  font-size: 11px;
-  line-height: 16px;
-  text-align: right;
-  color: var(--error);
-}
-
-.submit {
-  width: 100%;
-  height: clamp(44px, 100svh * 0.08 - 12px, 52px);
-  flex: none;
-  border: 0;
-  border-radius: 5px;
-  background: var(--button);
-  color: var(--bg);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.submit:focus-visible {
-  outline-offset: 3px;
-}
-
-@media (max-width: 360px) {
-  .code {
-    padding-inline: 10px;
-    font-size: clamp(11px, (100cqi - 20px) / ((var(--chars) + 1.5) * 0.6), 14px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition: none !important;
-    animation: none !important;
-  }
-}
-
-/* One sentence per line, as in the design. */
-.info-line {
-  display: block;
+  z-index: var(--layer-raised);
+  outline-offset: var(--focus-offset-cell);
 }
 
 .footer {
   flex: none;
 }
 
+/* Always room for two lines: a longer message never takes height from the grid. */
+.status {
+  height: var(--status-height);
+  padding-top: var(--status-top);
+  flex: none;
+  font-size: var(--text-sm);
+  line-height: var(--leading-line);
+  text-align: right;
+  color: var(--error);
+}
+
+.status.success {
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .status-line {
   display: block;
 }
 
-/* Disabled but focusable (keyboard focus stays put); the status line says why. */
-.submit[aria-disabled="true"] {
-  background: var(--button-disabled);
-  cursor: not-allowed;
+.submit {
+  width: 100%;
+  height: var(--submit-height);
+  flex: none;
 }
 
 .result-top {
   text-align: center;
-}
-
-.result {
-  margin-top: 16px;
-  flex: none;
-  text-align: center;
-}
-
-.result-top h2,
-.notice-title {
-  font-size: 16px;
-  line-height: 20px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
 }
 
 /* Focused by script when the puzzle ends, for screen readers: no ring, it isn't a control. */
@@ -509,78 +631,85 @@ h1 {
   outline: none;
 }
 
+.result {
+  margin-top: var(--space-16);
+  flex: none;
+  text-align: center;
+}
+
 /* Heading, gap and toggle add up to 56 px: less than the swatches they cover, even at 320 px. */
 .toggle {
-  margin-top: 8px;
+  --inner: calc(var(--radius-control) - var(--hairline));
+  margin-top: var(--space-8);
   display: inline-flex;
-  border: 1px solid var(--control-border);
-  border-radius: 5px;
+  border: var(--hairline) solid var(--control-border);
+  border-radius: var(--radius-control);
 }
 
 /* The ends follow the group's corners: clipping them instead would cut the focus ring. */
 .toggle button:first-child {
-  border-radius: 4px 0 0 4px;
+  border-radius: var(--inner) 0 0 var(--inner);
 }
 
 .toggle button:last-child {
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 var(--inner) var(--inner) 0;
 }
 
 .toggle button {
-  padding: 5px 12px;
-  line-height: 16px;
+  padding: var(--space-5) var(--space-12);
+  line-height: var(--leading-line);
   border: 0;
   background: transparent;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-md);
 }
 
 /* The pressed side is filled and bold, not just recolored. */
 .toggle button[aria-pressed="true"] {
   background: var(--button);
-  color: var(--bg);
+  color: var(--ink-dark);
   font-weight: 700;
 }
 
 .stats {
-  margin-top: 14px;
+  margin-top: var(--space-14);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  gap: var(--space-8);
 }
 
 .stat {
   display: flex;
   flex-direction: column-reverse;
-  gap: 2px;
+  gap: var(--space-2);
 }
 
 .stat dd {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--text-3xl);
   font-weight: 700;
 }
 
 .stat dt {
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 
 .distribution {
-  margin: 14px auto 0;
+  margin: var(--space-14) auto 0;
   padding: 0;
-  max-width: 320px;
+  max-width: var(--stats-width);
   list-style: none;
   display: grid;
-  gap: 4px;
-  font-size: 11px;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
 }
 
 .distribution li {
   display: grid;
-  grid-template-columns: 28px 1fr;
+  grid-template-columns: var(--bar-label) 1fr;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-6);
 }
 
 .bar-label {
@@ -590,8 +719,8 @@ h1 {
 }
 
 .bar {
-  width: max(22px, calc(var(--share) * 100%));
-  padding: 1px 6px;
+  width: max(var(--bar-min), calc(var(--share) * 100%));
+  padding: var(--space-1) var(--space-6);
   background: var(--panel-border);
   text-align: right;
   font-weight: 500;
@@ -600,7 +729,7 @@ h1 {
 /* The result on screen: filled, bold and marked, not just recolored. */
 .distribution .current .bar {
   background: var(--ink);
-  color: var(--bg);
+  color: var(--ink-dark);
   font-weight: 700;
 }
 
@@ -610,50 +739,41 @@ h1 {
 
 .share,
 .play-next {
-  margin-top: 16px;
+  margin-top: var(--space-16);
   width: 100%;
-  height: 48px;
-  border: 0;
-  border-radius: 5px;
-  background: var(--button);
-  color: var(--bg);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
 }
 
 .manual-copy {
-  margin-top: 12px;
+  margin-top: var(--space-12);
   width: 100%;
-  padding: 8px;
+  padding: var(--space-8);
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid var(--panel-border);
-  border-radius: 5px;
-  font: 12px/1.4 var(--font);
+  border: var(--hairline) solid var(--panel-border);
+  border-radius: var(--radius-control);
+  font: var(--text-md) / var(--leading-copy) var(--font);
   resize: none;
 }
 
 /* Missed puzzles still open: a row of small buttons under the share button. */
 .missed {
-  margin-top: 16px;
-  font-size: 12px;
+  margin-top: var(--space-16);
+  font-size: var(--text-md);
   color: var(--muted);
 }
 
 .missed-list {
-  margin-top: 8px;
+  margin-top: var(--space-8);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-8);
 }
 
 .next {
-  min-height: 48px;
-  margin-top: 12px;
-  font-size: 12px;
+  min-height: var(--button-height);
+  margin-top: var(--space-12);
+  font-size: var(--text-md);
   color: var(--muted);
 }
 
@@ -663,37 +783,37 @@ h1 {
 
 .follow {
   display: inline-block;
-  margin-top: 12px;
-  font-size: 12px;
+  margin-top: var(--space-12);
+  font-size: var(--text-md);
   color: var(--focus);
 }
 
 .notice-title {
-  margin-top: 40px;
+  margin-top: var(--space-40);
   text-align: center;
 }
 
 .notice-stats {
-  margin-top: 24px;
+  margin-top: var(--space-24);
   text-align: center;
 }
 
 .toast {
   position: fixed;
   left: 50%;
-  top: 16px;
+  top: var(--space-16);
   transform: translateX(-50%);
-  padding: 8px 14px;
-  border-radius: 5px;
+  padding: var(--space-8) var(--space-14);
+  border-radius: var(--radius-control);
   background: var(--button);
-  color: var(--bg);
-  font-size: 13px;
+  color: var(--ink-dark);
+  font-size: var(--text-lg);
   font-weight: 700;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--duration-fade) ease;
   /* Above the confetti. */
-  z-index: 11;
+  z-index: var(--layer-toast);
 }
 
 .toast.visible {
@@ -706,105 +826,66 @@ h1 {
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 10;
+  z-index: var(--layer-confetti);
   pointer-events: none;
-}
-
-.status.success {
-  color: var(--ink);
-  font-weight: 700;
 }
 
 /* The install invitation: a panel over the dimmed game. */
 .dialog {
-  width: min(360px, 100% - 32px);
+  width: min(var(--dialog-width), 100% - 2 * var(--gutter));
   /* Centered: the reset at the top zeroes the margin modal dialogs center with. */
   margin: auto;
-  padding: 20px;
+  padding: var(--space-20);
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid var(--panel-border);
-  border-radius: 8px;
+  border: var(--hairline) solid var(--panel-border);
+  border-radius: var(--radius-dialog);
 }
 
 .dialog::backdrop {
-  background: rgb(0 0 0 / 0.6);
-}
-
-.dialog h2 {
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 20px;
-  letter-spacing: 0.08em;
+  background: var(--backdrop);
 }
 
 .dialog p,
 .dialog ol {
-  margin-top: 10px;
-  font-size: 13px;
-  line-height: 1.6;
+  margin-top: var(--space-10);
+  font-size: var(--text-lg);
+  line-height: var(--leading-body);
   color: var(--muted);
 }
 
 .dialog ol {
-  padding-left: 20px;
+  padding-left: var(--space-20);
 }
 
 .dialog-actions {
-  margin-top: 18px;
+  margin-top: var(--space-18);
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-12);
 }
 
-.dialog-primary {
-  height: 40px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: 5px;
-  background: var(--button);
-  color: var(--bg);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.text-button {
-  padding: 4px 10px;
-  border: 1px solid var(--control-border);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--ink);
-  font-size: 12px;
-}
-
-.skip {
-  display: block;
-  margin: 10px auto 0;
-  border-color: transparent;
-  color: var(--muted);
-  text-decoration: underline;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 /*
  * Interaction states, the same for every button of a kind. Hover only where a mouse can hover:
- * on touch screens it would stick after a tap. Pressed comes last, so it wins over hover. Disabled
- * Submit (aria-disabled) shows neither.
+ * on touch screens it would stick after a tap. Pressed comes last, so it wins over hover. A
+ * disabled Submit (aria-disabled) shows neither.
  */
-:is(.submit, .share, .play-next, .dialog-primary) {
-  transition:
-    background-color 0.12s ease,
-    transform 0.08s ease;
-}
-
 @media (hover: hover) {
-  :is(.submit, .share, .play-next, .dialog-primary):not([aria-disabled="true"]):hover {
+  .button:not([aria-disabled="true"]):hover {
     background: var(--button-hover);
   }
 
-  :is(.text-button, .switch, .help):not(.skip):hover {
+  :is(.text-button, .help):not(.skip):hover {
     border-color: var(--control-strong);
   }
 
@@ -815,18 +896,18 @@ h1 {
 
   /* A lift, not a ring: a light ring would vanish on the white and yellow swatches. */
   .swatch[aria-checked="false"]:hover {
-    transform: translateY(-2px);
+    transform: translateY(var(--lift));
   }
 }
 
-:is(.submit, .share, .play-next, .dialog-primary):not([aria-disabled="true"]):active {
+.button:not([aria-disabled="true"]):active {
   background: var(--button-pressed);
-  transform: translateY(1px);
+  transform: translateY(var(--sink));
 }
 
-:is(.text-button, .switch, .help):not(.skip):active,
+:is(.text-button, .help):not(.skip):active,
 .toggle button[aria-pressed="false"]:active {
-  background: rgb(255 255 255 / 0.08);
+  background: var(--control-pressed);
 }
 
 .swatch[aria-checked="false"]:active {
