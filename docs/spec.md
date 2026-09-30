@@ -312,8 +312,10 @@ Level design. The generator can't check these; they apply when a level is writte
   recognizable picture.
 - The painting budget is counted in strokes, not cells: a drag paints a straight run, so diagonals
   and isolated cells are taps. At most one tap-heavy level a week.
-- No shift or bitwise operator on a negative value, and no result that depends on a type's width or
-  on `sizeof`.
+- No shift of a negative value: `<<` is undefined and `>>` implementation-defined, in C23 too. `~`,
+  `&`, `|` and `^` may take negative operands: levels assume two's complement (the only
+  representation gcc supports and C23 allows), so `~n` is `-n - 1`. No result may depend on a type's
+  width or on `sizeof`.
 - Comments are truthful hints, never lures.
 - A trap turns on one visible token, in standard C, never on a compiler quirk. Its plausible naive
   reading is at least 15 cells off, and the true grid is still worth painting.
