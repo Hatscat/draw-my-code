@@ -55,9 +55,13 @@ export interface ResultPanel {
 
 /**
  * Shown once the daily is over, in place of the swatches and of Submit. `today` is the player's
- * date, where the reminder's Google event starts.
+ * date, where the reminder's Google event starts; the reminder's file is on the website.
  */
-export function createResultPanel(today: CalendarDate, handlers: ResultPanelHandlers): ResultPanel {
+export function createResultPanel(
+  today: CalendarDate,
+  siteUrl: string,
+  handlers: ResultPanelHandlers,
+): ResultPanel {
   const heading = el("h2", { id: "result-title", class: "heading", tabindex: -1 });
   const showButtons = (["solution", "drawing"] as const).map((shown) => {
     const button = el(
@@ -98,7 +102,8 @@ export function createResultPanel(today: CalendarDate, handlers: ResultPanelHand
   // iPhone has no back button, and its Safari is what offers to add the file.
   const calendar = (href: string, label: string) =>
     el("a", { class: "text-button", href, target: "_blank", rel: "noopener" }, label);
-  const file = new URL("reminder.ics", document.baseURI);
+  // The website's copy, wherever this page runs: it serves the file as a calendar.
+  const file = new URL("reminder.ics", siteUrl);
   // Only Safari hands the file to Calendar: in an app's own browser, say where to open it.
   const inApp = inIosAppBrowser();
   const reminder = el(

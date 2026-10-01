@@ -115,7 +115,10 @@ export async function paintRows(page: Page, rows: readonly string[]): Promise<vo
 export const INSTAGRAM_USER_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) " +
   "AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 350.0.0.0.0";
 
-/** The site URL the build under test puts in share texts. */
+/**
+ * The site URL the build under test puts in share texts and links. Not where the tests load
+ * pages: CI serves its production build from 127.0.0.1, at the site's path.
+ */
 // deno-lint-ignore no-process-global -- Playwright runs this file on Node
 export const SITE_URL = siteUrl(process.env.VITE_SITE_URL).href;
 

@@ -84,7 +84,7 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
     onShowDigits: (on) => save(setShowDigits(store.read(), on)),
   });
 
-  const result = createResultPanel(puzzleDate(LAUNCH_DATE, current), {
+  const result = createResultPanel(puzzleDate(LAUNCH_DATE, current), options.siteUrl, {
     onShare() {
       const play = dailyPlay(store.read(), n, solution);
       const text = shareText(n, play.submissions, play.solution, options.siteUrl);

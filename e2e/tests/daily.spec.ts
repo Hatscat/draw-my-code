@@ -156,10 +156,11 @@ test("the result offers a daily reminder in the player's own calendar", async ({
     details: "Today's puzzle is ready.",
   });
 
-  // The same event as a file for every other calendar. Served as a calendar, an iPhone offers to
-  // add it.
+  // The same event as a file for every other calendar: the website's, which serves it as a
+  // calendar, so an iPhone offers to add it. Checked here in this build, served locally.
   await expect(file).toHaveAttribute("target", "_blank");
-  const response = await request.get(await file.evaluate((link: HTMLAnchorElement) => link.href));
+  await expect(file).toHaveAttribute("href", new URL("reminder.ics", SITE_URL).href);
+  const response = await request.get(new URL("reminder.ics", page.url()).href);
   expect(response.headers()["content-type"]).toMatch(/^text\/calendar/);
   const ics = await response.text();
   for (const line of ["DTSTART:20261005T090000", "RRULE:FREQ=DAILY", "TRANSP:TRANSPARENT"]) {

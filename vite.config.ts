@@ -30,12 +30,6 @@ export default defineConfig(({ command, isPreview }) => {
       {
         // The daily reminder's calendar file: the same event as its Google link, from one source.
         name: "draw-my-code:reminder",
-        configureServer(server) {
-          server.middlewares.use("/reminder.ics", (_request, response) => {
-            response.setHeader("Content-Type", "text/calendar; charset=utf-8");
-            response.end(reminderIcs());
-          });
-        },
         generateBundle() {
           this.emitFile({ type: "asset", fileName: "reminder.ics", source: reminderIcs() });
         },

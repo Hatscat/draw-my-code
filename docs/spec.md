@@ -86,11 +86,11 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
     Android). The series starts on the player's date, since Google ends one after 730 occurrences.
     It is shown as free (`crm=AVAILABLE`), and the player's default notifications apply: the form
     can't set an alert.
-  - `Apple, Outlook, others (.ics)`: `reminder.ics`, which a small Vite plugin builds from the same
-    source, served as `text/calendar` so an iPhone offers to add it. It starts on launch day, shown
-    as free, with an alert at its start. An iOS app's own browser (Instagram's, Facebook's) can't
-    hand the file to Calendar: there, a line replaces the link,
-    `For Apple Calendar, open drawmycode.lonebee.games/reminder.ics in Safari.`
+  - `Apple, Outlook, others (.ics)`: the website's `reminder.ics`, wherever the page runs. A small
+    Vite plugin builds it from the same source, and the site serves it as `text/calendar`, so an
+    iPhone offers to add it. It starts on launch day, shown as free, with an alert at its start. An
+    iOS app's own browser (Instagram's, Facebook's) can't hand the file to Calendar: there, a line
+    replaces the link, `For Apple Calendar, open drawmycode.lonebee.games/reminder.ics in Safari.`
   - The event: `Draw my code`, `Today's puzzle is ready.`, daily, 9:00 to 9:15 in floating time (no
     time zone: 9:00 wherever the player is, through DST changes). No link to the game: from an
     iPhone's installed app it would open Safari, whose save is separate. No server, nothing stored,
