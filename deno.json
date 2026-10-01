@@ -45,13 +45,15 @@
     "dev": "vite --configLoader native",
     "editor": "vite --configLoader native --open /src/editor/",
     "build": "vite build --configLoader native",
+    "build:itch": "VITE_SITE_URL=https://drawmycode.lonebee.games/ vite build --configLoader native --mode itch",
+    "itch": "deno task build:itch && rm -f draw-my-code-itch.zip && cd dist-itch && zip -qr ../draw-my-code-itch.zip .",
     "preview": "vite preview --configLoader native --host 127.0.0.1 --port 4173 --strictPort",
     "test": "deno test --allow-read --allow-write --allow-run --allow-env=TZ",
     "check": "deno fmt --check && deno lint && deno check && deno check --config tools/sw.deno.json src/sw.ts && deno task test",
     "levels": "deno run --allow-read --allow-write --allow-run tools/levels.ts",
     "levels:check": "deno run --allow-read --allow-write --allow-run tools/levels.ts --check",
     "icons": "deno run --allow-write=public/icons,public/og.png tools/icons.ts",
-    "e2e": "deno task build && deno task e2e:run",
+    "e2e": "deno task build && deno task build:itch && deno task e2e:run",
     "e2e:run": "cd e2e && ./node_modules/.bin/tsc -p . && ./node_modules/.bin/playwright test"
   }
 }

@@ -19,9 +19,11 @@ accounts, no cookies.
 | `deno task levels:check` | Fail if `generated.ts` is stale or any level is invalid (CI)            |
 | `deno task icons`        | Regenerate the PWA icons and the link preview image `public/og.png`     |
 | `deno task build`        | Production build to `dist/`                                             |
+| `deno task build:itch`   | itch.io build to `dist-itch/` (see `src/itch.ts`)                       |
+| `deno task itch`         | `build:itch`, then `draw-my-code-itch.zip` to upload to itch.io         |
 | `deno task preview`      | Serve `dist/`                                                           |
-| `deno task e2e`          | Build, then run Playwright (Node) from `e2e/`                           |
-| `deno task e2e:run`      | Run Playwright against the existing `dist/` (what CI does)              |
+| `deno task e2e`          | Build both, then run Playwright (Node) from `e2e/`                      |
+| `deno task e2e:run`      | Run Playwright against the existing `dist/` and `dist-itch/` (as CI)    |
 
 One unit test file: `deno task test <file>` (plain `deno test` lacks the permissions). One e2e spec:
 `deno task e2e <spec>`. `check`, `test` and `levels` need gcc and the UBSan runtime. Format with a
@@ -35,6 +37,7 @@ src/core/         Pure game logic. Zero DOM, zero dependencies, fully unit-teste
 src/ui/           Rendering and input. No game rules.
 src/levels/       generated.ts (never edit by hand) + level types.
 src/analytics.ts  The only module that talks to Umami.
+src/itch.ts       The itch.io build's flag, and the list of all it changes.
 src/sw.ts         Service worker (WebWorker lib, type-checked separately).
 src/editor/       Level editor page, dev server only; its server side is tools/level-editor.ts.
 src/fonts/        JetBrains Mono subset + OFL license

@@ -394,7 +394,33 @@ Level design. The generator can't check these; they apply when a level is writte
 - Base path and site URL come from the GitHub Pages configuration at build time, never hard-coded,
   so a custom domain later needs no code change. Local builds default to
   `http://127.0.0.1:4173/draw-my-code/`, so they also run under a sub-path. The site URL is used in
-  the share text and in the analytics host check.
+  the share text, the reminder's calendar file and the analytics host check.
+
+## itch.io build
+
+`deno task build:itch` builds the game for itch.io into `dist-itch/`, and `deno task itch` also zips
+it into `draw-my-code-itch.zip`, the HTML5 upload (it needs `zip`). itch.io runs it in an iframe of
+the game's page, served from a folder of html-classic.itch.zone, an origin every itch.io web game
+shares. Vite's `itch` mode and the `ITCH` flag of `src/itch.ts`, which lists them all, make every
+difference:
+
+- Relative paths: itch.io picks the folder.
+- No service worker, neither built nor registered: the origin and its caches belong to every itch.io
+  game.
+- No install offer: from itch's frame, it would install itch's page.
+- No calendar file: the reminder links the website's.
+
+Its site URL is the website's, written in the task: the one place it is hard-coded, since this build
+runs outside CI. Share texts and links point to the website, and analytics stay off, the host not
+being the site's. Saves live in the frame's storage, apart from the website's: every itch.io web
+game shares it, so another game can fill it (play then goes on in memory) or clear it, and WebKit
+doesn't keep it between visits, neither Safari nor any browser on iPhone or iPad. CI's e2e job
+builds it for its spec; it is never deployed.
+
+On itch.io: Embed in page at 500 × 900 (from 495 px wide the stylesheet keeps the scrollbar's room,
+so the result's scrollbar doesn't move the grid), Mobile friendly (portrait), Automatically start on
+page load, Enable scrollbars, Fullscreen button; in the theme, Layout › Screenshots: Sidebar, or
+itch hides the screenshots and trailer of a page with a game.
 
 ## Analytics — Umami Cloud (Hobby plan)
 
@@ -443,6 +469,8 @@ browser build, whose text metrics match real devices; time zone and locale pinne
   `text/calendar`, and the Safari line in an iOS in-app browser), exact share text (Web Share and
   clipboard stubs, including a cancelled share).
 - 3 failed attempts → solution revealed, X/3.
+- The itch.io build, served as itch.io serves it (from a folder of another origin, in an iframe): it
+  plays, registers no service worker, offers no install, and links the website's calendar file.
 - Reload mid-puzzle restores state; a finished puzzle stays finished; midnight while open; next day
   (`page.clock`) → new puzzle and updated streak; after the pool's last level, the first again; a
   special date's level; catching up a missed puzzle joins the streak, leaving it keeps its drawing,

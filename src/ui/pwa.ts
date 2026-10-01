@@ -1,6 +1,8 @@
-/** Offline support and installed-app niceties. Production builds only. */
+import { ITCH } from "../itch.ts";
+
+/** Offline support and installed-app niceties. Production builds only, and not on itch.io. */
 export function setUpPwa(): void {
-  if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return;
+  if (ITCH || !import.meta.env.PROD || !("serviceWorker" in navigator)) return;
   const base = import.meta.env.BASE_URL;
   navigator.serviceWorker.register(`${base}sw.js`, { scope: base }).catch(() => {
     // Without a service worker the game still works online.

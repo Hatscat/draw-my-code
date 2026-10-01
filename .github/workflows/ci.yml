@@ -112,6 +112,8 @@ jobs:
           name: github-pages
           path: ${{ runner.temp }}/pages
       - run: mkdir -p dist && tar -xf "$RUNNER_TEMP/pages/artifact.tar" -C dist
+      # The itch.io build isn't deployed: it is built here for its own spec.
+      - run: deno task build:itch
       - run: deno task e2e:run
         env:
           VITE_SITE_URL: ${{ needs.build.outputs.site-url }}

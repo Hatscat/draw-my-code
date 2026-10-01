@@ -3,6 +3,8 @@
  * only install from their own menus, so the game can at best explain where.
  */
 
+import { ITCH } from "../itch.ts";
+
 /** How this browser installs the app, or undefined if it can't or already has. */
 export type InstallWay = "prompt" | "ios" | "mac-safari";
 
@@ -55,7 +57,7 @@ export function inIosAppBrowser(): boolean {
 }
 
 export function installWay(): InstallWay | undefined {
-  if (standalone()) return undefined;
+  if (ITCH || standalone()) return undefined;
   if (offer) return "prompt";
   const agent = navigator.userAgent;
   if (apple(agent) && /Safari\//.test(agent)) return "ios";
