@@ -36,17 +36,29 @@ export function onInstallChange(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
+const standalone = () =>
+  (navigator as { readonly standalone?: boolean }).standalone === true ||
+  matchMedia("(display-mode: standalone)").matches;
+
+// iPadOS reports itself as a Mac, but a touch screen gives it away.
+const apple = (agent: string) =>
+  /iPhone|iPad|iPod/.test(agent) || (/Macintosh/.test(agent) && navigator.maxTouchPoints > 1);
+
+/**
+ * An iOS app's own browser, such as Instagram's or Facebook's. Safari, Chrome, Firefox and Edge all
+ * say Safari/ on iOS; most in-app browsers leave it out. They have no Add to Home Screen, and can't
+ * hand a calendar file to Calendar.
+ */
+export function inIosAppBrowser(): boolean {
+  const agent = navigator.userAgent;
+  return !standalone() && apple(agent) && !/Safari\//.test(agent);
+}
+
 export function installWay(): InstallWay | undefined {
-  const standalone = (navigator as { readonly standalone?: boolean }).standalone === true;
-  if (standalone || matchMedia("(display-mode: standalone)").matches) return undefined;
+  if (standalone()) return undefined;
   if (offer) return "prompt";
   const agent = navigator.userAgent;
-  // iPadOS reports itself as a Mac, but a touch screen gives it away.
-  const apple = /iPhone|iPad|iPod/.test(agent) ||
-    (/Macintosh/.test(agent) && navigator.maxTouchPoints > 1);
-  // Safari, Chrome, Firefox and Edge all say Safari/ on iOS. Most in-app browsers, such as
-  // Instagram's or Facebook's, leave it out: they have no Add to Home Screen.
-  if (apple && /Safari\//.test(agent)) return "ios";
+  if (apple(agent) && /Safari\//.test(agent)) return "ios";
   if (/Macintosh/.test(agent) && /Version\/[\d.]+ Safari\//.test(agent)) return "mac-safari";
   return undefined;
 }

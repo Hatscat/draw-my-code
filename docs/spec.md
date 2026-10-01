@@ -79,6 +79,22 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
 - Share button, `Next puzzle in HH:MM:SS` (or a `Play #N` button when the puzzle was finished after
   midnight), a `Follow for new games` link to the author's itch.io page, in a new tab (`FOLLOW_URL`;
   hidden when empty).
+- `Add a daily reminder to your calendar`: a text link that opens onto one line,
+  `A reminder every day at 9:00. You can change its time in your calendar.`, and two links, each in
+  a new tab (an installed app on an iPhone has no back button):
+  - `Google Calendar`: its new event form, filled in (Google Calendar can't import a file on
+    Android). The series starts on the player's date, since Google ends one after 730 occurrences.
+    It is shown as free (`crm=AVAILABLE`), and the player's default notifications apply: the form
+    can't set an alert.
+  - `Apple, Outlook, others (.ics)`: `reminder.ics`, which a small Vite plugin builds from the same
+    source, served as `text/calendar` so an iPhone offers to add it. It starts on launch day, shown
+    as free, with an alert at its start. An iOS app's own browser (Instagram's, Facebook's) can't
+    hand the file to Calendar: there, a line replaces the link,
+    `For Apple Calendar, open drawmycode.lonebee.games/reminder.ics in Safari.`
+  - The event: `Draw my code`, `Today's puzzle is ready.`, daily, 9:00 to 9:15 in floating time (no
+    time zone: 9:00 wherever the player is, through DST changes). No link to the game: from an
+    iPhone's installed app it would open Safari, whose save is separate. No server, nothing stored,
+    no analytics event.
 
 ## Share
 
@@ -225,8 +241,9 @@ Additions:
 - Design tokens: every color, font size, spacing, radius, size, duration and layer is a custom
   property in the `:root` block of `src/styles.css`, and every other rule uses them. Buttons come in
   two kinds: filled (`.button`, with Submit's height following the screen's and `.button-small` in
-  dialogs) and outlined (`.text-button`, with `.skip` reading as a link); headings share `.heading`.
-  The design system published on claude.ai mirrors these tokens and components.
+  dialogs) and outlined (`.text-button`, with `.skip` reading as a link); text links share `.link`
+  and headings `.heading`. The design system published on claude.ai mirrors these tokens and
+  components.
 
 ## Levels
 
@@ -422,7 +439,9 @@ browser build, whose text metrics match real devices; time zone and locale pinne
   keys 0–7. Dragging never scrolls the page.
 - Wrong submit → count line and no per-cell indication on the grid; Submit disabled until the grid
   changes, keyboard focus kept; painting keeps the count line; solve → result panel, stats, the
-  follow link, exact share text (Web Share and clipboard stubs, including a cancelled share).
+  follow link, the daily reminder's two calendars (Google's form from today, the .ics served as
+  `text/calendar`, and the Safari line in an iOS in-app browser), exact share text (Web Share and
+  clipboard stubs, including a cancelled share).
 - 3 failed attempts → solution revealed, X/3.
 - Reload mid-puzzle restores state; a finished puzzle stays finished; midnight while open; next day
   (`page.clock`) → new puzzle and updated streak; after the pool's last level, the first again; a
@@ -464,7 +483,7 @@ browser build, whose text metrics match real devices; time zone and locale pinne
 ## Out of scope for v1
 
 Accounts, backend, leaderboards, global stats, hints, an archive beyond the past week, push
-notifications, newsletter form, i18n, light theme, sound.
+notifications (the calendar reminder stands in), newsletter form, i18n, light theme, sound.
 
 ## Milestones
 

@@ -5,6 +5,7 @@ import {
   countConfetti,
   dayOf,
   expect,
+  INSTAGRAM_USER_AGENT,
   installPrompted,
   offerInstall,
   paintRows,
@@ -243,10 +244,7 @@ test("finishing the first tutorial after midnight still offers to install", asyn
 });
 
 test.describe("in an iOS app's own browser, such as Instagram's", () => {
-  test.use({
-    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 " +
-      "(KHTML, like Gecko) Mobile/15E148 Instagram 350.0.0.0.0",
-  });
+  test.use({ userAgent: INSTAGRAM_USER_AGENT });
 
   test("finishing the tutorial offers no install steps it can't follow", async ({ page, browserName }) => {
     test.skip(browserName !== "webkit", "the iPhone project");

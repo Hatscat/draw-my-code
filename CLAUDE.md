@@ -103,10 +103,10 @@ docs/puzzle-pool.html  Level catalogue: the loop, the specials, both design roun
 - Respect `prefers-reduced-motion`.
 - Style with the design tokens in the `:root` block of `src/styles.css` (colors, type, spacing,
   radii, sizes, motion, layers) and its components: `.button` (filled; `.button-small` in dialogs),
-  `.text-button` (outlined; `.skip` reads as a link), `.heading`. A new value joins the tokens
-  first: `tools/styles.test.ts` fails on a raw color or size anywhere else. The design system
-  artifact (https://claude.ai/artifact/NL9YZqsYb5LwJod7pX7QHV) mirrors them: re-sync it when they
-  change.
+  `.text-button` (outlined; `.skip` reads as a link), `.link` (text links), `.heading`. A new value
+  joins the tokens first: `tools/styles.test.ts` fails on a raw color or size anywhere else. The
+  design system artifact (https://claude.ai/artifact/NL9YZqsYb5LwJod7pX7QHV) mirrors them: re-sync
+  it when they change.
 
 ## Testing
 

@@ -287,7 +287,10 @@ h1 {
   font-size: var(--text-lg);
 }
 
-/* Outlined buttons: secondary actions and settings (Replay tutorial, Install app, Show digits). */
+/*
+ * Outlined buttons: secondary actions and settings (Replay tutorial, Install app, Show digits), and
+ * links that look like them (the reminder's calendars).
+ */
 .text-button {
   padding: var(--space-4) var(--space-10);
   border: var(--hairline) solid var(--control-border);
@@ -296,6 +299,7 @@ h1 {
   color: var(--ink);
   font-size: var(--text-md);
   line-height: var(--leading-line);
+  text-decoration: none;
 }
 
 /* The one way out of a screen, under Submit: an outlined button that reads as a link. */
@@ -305,6 +309,14 @@ h1 {
   border-color: transparent;
   color: var(--muted);
   text-decoration: underline;
+}
+
+/* Text links, in the focus color: Follow for new games, and the reminder's toggle. */
+.link {
+  font-size: var(--text-md);
+  color: var(--focus);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .help {
@@ -762,7 +774,8 @@ h1 {
   color: var(--muted);
 }
 
-.missed-list {
+.missed-list,
+.reminder-links {
   margin-top: var(--space-8);
   display: flex;
   flex-wrap: wrap;
@@ -781,11 +794,29 @@ h1 {
   margin-top: 0;
 }
 
+/* A text link that opens onto a line of explanation and the two calendars. */
+.reminder {
+  margin-top: var(--space-12);
+}
+
+.reminder summary {
+  display: inline-block;
+}
+
+/* Safari's own triangle: the opened content is what shows the state. */
+.reminder summary::-webkit-details-marker {
+  display: none;
+}
+
+.reminder p {
+  margin-top: var(--space-8);
+  font-size: var(--text-md);
+  color: var(--muted);
+}
+
 .follow {
   display: inline-block;
   margin-top: var(--space-12);
-  font-size: var(--text-md);
-  color: var(--focus);
 }
 
 .notice-title {

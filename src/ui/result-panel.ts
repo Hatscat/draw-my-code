@@ -1,6 +1,9 @@
 import { ATTEMPTS, FOLLOW_URL } from "../core/config.ts";
+import type { CalendarDate } from "../core/date.ts";
+import { googleCalendarUrl } from "../core/reminder.ts";
 import { distributionSlot, type Result, type Stats } from "../core/stats.ts";
 import { el } from "./dom.ts";
+import { inIosAppBrowser } from "./install.ts";
 import { createStatsView } from "./stats-view.ts";
 
 export type Shown = "solution" | "drawing";
@@ -50,8 +53,11 @@ export interface ResultPanel {
   focus(): void;
 }
 
-/** Shown once the daily is over, in place of the swatches and of Submit. */
-export function createResultPanel(handlers: ResultPanelHandlers): ResultPanel {
+/**
+ * Shown once the daily is over, in place of the swatches and of Submit. `today` is the player's
+ * date, where the reminder's Google event starts.
+ */
+export function createResultPanel(today: CalendarDate, handlers: ResultPanelHandlers): ResultPanel {
   const heading = el("h2", { id: "result-title", class: "heading", tabindex: -1 });
   const showButtons = (["solution", "drawing"] as const).map((shown) => {
     const button = el(
@@ -88,10 +94,30 @@ export function createResultPanel(handlers: ResultPanelHandlers): ResultPanel {
   );
   // Kept at its height while empty, so the countdown's arrival doesn't move the page.
   const next = el("div", { class: "next" });
+  // In the player's own calendar: no server, nothing stored. A new tab: an installed app on an
+  // iPhone has no back button, and its Safari is what offers to add the file.
+  const calendar = (href: string, label: string) =>
+    el("a", { class: "text-button", href, target: "_blank", rel: "noopener" }, label);
+  const file = new URL("reminder.ics", document.baseURI);
+  // Only Safari hands the file to Calendar: in an app's own browser, say where to open it.
+  const inApp = inIosAppBrowser();
+  const reminder = el(
+    "details",
+    { class: "reminder" },
+    el("summary", { class: "link" }, "Add a daily reminder to your calendar"),
+    el("p", {}, "A reminder every day at 9:00. You can change its time in your calendar."),
+    el(
+      "div",
+      { class: "reminder-links" },
+      calendar(googleCalendarUrl(today), "Google Calendar"),
+      ...(inApp ? [] : [calendar(file.href, "Apple, Outlook, others (.ics)")]),
+    ),
+    inApp ? el("p", {}, `For Apple Calendar, open ${file.host}${file.pathname} in Safari.`) : "",
+  );
   const follow = FOLLOW_URL
     ? el(
       "a",
-      { class: "follow", href: FOLLOW_URL, target: "_blank", rel: "noopener" },
+      { class: "link follow", href: FOLLOW_URL, target: "_blank", rel: "noopener" },
       "Follow for new games",
     )
     : "";
@@ -103,6 +129,7 @@ export function createResultPanel(handlers: ResultPanelHandlers): ResultPanel {
     manualCopy,
     missedSection,
     next,
+    reminder,
     follow,
   );
 

@@ -111,6 +111,10 @@ export async function paintRows(page: Page, rows: readonly string[]): Promise<vo
   }
 }
 
+/** Instagram's browser on an iPhone: like most in-app browsers, it leaves Safari/ out. */
+export const INSTAGRAM_USER_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) " +
+  "AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 350.0.0.0.0";
+
 /** The site URL the build under test puts in share texts. */
 // deno-lint-ignore no-process-global -- Playwright runs this file on Node
 export const SITE_URL = siteUrl(process.env.VITE_SITE_URL).href;

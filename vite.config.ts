@@ -1,6 +1,7 @@
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
+import { reminderIcs } from "./src/core/reminder.ts";
 import { levelEditor } from "./tools/level-editor.ts";
 import { siteUrl } from "./tools/site-url.ts";
 import { serviceWorker } from "./tools/vite-sw-plugin.ts";
@@ -25,6 +26,19 @@ export default defineConfig(({ command, isPreview }) => {
       {
         name: "draw-my-code:site-url",
         transformIndexHtml: (html) => html.replaceAll("%SITE_URL%", site.href),
+      },
+      {
+        // The daily reminder's calendar file: the same event as its Google link, from one source.
+        name: "draw-my-code:reminder",
+        configureServer(server) {
+          server.middlewares.use("/reminder.ics", (_request, response) => {
+            response.setHeader("Content-Type", "text/calendar; charset=utf-8");
+            response.end(reminderIcs());
+          });
+        },
+        generateBundle() {
+          this.emitFile({ type: "asset", fileName: "reminder.ics", source: reminderIcs() });
+        },
       },
     ],
     server: {

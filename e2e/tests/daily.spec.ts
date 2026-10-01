@@ -3,6 +3,7 @@ import {
   confettiBursts,
   countConfetti,
   expect,
+  INSTAGRAM_USER_AGENT,
   openPuzzle,
   paintRows,
   sharedTexts,
@@ -124,6 +125,71 @@ test("solving shows the result, the stats and the exact share text", async ({ pa
   }
   // The confetti, drawn over the page all along, never got in the way, and is gone after a while.
   await expect(page.locator(".confetti")).toHaveCount(0);
+});
+
+test("the result offers a daily reminder in the player's own calendar", async ({ page, request }) => {
+  // Puzzle #30, on Nov 3, 2026: Google's event starts that day, the file's on launch day.
+  await openPuzzle(page, 30);
+  await paintRows(page, solutionOf(30));
+  await page.getByRole("button", { name: "Submit" }).click();
+  const google = page.getByRole("link", { name: "Google Calendar" });
+  const file = page.getByRole("link", { name: "Apple, Outlook, others (.ics)" });
+  await expect(google).toBeHidden();
+  await page.getByText("Add a daily reminder to your calendar").click();
+  await expect(
+    page.getByText("A reminder every day at 9:00. You can change its time in your calendar."),
+  ).toBeVisible();
+
+  // Google Calendar can't import a file on Android: its own new event form, filled in.
+  await expect(google).toHaveAttribute("target", "_blank");
+  const form = new URL((await google.getAttribute("href")) ?? "");
+  expect(form.origin + form.pathname).toBe("https://calendar.google.com/calendar/render");
+  expect(Object.fromEntries(form.searchParams)).toEqual({
+    action: "TEMPLATE",
+    text: "Draw my code",
+    // No time zone: 9:00 wherever the player is, before and after a DST change. From today:
+    // Google ends a series after 730 days.
+    dates: "20261103T090000/20261103T091500",
+    recur: "RRULE:FREQ=DAILY",
+    // Shown as free, like the file's event: Google's form defaults to busy.
+    crm: "AVAILABLE",
+    details: "Today's puzzle is ready.",
+  });
+
+  // The same event as a file for every other calendar. Served as a calendar, an iPhone offers to
+  // add it.
+  await expect(file).toHaveAttribute("target", "_blank");
+  const response = await request.get(await file.evaluate((link: HTMLAnchorElement) => link.href));
+  expect(response.headers()["content-type"]).toMatch(/^text\/calendar/);
+  const ics = await response.text();
+  for (const line of ["DTSTART:20261005T090000", "RRULE:FREQ=DAILY", "TRANSP:TRANSPARENT"]) {
+    expect(ics).toContain(`\r\n${line}\r\n`);
+  }
+  // No link to the game: from an iPhone's installed app it would open Safari, whose save is
+  // separate.
+  expect(ics).not.toContain("http");
+
+  // Opened, it still fits a 320 px screen.
+  await page.setViewportSize({ width: 320, height: 568 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+});
+
+test.describe("in an iOS app's own browser, such as Instagram's", () => {
+  test.use({ userAgent: INSTAGRAM_USER_AGENT });
+
+  test("the reminder says where to open its calendar file: only Safari can add it", async ({ page }) => {
+    await openPuzzle(page, 1);
+    await paintRows(page, SOLUTION);
+    await page.getByRole("button", { name: "Submit" }).click();
+    await page.getByText("Add a daily reminder to your calendar").click();
+    await expect(page.getByRole("link", { name: "Apple, Outlook, others (.ics)" })).toHaveCount(0);
+    const file = new URL("reminder.ics", SITE_URL);
+    await expect(
+      page.getByText(`For Apple Calendar, open ${file.host}${file.pathname} in Safari.`),
+    ).toBeVisible();
+    // Google's form works wherever the player is signed in.
+    await expect(page.getByRole("link", { name: "Google Calendar" })).toBeVisible();
+  });
 });
 
 test("no confetti for players who prefer reduced motion", async ({ page }) => {
