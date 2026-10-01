@@ -881,8 +881,10 @@ h1 {
  * disabled Submit (aria-disabled) shows neither.
  */
 @media (hover: hover) {
+  /* Lighter and a little larger: a transform, so nothing around it moves. */
   .button:not([aria-disabled="true"]):hover {
     background: var(--button-hover);
+    transform: scale(1.03);
   }
 
   :is(.text-button, .help):not(.skip):hover {

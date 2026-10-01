@@ -201,11 +201,12 @@ Additions:
   Each cell's accessible name includes its value and color name.
 - Over a grid that paints, the mouse pointer is a crosshair; the default arrow once the puzzle is
   over.
-- Buttons show their state. Filled buttons light up on hover and sink a pixel, darker, while
-  pressed; outlined ones brighten their edge on hover and fill faintly while pressed; an unselected
-  swatch lifts on hover and shrinks while pressed. Hover only where a mouse can hover. A disabled
-  Submit shows in its fill, never by fading the whole button, and nothing clips a focus ring. iOS
-  Safari needs an empty `touchstart` listener to show pressed states.
+- Buttons show their state. Filled buttons light up and grow 3% on hover (a transform: nothing
+  around them moves) and sink a pixel, darker and back to size, while pressed; outlined ones
+  brighten their edge on hover and fill faintly while pressed; an unselected swatch lifts on hover
+  and shrinks while pressed. Hover only where a mouse can hover. A disabled Submit shows in its
+  fill, never by fading the whole button, and nothing clips a focus ring. iOS Safari needs an empty
+  `touchstart` listener to show pressed states.
 - Code font scales so the longest line fits without horizontal scroll, never below 11 px.
 - Syntax highlighting with a tiny hand-written tokenizer (keywords, types, function name, numbers,
   operators, identifiers, comments). No library.
@@ -435,7 +436,7 @@ browser build, whose text metrics match real devices; time zone and locale pinne
 - 320 px wide: no horizontal scroll, every control reachable; a 12-line, 36-column level at 320×568
   keeps the grid at least 250 px wide. On every device, the grid spans the column, even for the
   longest level.
-- Submit's hover and pressed states (with a mouse).
+- Submit's hover (lighter and larger, its place unchanged) and pressed states (with a mouse).
 - A two-line status and the result panel (solved, and failed at 320 px) leave the grid exactly where
   and as large as it was, also with the classic scrollbars of desktop Chrome, which appear with the
   result (reserved in windows from 495 px wide, where they never narrow the column).

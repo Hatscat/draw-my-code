@@ -44,21 +44,36 @@ test("a wrong submit only tells the count; Submit waits for a change", async ({ 
   await expect(submit).toHaveAttribute("aria-disabled", "false");
 });
 
-test("Submit answers the mouse: hovering lights it, pressing pushes it in", async ({ page, isMobile }) => {
+test("Submit answers the mouse: hovering lights and grows it, pressing pushes it in", async ({ page, isMobile }) => {
   test.skip(isMobile, "hover needs a mouse");
   // No transitions: each state's style applies at once.
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openPuzzle(page, 1);
   const submit = page.getByRole("button", { name: "Submit" });
   const color = () => submit.evaluate((button) => getComputedStyle(button).backgroundColor);
+  const width = () => submit.evaluate((button) => button.getBoundingClientRect().width);
+  // Its box in the layout, which transforms leave alone.
+  const place = () =>
+    submit.evaluate((button: HTMLElement) => [
+      button.offsetLeft,
+      button.offsetTop,
+      button.offsetWidth,
+      button.offsetHeight,
+    ]);
   await page.mouse.move(0, 0);
   const rest = await color();
+  const restWidth = await width();
+  const restPlace = await place();
   await submit.hover();
   const hovered = await color();
   expect(hovered).not.toBe(rest);
+  // It also grows, without moving anything around it.
+  expect(await width()).toBeGreaterThan(restWidth);
+  expect(await place()).toEqual(restPlace);
   await page.mouse.down();
-  // Pressed wins over hovered, and the button sinks a pixel.
+  // Pressed wins over hovered: back to its size, and it sinks a pixel.
   expect(await color()).not.toBe(hovered);
+  expect(await width()).toBe(restWidth);
   expect(await submit.evaluate((button) => getComputedStyle(button).transform)).not.toBe("none");
   await page.mouse.up();
 
