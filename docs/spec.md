@@ -115,8 +115,10 @@ never reveals the solution's colors, but it may reveal its shape (a blank first 
 solve outlines the non-black cells).
 
 Touch devices (`pointer: coarse`) with `navigator.share`: `navigator.share({ text })`, called
-directly in the click handler; a cancel does nothing. Otherwise: clipboard and a "Copied" toast. If
-both fail, the text is shown in a read-only field to copy by hand.
+directly in the click handler; a cancel does nothing. Otherwise: clipboard and a "Copied" toast;
+where the page may not use the Clipboard API (a frame denied it, such as itch.io's game frame, which
+Chromium can tell), the older copy command. If both fail, the text is shown in a read-only field to
+copy by hand.
 
 Link previews, for the URL in shared texts: the page's description, Open Graph and Twitter card tags
 (`summary_large_image`) with absolute URLs built from the site URL, and `public/og.png` (1200×630:
@@ -412,10 +414,11 @@ difference:
 
 Its site URL is the website's, written in the task: the one place it is hard-coded, since this build
 runs outside CI. Share texts and links point to the website, and analytics stay off, the host not
-being the site's. Saves live in the frame's storage, apart from the website's: every itch.io web
-game shares it, so another game can fill it (play then goes on in memory) or clear it, and WebKit
-doesn't keep it between visits, neither Safari nor any browser on iPhone or iPad. CI's e2e job
-builds it for its spec; it is never deployed.
+being the site's. The frame may not use the Clipboard API, so Share copies the old way. Saves live
+in the frame's storage, apart from the website's: every itch.io web game shares it, so another game
+can fill it (play then goes on in memory) or clear it, and WebKit doesn't keep it between visits,
+neither Safari nor any browser on iPhone or iPad. CI's e2e job builds it for its spec; it is never
+deployed.
 
 On itch.io: Embed in page at 500 × 900 (from 495 px wide the stylesheet keeps the scrollbar's room,
 so the result's scrollbar doesn't move the grid), Mobile friendly (portrait), Automatically start on
@@ -470,7 +473,8 @@ browser build, whose text metrics match real devices; time zone and locale pinne
   clipboard stubs, including a cancelled share).
 - 3 failed attempts → solution revealed, X/3.
 - The itch.io build, served as itch.io serves it (from a folder of another origin, in an iframe): it
-  plays, registers no service worker, offers no install, and links the website's calendar file.
+  plays, registers no service worker, offers no install, links the website's calendar file, and
+  Share still copies in desktop Chromium, which denies the frame the Clipboard API.
 - Reload mid-puzzle restores state; a finished puzzle stays finished; midnight while open; next day
   (`page.clock`) → new puzzle and updated streak; after the pool's last level, the first again; a
   special date's level; catching up a missed puzzle joins the streak, leaving it keeps its drawing,

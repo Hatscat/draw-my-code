@@ -155,6 +155,10 @@ export async function stubShare(
         },
       },
     });
+    // The old way of copying, the game's fallback, fails along with the clipboard.
+    const execCommand = document.execCommand.bind(document);
+    document.execCommand = (command, ...rest) =>
+      clipboardBroken && command === "copy" ? false : execCommand(command, ...rest);
   }, [shareError, clipboardFails] as const);
 }
 

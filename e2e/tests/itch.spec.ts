@@ -70,3 +70,11 @@ test("the itch.io build plays in itch's frame, from its folder, and points to th
   await expect(game.getByRole("link", { name: "Apple, Outlook, others (.ics)" }))
     .toHaveAttribute("href", "https://drawmycode.lonebee.games/reminder.ics");
 });
+
+test("in itch's frame, Share still copies, though the Clipboard API is blocked there", async ({ page, browserName, isMobile }) => {
+  test.skip(browserName !== "chromium" || isMobile, "desktop Chromium enforces the frame's policy");
+  const game = await openOnItch(page);
+  await game.getByRole("button", { name: "Share" }).click();
+  await expect(game.locator(".toast")).toHaveText("Copied");
+  await expect(game.getByRole("textbox", { name: "Your result, to copy" })).toBeHidden();
+});

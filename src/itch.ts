@@ -11,8 +11,9 @@
  * - no calendar file: the reminder links the website's (vite.config.ts).
  *
  * Share texts and links still point to the website. Analytics stay off on their own: the host isn't
- * the site's. Saves stay in the frame's storage, apart from the website's. Every itch.io web game
- * shares it, so another game can fill it (play then goes on in memory) or clear it, and WebKit
- * doesn't keep it between visits: neither Safari nor any browser on iPhone or iPad.
+ * the site's. The frame may not use the Clipboard API: Share copies the old way (src/ui/share.ts).
+ * Saves stay in the frame's storage, apart from the website's. Every itch.io web game shares it, so
+ * another game can fill it (play then goes on in memory) or clear it, and WebKit doesn't keep it
+ * between visits: neither Safari nor any browser on iPhone or iPad.
  */
 export const ITCH = import.meta.env.MODE === "itch";
