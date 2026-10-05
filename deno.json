@@ -46,7 +46,7 @@
     "editor": "vite --configLoader native --open /src/editor/",
     "build": "vite build --configLoader native",
     "build:itch": "VITE_SITE_URL=https://drawmycode.lonebee.games/ vite build --configLoader native --mode itch",
-    "itch": "deno task build:itch && rm -f draw-my-code-itch.zip && cd dist-itch && zip -qr ../draw-my-code-itch.zip .",
+    "itch": "deno task build:itch && deno run --allow-read=dist-itch --allow-write=draw-my-code-itch.zip tools/zip.ts dist-itch draw-my-code-itch.zip",
     "preview": "vite preview --configLoader native --host 127.0.0.1 --port 4173 --strictPort",
     "test": "deno test --allow-read --allow-write --allow-run --allow-env=TZ",
     "check": "deno fmt --check && deno lint && deno check && deno check --config tools/sw.deno.json src/sw.ts && deno task test",

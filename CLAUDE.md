@@ -44,7 +44,7 @@ src/fonts/        JetBrains Mono subset + OFL license
 levels/           Level sources: tutorial/NN-name.c, daily/NNNN.c (the looping pool),
                   special/MM-DD-name.c (yearly dates); pool/: unscheduled candidates
 tools/            Level generator and editor server, harness.c, prelude.h, icons, lint plugin,
-                  SW Vite plugin (Deno)
+                  SW Vite plugin, ZIP writer (Deno)
 e2e/              Playwright specs, own package.json (Node)
 design/           UI reference from Claude Design
 docs/spec.md      Product spec

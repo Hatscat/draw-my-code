@@ -31,7 +31,7 @@ npx playwright install --with-deps --no-shell chromium webkit
 | `deno task check`  | Formatting, lint, type-check and unit tests: run before a commit |
 | `deno task levels` | Compile and validate every level, regenerate the level list      |
 | `deno task e2e`    | Production build, then the Playwright tests                      |
-| `deno task itch`   | The itch.io build, zipped for upload (needs `zip`)               |
+| `deno task itch`   | The itch.io build, zipped for upload                             |
 
 In `deno task dev`, add `?date=YYYY-MM-DD` to the URL to pretend today is another day. Production
 builds ignore it.

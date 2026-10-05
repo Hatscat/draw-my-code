@@ -401,10 +401,10 @@ Level design. The generator can't check these; they apply when a level is writte
 ## itch.io build
 
 `deno task build:itch` builds the game for itch.io into `dist-itch/`, and `deno task itch` also zips
-it into `draw-my-code-itch.zip`, the HTML5 upload (it needs `zip`). itch.io runs it in an iframe of
-the game's page, served from a folder of html-classic.itch.zone, an origin every itch.io web game
-shares. Vite's `itch` mode and the `ITCH` flag of `src/itch.ts`, which lists them all, make every
-difference:
+it into `draw-my-code-itch.zip`, the HTML5 upload, with `tools/zip.ts`: a small ZIP writer on
+CompressionStream, so no zip library or command. itch.io runs it in an iframe of the game's page,
+served from a folder of html-classic.itch.zone, an origin every itch.io web game shares. Vite's
+`itch` mode and the `ITCH` flag of `src/itch.ts`, which lists them all, make every difference:
 
 - Relative paths: itch.io picks the folder.
 - No service worker, neither built nor registered: the origin and its caches belong to every itch.io
