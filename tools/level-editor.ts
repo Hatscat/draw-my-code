@@ -219,8 +219,11 @@ export async function checkSource(
   }
 }
 
-/** The editor's endpoints, independent of any HTTP server. */
-export function createEditor(root: string): Editor {
+/** The editor's endpoints, independent of any HTTP server. `today` is the clock, for tests. */
+export function createEditor(
+  root: string,
+  today: () => CalendarDate = todayInUtcPlus14,
+): Editor {
   // One fixed directory, emptied when the harness is built: a dev server stopped with Ctrl+C gets
   // no chance to clean up, so the next one does.
   const workDir = join(root, "node_modules", ".cache", "level-editor");
@@ -245,14 +248,14 @@ export function createEditor(root: string): Editor {
     const url = new URL(request.url, "http://localhost");
     const route = `${request.method} ${url.pathname}`;
     if (route === "GET /levels") {
-      return reply(200, await listLevels(root, LAUNCH_DATE, todayInUtcPlus14()));
+      return reply(200, await listLevels(root, LAUNCH_DATE, today()));
     }
     if (route === "POST /generate") {
       const report = await generate({
         root,
         check: false,
         allowPublishedEdit: false,
-        today: todayInUtcPlus14(),
+        today: today(),
         launch: LAUNCH_DATE,
       });
       return reply(200, { ok: report.ok, lines: report.lines.map(plainText) } satisfies Report);

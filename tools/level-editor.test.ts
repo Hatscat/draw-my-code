@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import type { IncomingHttpHeaders } from "node:http";
 import { fileURLToPath } from "node:url";
+import { LAUNCH_DATE } from "../src/core/config.ts";
+import { addDays } from "../src/core/date.ts";
 import { prepareToolchain } from "./level-compile.ts";
 import {
   checkSource,
@@ -291,7 +293,8 @@ Deno.test("Update the game runs the level generator and reports it as plain text
   const root = await repo();
   // The generator, unlike the editor's list, rejects any other file in levels/.
   await Deno.remove(`${root}/levels/daily/notes.txt`);
-  const editor = createEditor(root);
+  // The scratch repo has no generated.ts yet: only before launch may the generator start one.
+  const editor = createEditor(root, () => addDays(LAUNCH_DATE, -1));
   try {
     const { status, body: report } = await editor.respond(request("POST", "/generate"));
     assert.equal(status, 200);
