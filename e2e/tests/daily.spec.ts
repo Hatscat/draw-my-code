@@ -15,6 +15,11 @@ import {
 
 const SOLUTION = solutionOf(1);
 const COLORED = SOLUTION.join("").replaceAll("0", "").length;
+// The share text's picture of a grid: its top half, each color as its own square, from 0 black
+// to 7 purple.
+const SQUARES = ["⬛", "⬜", "🟥", "🟧", "🟨", "🟩", "🟦", "🟪"];
+const picture = (rows: readonly string[]) =>
+  rows.slice(0, 4).map((row) => [...row].map((digit) => SQUARES[Number(digit)]).join(""));
 
 test("a wrong submit only tells the count; Submit waits for a change", async ({ page }) => {
   await openPuzzle(page, 1);
@@ -110,9 +115,8 @@ test("solving shows the result, the stats and the exact share text", async ({ pa
   await expect(follow).toHaveAttribute("href", "https://lone-bee.itch.io/");
   await expect(follow).toHaveAttribute("target", "_blank");
 
-  // A blank first attempt: black cells were right from attempt 1, colored ones from attempt 2.
-  const rows = SOLUTION.map((row) => [...row].map((d) => (d === "0" ? "🟩" : "🟨")).join(""));
-  const expected = ["Draw my code #1 2/3", ...rows, SITE_URL].join("\n");
+  // The solution's picture, whatever the attempts were (a blank one here).
+  const expected = ["Draw my code #1 2/3", ...picture(SOLUTION), SITE_URL].join("\n");
   await page.getByRole("button", { name: "Share" }).click();
   if (isMobile) {
     await expect.poll(async () => (await sharedTexts(page)).shared).toEqual([expected]);
@@ -255,13 +259,9 @@ test("3 wrong attempts fail: X/3, the solution, and a toggle to your drawing", a
   expect(await page.locator(".toggle").evaluate((group) => getComputedStyle(group).overflow))
     .toBe("visible");
 
-  // Never right: every colored cell, plus the two black cells painted white later on.
-  const whitened = (x: number, y: number) => [first, second].some((c) => c[0] === x && c[1] === y);
-  const rows = SOLUTION.map((row, y) =>
-    [...row].map((d, x) => (d !== "0" || whitened(x, y) ? "⬛" : "🟩")).join("")
-  );
+  // Failed, the share text still shows the solution's picture, never the last drawing.
   await page.getByRole("button", { name: "Share" }).click();
-  const expected = ["Draw my code #1 X/3", ...rows, SITE_URL].join("\n");
+  const expected = ["Draw my code #1 X/3", ...picture(SOLUTION), SITE_URL].join("\n");
   await expect.poll(async () => {
     const { shared, copied } = await sharedTexts(page);
     return [...shared, ...copied];

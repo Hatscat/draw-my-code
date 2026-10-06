@@ -116,17 +116,17 @@ Exact text, lines joined by `\n`, no trailing newline:
 
 ```
 Draw my code #12 2/3
-🟩🟩🟩🟨🟨🟩🟩🟩
-…(8 rows of 8)
+⬛⬛🟥🟥🟥🟥⬛⬛
+…(4 rows of 8)
 https://drawmycode.lonebee.games/
 ```
 
 A failed puzzle reads `Draw my code #12 X/3`. The URL is the site URL, with its trailing slash.
 
-Per cell: 🟩 correct from attempt 1 on, 🟨 from attempt 2 on, 🟧 from attempt 3 on, ⬛ still wrong
-at the end. "Correct from attempt k on" = correct in attempt k and in every later attempt. The text
-never reveals the solution's colors, but it may reveal its shape (a blank first submit followed by a
-solve outlines the non-black cells).
+The rows are the top half of the solution's picture, for a failed puzzle too: each cell as the
+square of its color, ⬛ 0 black, ⬜ 1 white, 🟥 2 red, 🟧 3 orange, 🟨 4 yellow, 🟩 5 green, 🟦 6
+blue, 🟪 7 purple. Half a picture says more than a score, keeps the text short and hides the rest of
+the answer; players who don't want to give even that half away delete the rows before sending.
 
 Touch devices (`pointer: coarse`) with `navigator.share`: `navigator.share({ text })`, called
 directly in the click handler; a cancel does nothing. Otherwise: clipboard and a "Copied" toast;

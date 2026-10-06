@@ -85,7 +85,8 @@ export function createResultPanel(
   const manualCopy = el("textarea", {
     class: "manual-copy",
     readonly: true,
-    rows: 10,
+    // The share text's lines: the score, four rows of the picture, the URL.
+    rows: 6,
     "aria-label": "Your result, to copy",
     hidden: true,
   });

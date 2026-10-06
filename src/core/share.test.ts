@@ -1,117 +1,59 @@
 import assert from "node:assert/strict";
-import { ATTEMPTS } from "./config.ts";
 import { gridFromRows } from "./grid.ts";
-import { CORRECT_FROM, correctSince, shareText } from "./share.ts";
+import { shareText } from "./share.ts";
 
 const URL = "https://hatscat.github.io/draw-my-code/";
 const RED = gridFromRows(Array<string>(8).fill("22222222"));
 const BLANK = gridFromRows(Array<string>(8).fill("00000000"));
+const RED_ROWS = Array<string>(4).fill("🟥🟥🟥🟥🟥🟥🟥🟥");
 
-Deno.test("there is one 'correct from' square per attempt", () => {
-  assert.equal(CORRECT_FROM.length, ATTEMPTS);
-});
-
-Deno.test("shareText: solved on the first attempt", () => {
+Deno.test("shareText: each color is its own square, row by row", () => {
+  const solution = gridFromRows([
+    "01234567",
+    "76543210",
+    ...Array<string>(6).fill("00000000"),
+  ]);
   assert.equal(
-    shareText(1, [RED], RED, URL),
+    shareText(1, [solution], solution, URL),
     [
       "Draw my code #1 1/3",
-      "🟩🟩🟩🟩🟩🟩🟩🟩",
-      "🟩🟩🟩🟩🟩🟩🟩🟩",
-      "🟩🟩🟩🟩🟩🟩🟩🟩",
-      "🟩🟩🟩🟩🟩🟩🟩🟩",
-      "🟩🟩🟩🟩🟩🟩🟩🟩",
-      "🟩🟩🟩🟩🟩🟩🟩🟩",
-      "🟩🟩🟩🟩🟩🟩🟩🟩",
-      "🟩🟩🟩🟩🟩🟩🟩🟩",
+      "⬛⬜🟥🟧🟨🟩🟦🟪",
+      "🟪🟦🟩🟨🟧🟥⬜⬛",
+      "⬛⬛⬛⬛⬛⬛⬛⬛",
+      "⬛⬛⬛⬛⬛⬛⬛⬛",
       "https://hatscat.github.io/draw-my-code/",
     ].join("\n"),
   );
 });
 
-Deno.test("shareText: solved on the second attempt after a partly right first one", () => {
+Deno.test("shareText: only the top half shows, the bottom half stays hidden", () => {
+  const solution = gridFromRows([
+    ...Array<string>(4).fill("00000000"),
+    ...Array<string>(4).fill("11111111"),
+  ]);
+  assert.equal(
+    shareText(1, [solution], solution, URL),
+    ["Draw my code #1 1/3", ...Array<string>(4).fill("⬛⬛⬛⬛⬛⬛⬛⬛"), URL].join("\n"),
+  );
+});
+
+Deno.test("shareText: solved on the second attempt, the picture is the solution", () => {
   const first = gridFromRows(["22222222", "22220000", ...Array<string>(6).fill("00000000")]);
   assert.equal(
     shareText(12, [first, RED], RED, URL),
-    [
-      "Draw my code #12 2/3",
-      "🟩🟩🟩🟩🟩🟩🟩🟩",
-      "🟩🟩🟩🟩🟨🟨🟨🟨",
-      "🟨🟨🟨🟨🟨🟨🟨🟨",
-      "🟨🟨🟨🟨🟨🟨🟨🟨",
-      "🟨🟨🟨🟨🟨🟨🟨🟨",
-      "🟨🟨🟨🟨🟨🟨🟨🟨",
-      "🟨🟨🟨🟨🟨🟨🟨🟨",
-      "🟨🟨🟨🟨🟨🟨🟨🟨",
-      "https://hatscat.github.io/draw-my-code/",
-    ].join("\n"),
+    ["Draw my code #12 2/3", ...RED_ROWS, URL].join("\n"),
   );
 });
 
-Deno.test("shareText: failed, with cells that were right, then wrong, then right again", () => {
-  const attempts = [
-    [
-      "22222222",
-      "00000000",
-      "00000000",
-      "00000000",
-      "22220000",
-      "00000000",
-      "00000000",
-      "00000000",
-    ],
-    [
-      "22222222",
-      "22222222",
-      "00000000",
-      "00000000",
-      "00002222",
-      "00000000",
-      "00000000",
-      "00000000",
-    ],
-    [
-      "22222222",
-      "22222222",
-      "22222222",
-      "00000000",
-      "22222222",
-      "00000000",
-      "00000000",
-      "20000000",
-    ],
-  ].map(gridFromRows);
+Deno.test("shareText: failed, it still shows the solution, never the last drawing", () => {
+  const top = gridFromRows(["22222222", ...Array<string>(7).fill("00000000")]);
+  const almost = gridFromRows(["22222220", ...Array<string>(7).fill("22222222")]);
   assert.equal(
-    shareText(12, attempts, RED, URL),
-    [
-      "Draw my code #12 X/3",
-      "🟩🟩🟩🟩🟩🟩🟩🟩",
-      "🟨🟨🟨🟨🟨🟨🟨🟨",
-      "🟧🟧🟧🟧🟧🟧🟧🟧",
-      "⬛⬛⬛⬛⬛⬛⬛⬛",
-      "🟧🟧🟧🟧🟨🟨🟨🟨",
-      "⬛⬛⬛⬛⬛⬛⬛⬛",
-      "⬛⬛⬛⬛⬛⬛⬛⬛",
-      "🟧⬛⬛⬛⬛⬛⬛⬛",
-      "https://hatscat.github.io/draw-my-code/",
-    ].join("\n"),
+    shareText(12, [BLANK, top, almost], RED, URL),
+    ["Draw my code #12 X/3", ...RED_ROWS, URL].join("\n"),
   );
-});
-
-Deno.test("shareText never shows colors: a blank first submit outlines the black cells", () => {
-  const solution = gridFromRows(["00000000", "01234567", ...Array<string>(6).fill("00000000")]);
-  const text = shareText(3, [BLANK, solution], solution, URL);
-  assert.equal(text.split("\n")[1], "🟩🟩🟩🟩🟩🟩🟩🟩");
-  assert.equal(text.split("\n")[2], "🟩🟨🟨🟨🟨🟨🟨🟨");
-  assert.doesNotMatch(text, /[0-7]{2}|red|🟥|🟦|🟪|⬜/);
 });
 
 Deno.test("shareText has no trailing newline", () => {
   assert.ok(shareText(1, [RED], RED, URL).endsWith(URL));
-});
-
-Deno.test("correctSince is 0 for a cell wrong in the last submission", () => {
-  const since = correctSince([RED, BLANK], RED);
-  assert.ok(since.every((k) => k === 0));
-  assert.deepEqual(correctSince([], RED).slice(0, 2), [0, 0]);
 });
