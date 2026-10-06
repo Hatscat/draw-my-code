@@ -6,6 +6,7 @@ import {
   startPlay,
   status,
   submit,
+  unmark,
 } from "../core/game.ts";
 import { isTracking, track } from "../analytics.ts";
 import { gridFromRows } from "../core/grid.ts";
@@ -63,7 +64,13 @@ export function showTutorial(
       infoActions: [installButton()],
       footerActions: [skip],
       onPaint(cell, color) {
+        const before = play;
         play = paint(play, cell, color);
+        render();
+        return play !== before;
+      },
+      onTapAgain(cell) {
+        play = unmark(play, cell);
         render();
       },
       onSubmit() {
@@ -92,6 +99,7 @@ export function showTutorial(
       levelView.render(play.drawing, {
         editable: !solved,
         showDigits: store.read().showDigits,
+        marks: solved ? undefined : play.marks,
       });
       if (solved) {
         levelView.setStatus(["Right!"], "success");

@@ -4,7 +4,7 @@
  */
 
 import { ATTEMPTS, CATCH_UP_DAYS } from "./config.ts";
-import { paint, type Play, startPlay, status, submit } from "./game.ts";
+import { paint, type Play, startPlay, status, submit, unmark } from "./game.ts";
 import { type Color, type Grid, sameGrid } from "./grid.ts";
 import type { PlayerState } from "./storage.ts";
 
@@ -22,13 +22,14 @@ export function dailyPlay(state: PlayerState, n: number, solution: Grid): Play {
 }
 
 /**
- * Whether puzzle #n was never touched: nothing painted, nothing submitted. At midnight such a
- * puzzle can make way for the new one, while one in progress stays until it is finished.
+ * Whether puzzle #n was never touched: nothing painted, no dot, nothing submitted. At midnight
+ * such a puzzle can make way for the new one, while one in progress stays until it is finished.
  */
 export function isUntouched(state: PlayerState, n: number): boolean {
   const play = state.plays[n];
   return !isFinished(state, n) &&
-    (!play || (play.submissions.length === 0 && play.drawing.every((cell) => cell === 0)));
+    (!play || (play.submissions.length === 0 && play.drawing.every((cell) => cell === 0) &&
+      !play.marks.includes(true)));
 }
 
 export function setShowDigits(state: PlayerState, on: boolean): PlayerState {
@@ -56,9 +57,29 @@ export function paintDaily(
   index: number,
   color: Color,
 ): PlayerState {
+  return changeDaily(state, n, solution, (play) => paint(play, index, color));
+}
+
+/** Takes a dot off one of puzzle #n's cells: a second tap with 0. */
+export function unmarkDaily(
+  state: PlayerState,
+  n: number,
+  solution: Grid,
+  index: number,
+): PlayerState {
+  return changeDaily(state, n, solution, (play) => unmark(play, index));
+}
+
+/** Applies a change to puzzle #n's open play, and saves it when anything changed. */
+function changeDaily(
+  state: PlayerState,
+  n: number,
+  solution: Grid,
+  change: (play: Play) => Play,
+): PlayerState {
   if (isFinished(state, n)) return state;
   const before = dailyPlay(state, n, solution);
-  const after = paint(before, index, color);
+  const after = change(before);
   return after === before ? state : withPlay(state, n, after);
 }
 
@@ -97,9 +118,9 @@ export function missedPuzzles(state: PlayerState, today: number): number[] {
 function withPlay(state: PlayerState, n: number, play: Play): PlayerState {
   // Relative to the puzzle being played: catching up an old one never drops a newer one.
   const kept = Object.entries(state.plays).filter(([key]) => Number(key) >= n - CATCH_UP_DAYS);
-  const { solution, drawing, submissions } = play;
+  const { solution, drawing, marks, submissions } = play;
   return {
     ...state,
-    plays: { ...Object.fromEntries(kept), [n]: { solution, drawing, submissions } },
+    plays: { ...Object.fromEntries(kept), [n]: { solution, drawing, marks, submissions } },
   };
 }

@@ -85,6 +85,20 @@ test("a puzzle in progress at midnight stays until it's finished", async ({ page
   await expect(page.locator(".header-label")).toHaveText("#2");
 });
 
+test("a puzzle with only dots stays at midnight: they are the player's work", async ({ page }) => {
+  await openPuzzle(page, 1);
+  await page.getByRole("radio", { name: "0 black" }).click();
+  await cell(page, 0, 0).click();
+  const untilMidnight = await page.evaluate(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime();
+  });
+  await page.clock.fastForward(untilMidnight - 10_000);
+  await page.clock.runFor(20_000);
+  await expect(page.locator(".header-label")).toHaveText("#1");
+  await expect(cell(page, 0, 0)).toHaveAccessibleName("x 0, y 0: 0 black, marked");
+});
+
 test("an untouched puzzle makes way for the new one at midnight", async ({ page }) => {
   await openPuzzle(page, 1);
   const untilMidnight = await page.evaluate(() => {

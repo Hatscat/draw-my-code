@@ -43,6 +43,7 @@ export function createInfoPanel(
         "f(x, y) returns a color index from 0 to 7 for every cell.",
         "x runs left to right, y top to bottom, both from 0 to 7.",
         "Pick a swatch, then tap or drag across the grid to paint.",
+        "Painting 0 leaves a dot, to keep track of checked cells.",
         "Keys 0–7 pick a color; arrows move, Space paints.",
         attempts,
       ].map((sentence) => el("span", { class: "info-line" }, sentence, " ")),

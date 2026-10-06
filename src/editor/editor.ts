@@ -92,7 +92,9 @@ function start(root: HTMLElement) {
   const codeSlot = el("div", { class: "editor-code" });
   const readout = el("p", { class: "editor-readout" });
   const board = createBoard({
-    onPaint() {},
+    // Read-only: the editor's grid only shows a level's output.
+    onPaint: () => false,
+    onTapAgain() {},
     onPoint(index) {
       pointed = index;
       showPointed();

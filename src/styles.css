@@ -135,6 +135,8 @@
   --stats-width: 320px;
   --bar-label: 28px;
   --bar-min: 22px;
+  /* The dot on a cell painted 0: a fifth of the cell, 6 px at 320 px wide, 9 px at most. */
+  --mark-size: clamp(6px, 20%, 9px);
   --focus-width: 2px;
   --focus-offset: 2px;
   --focus-offset-button: 3px;
@@ -597,6 +599,18 @@ h1 {
 
 .cell[data-value="0"] {
   color: var(--ink);
+}
+
+/* The player's own note on a cell painted 0. The game itself never marks cells. */
+.cell[data-marked]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: var(--mark-size);
+  height: var(--mark-size);
+  margin: auto;
+  border-radius: var(--radius-round);
+  background: var(--faint);
 }
 
 .cell:focus-visible {

@@ -75,6 +75,23 @@ test.describe("on a small phone screen", () => {
   });
 });
 
+test("the tutorial has dots too, gone once the level is right", async ({ page }) => {
+  await page.clock.install({ time: dayOf(1) });
+  await page.goto("./");
+  const dots = page.getByRole("gridcell", { name: /, marked$/ });
+  const zero = [...LEVEL_1].findIndex((digit) => digit === "0");
+  await page.keyboard.press("0");
+  await cell(page, zero % 8, Math.floor(zero / 8)).click();
+  await expect(dots).toHaveCount(1);
+  await solveLevel1(page);
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.locator(".status")).toHaveText("Right!");
+  await expect(dots).toHaveCount(0);
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(label(page)).toHaveText(`Tutorial 2/${tutorial.length}`);
+  await expect(dots).toHaveCount(0);
+});
+
 test("Skip tutorial looks like a link, even while pressed", async ({ page, isMobile }) => {
   test.skip(isMobile, "pressing with a mouse");
   await page.emulateMedia({ reducedMotion: "reduce" });

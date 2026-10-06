@@ -1,4 +1,5 @@
 import { type Color, type Grid, SIZE } from "../core/grid.ts";
+import type { Marks } from "../core/marks.ts";
 import { createBoard } from "./board.ts";
 import { createCodePanel } from "./code-panel.ts";
 import { celebrate } from "./confetti.ts";
@@ -18,14 +19,20 @@ export interface PuzzleViewOptions {
   readonly infoActions?: readonly HTMLElement[];
   /** Extra buttons under Submit, such as Skip tutorial. */
   readonly footerActions?: readonly HTMLElement[];
-  onPaint(index: number, color: Color): void;
+  /** Whether anything changed, color or dot. */
+  onPaint(index: number, color: Color): boolean;
+  /** A tap again on a cell, or Space or Enter, that changed nothing: with 0, the dot goes. */
+  onTapAgain(index: number): void;
   onSubmit(): void;
   onShowDigits(on: boolean): void;
 }
 
 export interface PuzzleView {
-  /** Draws a grid; `editable` is false once the puzzle is over. */
-  render(grid: Grid, options: { readonly editable: boolean; readonly showDigits: boolean }): void;
+  /** Draws a grid; `editable` is false once the puzzle is over, which also leaves out the dots. */
+  render(
+    grid: Grid,
+    options: { readonly editable: boolean; readonly showDigits: boolean; readonly marks?: Marks },
+  ): void;
   /** The line above Submit: an error (the wrong count) by default, or good news. */
   setStatus(lines: readonly string[], tone?: "error" | "success"): void;
   /** Submit's label, and whether it does anything. It stays focusable either way. */
@@ -65,6 +72,7 @@ export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): P
   const swatches = createSwatches(select);
   const board = createBoard({
     onPaint: (index) => options.onPaint(index, selected),
+    onTapAgain: (index) => options.onTapAgain(index),
     onPoint(index) {
       if (index === undefined) code.clearCall();
       else code.showCall(index % SIZE, Math.floor(index / SIZE));
@@ -111,8 +119,8 @@ export function showPuzzleView(root: HTMLElement, options: PuzzleViewOptions): P
   }, { signal: listeners.signal });
 
   return {
-    render(grid, { editable, showDigits }) {
-      board.render(grid, showDigits);
+    render(grid, { editable, showDigits, marks }) {
+      board.render(grid, showDigits, marks);
       board.setEditable(editable);
       info.setShowDigits(showDigits);
     },

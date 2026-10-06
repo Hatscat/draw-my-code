@@ -1,17 +1,24 @@
 import { cellIndex, type Grid, SIZE } from "../core/grid.ts";
+import type { Marks } from "../core/marks.ts";
 import { el } from "./dom.ts";
 import { PALETTE } from "./palette.ts";
 
 export interface BoardHandlers {
-  /** Paint the cell at `index` with the selected color. */
-  onPaint(index: number): void;
+  /** Paint the cell at `index` with the selected color; whether anything changed, color or dot. */
+  onPaint(index: number): boolean;
+  /**
+   * A press, Space or Enter that changed nothing and ended on its own cell: with 0, it takes the
+   * cell's dot off.
+   */
+  onTapAgain(index: number): void;
   /** The cell under the mouse or the keyboard focus, or undefined when there is none. */
   onPoint(index: number | undefined): void;
 }
 
 export interface Board {
   readonly element: HTMLElement;
-  render(grid: Grid, showDigits: boolean): void;
+  /** `marks`: the player's dots, while the puzzle is being played. */
+  render(grid: Grid, showDigits: boolean, marks?: Marks): void;
   /** Painting is turned off once the puzzle is over; moving around still works. */
   setEditable(editable: boolean): void;
   /** Highlights the axis labels of a cell. */
@@ -62,8 +69,17 @@ export function createBoard(handlers: BoardHandlers): Board {
 
   let editable = true;
   let focused = 0;
-  // The pointer painting right now, and the last cell it painted (undefined once it left the grid).
-  let stroke: { readonly id: number; last: number | undefined } | undefined;
+  // The pointer painting right now: where it pressed, whether that press changed anything,
+  // whether it left that cell, and the last cell it painted (undefined once it left the grid).
+  let stroke:
+    | {
+      readonly id: number;
+      readonly start: number;
+      readonly changed: boolean;
+      moved: boolean;
+      last: number | undefined;
+    }
+    | undefined;
 
   // From coordinates, not event.target: a touch stays targeted at the cell where it started.
   function cellAt(clientX: number, clientY: number): number | undefined {
@@ -84,20 +100,23 @@ export function createBoard(handlers: BoardHandlers): Board {
     const index = cellAt(event.clientX, event.clientY);
     if (index === undefined) return;
     event.preventDefault();
-    stroke = { id: event.pointerId, last: index };
     try {
       grid.setPointerCapture(event.pointerId);
     } catch {
       // Synthetic pointer events (tests) have no active pointer to capture.
     }
-    handlers.onPaint(index);
+    const changed = handlers.onPaint(index);
+    stroke = { id: event.pointerId, start: index, changed, moved: false, last: index };
   });
 
   grid.addEventListener("pointermove", (event) => {
     const index = cellAt(event.clientX, event.clientY);
     // Mice and pens hover; a finger only touches.
     if (event.pointerType !== "touch") handlers.onPoint(index ?? focusedInside());
-    if (!stroke || event.pointerId !== stroke.id || index === stroke.last) return;
+    if (!stroke || event.pointerId !== stroke.id) return;
+    // Out of its cell, a press is a drag: drags only add dots, never take one off.
+    if (index !== stroke.start) stroke.moved = true;
+    if (index === stroke.last) return;
     if (index === undefined) {
       // Left the grid: coming back elsewhere must not draw a line through cells never crossed.
       stroke.last = undefined;
@@ -112,7 +131,14 @@ export function createBoard(handlers: BoardHandlers): Board {
   const endStroke = (event: PointerEvent) => {
     if (stroke?.id === event.pointerId) stroke = undefined;
   };
-  grid.addEventListener("pointerup", endStroke);
+  grid.addEventListener("pointerup", (event) => {
+    if (stroke?.id !== event.pointerId) return;
+    const { start, changed, moved } = stroke;
+    stroke = undefined;
+    if (!changed && !moved && cellAt(event.clientX, event.clientY) === start) {
+      handlers.onTapAgain(start);
+    }
+  });
   grid.addEventListener("pointercancel", endStroke);
   grid.addEventListener("lostpointercapture", endStroke);
   grid.addEventListener("pointerleave", (event) => {
@@ -156,7 +182,7 @@ export function createBoard(handlers: BoardHandlers): Board {
     } else if (event.key === " " || event.key === "Enter") {
       // Also stops Space from scrolling the page.
       event.preventDefault();
-      if (editable && !event.repeat) handlers.onPaint(focused);
+      if (editable && !event.repeat && !handlers.onPaint(focused)) handlers.onTapAgain(focused);
     }
   });
 
@@ -170,15 +196,21 @@ export function createBoard(handlers: BoardHandlers): Board {
 
   return {
     element,
-    render(drawing, showDigits) {
+    render(drawing, showDigits, marks) {
       cells.forEach((cell, i) => {
         const value = drawing[i] ?? 0;
         const color = PALETTE[value];
         if (!color) return;
+        const marked = marks?.[i] === true;
         cell.style.backgroundColor = color.hex;
         cell.dataset.value = String(value);
+        // A boolean attribute: data-marked="false" would match the dot's selector too.
+        cell.toggleAttribute("data-marked", marked);
         cell.textContent = showDigits ? String(value) : "";
-        cell.setAttribute("aria-label", `x ${xOf(i)}, y ${yOf(i)}: ${value} ${color.name}`);
+        cell.setAttribute(
+          "aria-label",
+          `x ${xOf(i)}, y ${yOf(i)}: ${value} ${color.name}${marked ? ", marked" : ""}`,
+        );
       });
     },
     setEditable(value) {

@@ -9,6 +9,7 @@ import {
   paintDaily,
   setShowDigits,
   submitDaily,
+  unmarkDaily,
 } from "../core/player.ts";
 import { puzzleDate, puzzleNumber } from "../core/schedule.ts";
 import { recordShare } from "../core/sent.ts";
@@ -67,7 +68,13 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
     infoActions: [replayButton(options.onReplayTutorial), installButton()],
     footerActions: missed ? [back] : [],
     // Every action applies to freshly read storage: another tab may have played meanwhile.
-    onPaint: (index, color) => save(paintDaily(store.read(), n, solution, index, color)),
+    onPaint(index, color) {
+      const before = store.read();
+      const after = paintDaily(before, n, solution, index, color);
+      save(after);
+      return after !== before;
+    },
+    onTapAgain: (index) => save(unmarkDaily(store.read(), n, solution, index)),
     onSubmit() {
       const before = store.read();
       const after = submitDaily(before, n, solution);
@@ -123,7 +130,11 @@ export function showDaily(root: HTMLElement, options: DailyOptions): Screen {
     const play = dailyPlay(state, n, solution);
     const outcome = state.results[n];
     if (outcome === undefined) {
-      view.render(play.drawing, { editable: true, showDigits: state.showDigits });
+      view.render(play.drawing, {
+        editable: true,
+        showDigits: state.showDigits,
+        marks: play.marks,
+      });
       const wrong = lastWrongCount(play);
       const submittable = canSubmit(play);
       view.setStatus(

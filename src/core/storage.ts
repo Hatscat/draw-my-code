@@ -5,17 +5,20 @@
 
 import { ATTEMPTS } from "./config.ts";
 import { type Grid, gridFromString, gridToString } from "./grid.ts";
+import { type Marks, marksFromString, marksToString, noMarks } from "./marks.ts";
 import { isResult, type Results } from "./stats.ts";
 
 /** Namespaced: other games may share the site's origin. */
 export const STORAGE_KEY = "draw-my-code";
-export const STATE_VERSION = 1;
+export const STATE_VERSION = 2;
 
 /** A daily's play, kept so a reload restores it and the share text can be rebuilt. */
 export interface StoredPlay {
   /** The solution it was judged against: if the bundle's differs, the level was edited. */
   readonly solution: Grid;
   readonly drawing: Grid;
+  /** The player's dots, on cells painted 0. */
+  readonly marks: Marks;
   readonly submissions: readonly Grid[];
 }
 
@@ -63,8 +66,8 @@ export function loadState(raw: string | null): Loaded {
     // Someone who has newer data isn't a first-time player: don't show them the tutorial.
     return { state: { ...INITIAL_STATE, tutorial: { done: true, next: 1 } }, writable: false };
   }
-  // Version 1 is the first schema, so there is nothing older to migrate yet.
-  if (data.v !== STATE_VERSION) return { state: INITIAL_STATE, writable: true };
+  // Version 1 had no dots: its plays load with none, and the next write saves version 2.
+  if (data.v !== STATE_VERSION && data.v !== 1) return { state: INITIAL_STATE, writable: true };
   return {
     state: {
       tutorial: readTutorial(data.tutorial),
@@ -82,6 +85,7 @@ export function serializeState(state: PlayerState): string {
     Object.entries(state.plays).map(([n, play]) => [n, {
       solution: gridToString(play.solution),
       drawing: gridToString(play.drawing),
+      marks: marksToString(play.marks),
       submissions: play.submissions.map(gridToString),
     }]),
   );
@@ -135,7 +139,11 @@ function readPlay(value: unknown): StoredPlay | undefined {
   if (!submissions.every((submitted): submitted is Grid => submitted !== undefined)) {
     return undefined;
   }
-  return { solution, drawing, submissions };
+  // Dots are read on their own: missing (version 1) or bad ones cost the play nothing, and a dot
+  // only ever sits on a 0.
+  const read = typeof value.marks === "string" ? marksFromString(value.marks) : undefined;
+  const marks = read ? read.map((mark, i) => mark && drawing[i] === 0) : noMarks();
+  return { solution, drawing, marks, submissions };
 }
 
 function readSent(value: unknown): Sent {

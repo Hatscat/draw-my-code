@@ -329,3 +329,59 @@ test.describe("on a phone-sized screen", () => {
     await expect(share).toBeInViewport();
   });
 });
+
+test("dots are notes: a wrong submit keeps them, and they never re-enable Submit", async ({ page }) => {
+  await openPuzzle(page, 1);
+  const submit = page.getByRole("button", { name: "Submit" });
+  const status = page.locator(".status");
+  await page.getByRole("radio", { name: "0 black" }).click();
+  await cell(page, 1, 1).click();
+  await submit.click();
+  await expect(status).toContainText("Change a cell to submit again");
+  await expect(cell(page, 1, 1)).toHaveAccessibleName("x 1, y 1: 0 black, marked");
+  await cell(page, 0, 0).click();
+  await expect(cell(page, 0, 0)).toHaveAccessibleName("x 0, y 0: 0 black, marked");
+  await expect(status).toContainText("Change a cell to submit again");
+  await expect(submit).toHaveAttribute("aria-disabled", "true");
+  await cell(page, 0, 0).click();
+  await expect(cell(page, 0, 0)).toHaveAccessibleName("x 0, y 0: 0 black");
+  await expect(submit).toHaveAttribute("aria-disabled", "true");
+});
+
+test("once the puzzle is over, the grid shows no dots", async ({ page }) => {
+  await openPuzzle(page, 1);
+  const dots = page.getByRole("gridcell", { name: /, marked$/ });
+  // A dot where the solution is black: painting the solution leaves it there.
+  const y = SOLUTION.findIndex((row) => row.includes("0"));
+  const x = SOLUTION[y]?.indexOf("0") ?? 0;
+  await page.getByRole("radio", { name: "0 black" }).click();
+  await cell(page, x, y).click();
+  await expect(dots).toHaveCount(1);
+  await paintRows(page, SOLUTION);
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByRole("heading", { name: "Solved in 1/3" })).toBeVisible();
+  await expect(dots).toHaveCount(0);
+});
+
+test("a failed puzzle shows no dots, in either view", async ({ page }) => {
+  await openPuzzle(page, 1);
+  const dots = page.getByRole("gridcell", { name: /, marked$/ });
+  const submit = page.getByRole("button", { name: "Submit" });
+  await page.getByRole("radio", { name: "0 black" }).click();
+  await cell(page, 0, 0).click();
+  await expect(dots).toHaveCount(1);
+  await submit.click();
+  await page.getByRole("radio", { name: "1 white" }).click();
+  for (const x of [1, 2]) {
+    await cell(page, x, 0).click();
+    await submit.click();
+  }
+  await expect(page.getByRole("heading", { name: "X/3" })).toBeVisible();
+  await expect(dots).toHaveCount(0);
+  await page.getByRole("button", { name: "Your drawing" }).click();
+  await expect(page.getByRole("button", { name: "Your drawing" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(dots).toHaveCount(0);
+});

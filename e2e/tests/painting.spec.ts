@@ -221,3 +221,76 @@ test("Show digits prints each cell's value", async ({ page }) => {
   await expect(cell(page, 0, 0)).toHaveText("1");
   await expect(cell(page, 1, 0)).toHaveText("0");
 });
+
+test.describe("dots, the player's notes on cells painted 0", () => {
+  const black = (page: import("@playwright/test").Page) =>
+    page.getByRole("radio", { name: "0 black" }).click();
+
+  test("painting 0 leaves a dot, which another color takes off", async ({ page }) => {
+    await black(page);
+    await cell(page, 2, 3).click();
+    await expect(cell(page, 2, 3)).toHaveAccessibleName("x 2, y 3: 0 black, marked");
+    // Drawn as a shape, not told by color alone.
+    const dot = await cell(page, 2, 3).evaluate((element) => {
+      const style = getComputedStyle(element, "::after");
+      return { content: style.content, color: style.backgroundColor };
+    });
+    expect(dot.content).not.toBe("none");
+    expect(dot.color).toBe("rgb(122, 128, 139)");
+    await page.getByRole("radio", { name: "5 green" }).click();
+    await cell(page, 2, 3).click();
+    await expect(cell(page, 2, 3)).toHaveAccessibleName("x 2, y 3: 5 green");
+    await black(page);
+    await cell(page, 2, 3).click();
+    await expect(cell(page, 2, 3)).toHaveAccessibleName("x 2, y 3: 0 black, marked");
+    await page.getByRole("button", { name: "How to play and settings" }).click();
+    await expect(page.getByText("Painting 0 leaves a dot, to keep track of checked cells."))
+      .toBeVisible();
+  });
+
+  test("a second tap with 0 takes the dot off, a third puts it back", async ({ page, isMobile }) => {
+    await black(page);
+    const { clientX, clientY } = await cellCenter(page, 3, 4);
+    const tap = () =>
+      isMobile ? page.touchscreen.tap(clientX, clientY) : page.mouse.click(clientX, clientY);
+    await tap();
+    await expect(cell(page, 3, 4)).toHaveAccessibleName("x 3, y 4: 0 black, marked");
+    await tap();
+    await expect(cell(page, 3, 4)).toHaveAccessibleName("x 3, y 4: 0 black");
+    await tap();
+    await expect(cell(page, 3, 4)).toHaveAccessibleName("x 3, y 4: 0 black, marked");
+  });
+
+  test("keyboard: with 0, Space or Enter puts a dot on or takes it off", async ({ page }) => {
+    await cell(page, 4, 4).focus();
+    await page.keyboard.press("0");
+    await page.keyboard.press(" ");
+    await expect(cell(page, 4, 4)).toHaveAccessibleName("x 4, y 4: 0 black, marked");
+    await page.keyboard.press(" ");
+    await expect(cell(page, 4, 4)).toHaveAccessibleName("x 4, y 4: 0 black");
+    await page.keyboard.press("Enter");
+    await expect(cell(page, 4, 4)).toHaveAccessibleName("x 4, y 4: 0 black, marked");
+  });
+
+  test("a drag with 0 adds dots and never takes one off, even from a dotted cell", async ({ page }) => {
+    await black(page);
+    await cell(page, 0, 2).click();
+    const from = await cellCenter(page, 0, 2);
+    const to = await cellCenter(page, 7, 2);
+    await page.mouse.move(from.clientX, from.clientY);
+    await page.mouse.down();
+    await page.mouse.move(to.clientX, to.clientY);
+    await page.mouse.up();
+    for (let x = 0; x < 8; x++) {
+      await expect(cell(page, x, 2)).toHaveAccessibleName(`x ${x}, y 2: 0 black, marked`);
+    }
+    await expect(page.getByRole("gridcell", { name: /, marked$/ })).toHaveCount(8);
+  });
+
+  test("dots survive a reload", async ({ page }) => {
+    await black(page);
+    await cell(page, 6, 1).click();
+    await page.reload();
+    await expect(cell(page, 6, 1)).toHaveAccessibleName("x 6, y 1: 0 black, marked");
+  });
+});

@@ -1,9 +1,12 @@
 import { blankGrid, type Color, type Grid, sameGrid, setCell, wrongCount } from "./grid.ts";
+import { type Marks, noMarks, setMark } from "./marks.ts";
 
 /** One puzzle in play: a daily (limited attempts) or a tutorial level (unlimited). */
 export interface Play {
   readonly solution: Grid;
   readonly drawing: Grid;
+  /** The player's dots, on the cells they painted 0. Never submitted. */
+  readonly marks: Marks;
   /** Every submitted grid, oldest first. */
   readonly submissions: readonly Grid[];
   /** Attempts allowed: `ATTEMPTS` for a daily, Infinity in the tutorial. */
@@ -13,7 +16,7 @@ export interface Play {
 export type Status = "playing" | "solved" | "failed";
 
 export function startPlay(solution: Grid, attempts: number): Play {
-  return { solution, drawing: blankGrid(), submissions: [], attempts };
+  return { solution, drawing: blankGrid(), marks: noMarks(), submissions: [], attempts };
 }
 
 export function status(play: Play): Status {
@@ -22,11 +25,22 @@ export function status(play: Play): Status {
   return play.submissions.length >= play.attempts ? "failed" : "playing";
 }
 
-/** Paints one cell. Once the puzzle is over, the drawing is frozen. */
+/**
+ * Paints one cell: 0 leaves a dot on it, another color takes the dot off, so a dot only ever sits
+ * on a 0. Once the puzzle is over, the drawing is frozen.
+ */
 export function paint(play: Play, index: number, color: Color): Play {
   if (status(play) !== "playing") return play;
   const drawing = setCell(play.drawing, index, color);
-  return drawing === play.drawing ? play : { ...play, drawing };
+  const marks = setMark(play.marks, index, color === 0);
+  return drawing === play.drawing && marks === play.marks ? play : { ...play, drawing, marks };
+}
+
+/** Takes a cell's dot off, the cell staying 0: what a second tap with 0 does. */
+export function unmark(play: Play, index: number): Play {
+  if (status(play) !== "playing") return play;
+  const marks = setMark(play.marks, index, false);
+  return marks === play.marks ? play : { ...play, marks };
 }
 
 /**

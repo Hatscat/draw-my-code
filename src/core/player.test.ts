@@ -11,6 +11,7 @@ import {
   paintDaily,
   setShowDigits,
   submitDaily,
+  unmarkDaily,
 } from "./player.ts";
 import { INITIAL_STATE, type PlayerState } from "./storage.ts";
 
@@ -135,14 +136,39 @@ Deno.test("a finished puzzle keeps its play and its own solution when its level 
   assert.equal(status(play), "solved");
 });
 
-Deno.test("isUntouched until something is painted or submitted", () => {
+Deno.test("isUntouched until something is painted, dotted or submitted", () => {
   assert.equal(isUntouched(INITIAL_STATE, 5), true);
   const painted = paintDaily(INITIAL_STATE, 5, SOLUTION, 0, 3);
   assert.equal(isUntouched(painted, 5), false);
-  // Painting a cell back to black leaves a blank drawing: nothing is lost by moving on.
-  assert.equal(isUntouched(paintDaily(painted, 5, SOLUTION, 0, 0), 5), true);
+  // Painted back to black, the cell keeps a dot: the player's work, so the puzzle stays.
+  const dotted = paintDaily(painted, 5, SOLUTION, 0, 0);
+  assert.equal(isUntouched(dotted, 5), false);
+  assert.equal(canMoveOn(dotted, 5), false);
+  // Without the dot either, nothing is lost by moving on.
+  assert.equal(isUntouched(unmarkDaily(dotted, 5, SOLUTION, 0), 5), true);
   assert.equal(isUntouched(submitDaily(INITIAL_STATE, 5, SOLUTION), 5), false);
   assert.equal(isUntouched(INITIAL_STATE, 4), true, "other puzzles are separate");
+});
+
+Deno.test("paintDaily saves the dots with the drawing", () => {
+  const state = paintDaily(INITIAL_STATE, 5, SOLUTION, 9, 0);
+  assert.equal(dailyPlay(state, 5, SOLUTION).marks[9], true);
+  assert.equal(state.plays[5]?.marks[9], true);
+});
+
+Deno.test("unmarkDaily takes a dot off, and changes nothing without one or once finished", () => {
+  const dotted = paintDaily(INITIAL_STATE, 5, SOLUTION, 9, 0);
+  const unmarked = unmarkDaily(dotted, 5, SOLUTION, 9);
+  assert.equal(dailyPlay(unmarked, 5, SOLUTION).marks[9], false);
+  assert.equal(unmarkDaily(unmarked, 5, SOLUTION, 9), unmarked);
+  const finished = { ...dotted, results: { 5: 1 as const } };
+  assert.equal(unmarkDaily(finished, 5, SOLUTION, 9), finished);
+});
+
+Deno.test("an edited level's fresh play has no dots", () => {
+  const dotted = paintDaily(INITIAL_STATE, 5, SOLUTION, 9, 0);
+  const edited = gridFromRows(Array<string>(8).fill("11111111"));
+  assert.ok(dailyPlay(dotted, 5, edited).marks.every((mark) => !mark));
 });
 
 Deno.test("a finished puzzle is not untouched, even when solved without painting", () => {

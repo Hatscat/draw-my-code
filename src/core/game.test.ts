@@ -8,6 +8,7 @@ import {
   startPlay,
   status,
   submit,
+  unmark,
 } from "./game.ts";
 import { cellIndex, type Color, gridFromRows } from "./grid.ts";
 
@@ -27,9 +28,13 @@ const TARGET = cellIndex(3, 4);
 const paintAll = (play: Play, cells: [number, Color][]) =>
   cells.reduce((p, [index, color]) => paint(p, index, color), play);
 
+/** The cells with a dot. */
+const dots = (play: Play) => play.marks.flatMap((mark, i) => (mark ? [i] : []));
+
 Deno.test("a new play is blank, playing, and can be submitted right away", () => {
   const play = startPlay(ONE_CELL, 3);
   assert.ok(play.drawing.every((cell) => cell === 0));
+  assert.deepEqual(dots(play), []);
   assert.equal(status(play), "playing");
   assert.equal(canSubmit(play), true);
   assert.equal(nextAttempt(play), 1);
@@ -60,9 +65,45 @@ Deno.test("an unchanged grid can't be resubmitted, a changed one can", () => {
   assert.equal(canSubmit(paint(changed, 5, 0)), false);
 });
 
-Deno.test("painting the color a cell already has changes nothing", () => {
+Deno.test("painting the color a cell already has changes nothing, but its first 0 leaves a dot", () => {
   const play = startPlay(ONE_CELL, 3);
-  assert.equal(paint(play, 0, 0), play);
+  const red = paint(play, 0, 2);
+  assert.equal(paint(red, 0, 2), red);
+  const dotted = paint(play, 0, 0);
+  assert.notEqual(dotted, play);
+  assert.equal(paint(dotted, 0, 0), dotted);
+});
+
+Deno.test("painting 0 leaves a dot, another color takes it off: a dot only sits on a 0", () => {
+  let play = paint(startPlay(ONE_CELL, 3), 5, 0);
+  assert.deepEqual(dots(play), [5]);
+  play = paint(paint(play, 6, 3), 6, 0);
+  assert.deepEqual(dots(play), [5, 6], "0 over a color: black with a dot");
+  assert.equal(play.drawing[6], 0);
+  play = paint(play, 5, 4);
+  assert.deepEqual(dots(play), [6]);
+  assert.ok(play.marks.every((mark, i) => !mark || play.drawing[i] === 0));
+});
+
+Deno.test("unmark takes a dot off and leaves the cell 0", () => {
+  const dotted = paint(startPlay(ONE_CELL, 3), 5, 0);
+  const unmarked = unmark(dotted, 5);
+  assert.deepEqual(dots(unmarked), []);
+  assert.equal(unmarked.drawing[5], 0);
+  assert.equal(unmark(unmarked, 5), unmarked, "no dot, no change");
+});
+
+Deno.test("dots are notes: they never count as a change for Submit", () => {
+  const wrong = submit(startPlay(ONE_CELL, 3));
+  const dotted = paint(wrong, 5, 0);
+  assert.equal(canSubmit(dotted), false);
+  assert.equal(submit(dotted), dotted);
+  assert.equal(canSubmit(unmark(dotted, 5)), false);
+});
+
+Deno.test("a submit keeps the dots", () => {
+  const submitted = submit(paint(paint(startPlay(ONE_CELL, 3), 5, 0), TARGET, 2));
+  assert.deepEqual(dots(submitted), [5]);
 });
 
 Deno.test("the last allowed wrong submit fails the puzzle", () => {
@@ -76,6 +117,9 @@ Deno.test("the last allowed wrong submit fails the puzzle", () => {
 Deno.test("a finished play ignores painting and submitting", () => {
   const solved = submit(paint(startPlay(ONE_CELL, 3), TARGET, 1));
   assert.equal(paint(solved, 0, 5), solved);
+  assert.equal(paint(solved, 0, 0), solved, "no dot either");
+  const dottedThenSolved = submit(paint(paint(startPlay(ONE_CELL, 3), 0, 0), TARGET, 1));
+  assert.equal(unmark(dottedThenSolved, 0), dottedThenSolved);
   assert.equal(submit(solved), solved);
 });
 

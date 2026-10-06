@@ -71,7 +71,8 @@ docs/puzzle-pool.html  Level catalogue: the loop, the specials, both design roun
   never as timestamps. Its lib config (no DOM) and the lint plugin in `tools/` enforce this.
 - `src/ui/` holds no rules: it calls core and renders the result.
 - Every grid cell always holds a value in [0, 7] and starts at 0 (black). There is no empty state:
-  no `null`, no `undefined`, no sentinel.
+  no `null`, no `undefined`, no sentinel. The player's dots are a separate layer beside the grid
+  (`Play.marks`), never a cell value.
 - Small modules with explicit names. Functions over classes. No abstraction without a second use
   case.
 - Comments explain why, not what.

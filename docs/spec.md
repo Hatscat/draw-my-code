@@ -21,10 +21,22 @@ No ads, no accounts, no backend. English only.
   1 white, C booleans draw white on black, like a 1-bit screen.
 - No empty state: every cell always holds a value in [0, 7], starting at 0.
 - The selected color is 1 (white) whenever a puzzle loads, so the first tap always paints.
+- Dots, the player's notes: black is both where cells start and an answer, so a 0 worked out would
+  look like a cell not looked at yet.
+  - Painting a cell 0 (tap, drag, Space or Enter) leaves a dot on it. Painting it another color
+    takes the dot off, so a dot only ever sits on a 0.
+  - With 0 selected, a tap on a dotted cell (released on the cell it pressed, never over another) or
+    Space/Enter on it takes the dot off. A drag only adds dots, so a run of zeros can go on from a
+    dotted cell.
+  - Dots never lock a cell, are never submitted and never count as a change: they stay after a wrong
+    submit, and Submit still waits for a color to change.
+  - They are saved with the play (in the tutorial, in memory with the drawing). The grid shows none
+    once the puzzle is over.
 - 3 attempts per daily puzzle (`ATTEMPTS` in config). After a wrong submit, the only feedback is a
   line above Submit: `N wrong · attempt 2/3`, where 2 is the attempt about to be played. It stays
-  until the next submit; painting doesn't clear it. Cells are never marked, in the daily or the
-  tutorial: per-cell marks would give the solution away.
+  until the next submit; painting doesn't clear it. The game never marks cells, in the daily or the
+  tutorial: per-cell feedback would give the solution away. The only marks on the grid are the
+  player's own dots.
 - After a wrong submit, while the grid equals the last submitted drawing, Submit is disabled and a
   second line says `Change a cell to submit again`, so a double tap can't burn an attempt. Submit
   stays focusable (`aria-disabled`): a truly disabled button drops keyboard focus.
@@ -56,6 +68,7 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
   `x runs left to right, y top to
   bottom, both from 0 to 7.` /
   `Pick a swatch, then tap or drag across the grid to paint.` /
+  `Painting 0 leaves a dot, to keep track of checked cells.` /
   `Keys
   0–7 pick a color; arrows move, Space paints.` / `You have 3 attempts.` (from `ATTEMPTS`;
   `Unlimited attempts.` in the tutorial).
@@ -72,7 +85,7 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
   status line and Submit. The grid stays visible and read-only. The page may scroll once the puzzle
   is over.
 - Solved: "Solved in N/3". Failed: "X/3", plus a toggle `Solution` (default) / `Your drawing`. Both
-  are shown plain, with no per-cell marks: toggling is how the player compares them.
+  are shown plain, with no per-cell marks and no dots: toggling is how the player compares them.
 - Stats (played, win %, current streak, max streak, distribution 1/2/3/X). Distribution bars show
   their counts; the bar of the result on screen is highlighted by more than color, and screen
   readers hear whose it is: `In 2: 5, today`, or `In 2: 5, #10` for a missed puzzle.
@@ -156,11 +169,11 @@ distribution are derived from them.
 - Puzzle number = calendar days between `LAUNCH_DATE` and the player's local date, + 1. Computed
   from `{ y, m, d }` only: no timestamps, no DST bugs.
 - Midnight while the page stays open: the date is re-checked on every countdown tick and whenever
-  the app comes back to the foreground. A finished or untouched puzzle then reloads to today's. An
-  in-progress puzzle stays until finished, and its result counts for its own number; its result
-  panel keeps its streak and missed puzzles current through later midnights. The tutorial is never
-  interrupted: if the day changed meanwhile, its end leads to today's puzzle without a reload, so a
-  first tutorial's install invitation still shows.
+  the app comes back to the foreground. A finished or untouched puzzle (nothing painted, no dot,
+  nothing submitted) then reloads to today's. An in-progress puzzle stays until finished, and its
+  result counts for its own number; its result panel keeps its streak and missed puzzles current
+  through later midnights. The tutorial is never interrupted: if the day changed meanwhile, its end
+  leads to today's puzzle without a reload, so a first tutorial's install invitation still shows.
 - Before `LAUNCH_DATE`: tutorial on the first visit, then "First puzzle on <Month D, YYYY>" (e.g.
   "First puzzle on October 1, 2026") and a countdown: `Starts in N days`, then `Starts in HH:MM:SS`
   on the last day. On both screens the header shows only "?".
@@ -171,11 +184,11 @@ distribution are derived from them.
 ## Player data
 
 - One localStorage key, `draw-my-code`, holding versioned JSON: tutorial progress, per-puzzle
-  results, the current puzzle's play state (its solution, drawing and every submitted grid, needed
-  to rebuild the share text), analytics dedupe markers and the `Show digits` setting.
+  results, the current puzzle's play state (its solution, drawing, dots and every submitted grid;
+  the grids rebuild the share text), analytics dedupe markers and the `Show digits` setting.
 - Corrupted data: defaults, written at the next write (a player action, or the day's pageview marker
   in production). Data from a newer version (an old tab or cached bundle): play in memory, never
-  write. Older versions: migrate.
+  write. Older versions: migrate (version 2 added the dots: a version 1 play loads with none).
 - Every action re-reads storage before writing, and other tabs re-render on `storage` events, so two
   tabs can't multiply attempts.
 - If a stored in-progress solution differs from the bundle's (a level was edited), that play state
@@ -196,8 +209,9 @@ Follow `design/`. What was designed:
 - Single centered column: header, code panel, instruction "Draw the output in each cell", 8 numbered
   swatches, 8×8 grid with axis labels 0–7, Submit button.
 - Selected swatch: light outline, slightly larger, bold number.
-- The screenshots show × marks and inner outlines on wrong cells: ignore them, cells are never
-  marked. Black cells must stay clearly visible against the dark page: keep crisp grid lines.
+- The screenshots show × marks and inner outlines on wrong cells: ignore them, the game never marks
+  cells. The player's dots (see Rules) are a small centered disc in `--faint`, `--mark-size` wide.
+  Black cells must stay clearly visible against the dark page: keep crisp grid lines.
 - Contrast fixes over the design (WCAG AA): axis and domain labels `#7a808b`, inner grid lines
   `#545a66` (the design's outer border color).
 - Keys 0–7 select a color (not with Ctrl, Meta or Alt). Hovering a cell (fine pointers) or focusing
@@ -215,8 +229,9 @@ Additions:
 
 - Header right: `#N` for the daily, `Tutorial 2/9` in the tutorial; a "?" button. Code panel label:
   `daily_0012.c` / `tutorial_2.c`.
-- Keyboard on the grid: roving focus, arrows, Home/End, Space/Enter paints with the selected color.
-  Each cell's accessible name includes its value and color name.
+- Keyboard on the grid: roving focus, arrows, Home/End, Space/Enter paints with the selected color,
+  or, with 0 on a dotted cell, takes the dot off. Each cell's accessible name includes its value and
+  color name, plus `, marked` with a dot.
 - Over a grid that paints, the mouse pointer is a crosshair; the default arrow once the puzzle is
   over.
 - Buttons show their state. Filled buttons light up and grow 3% on hover (a transform: nothing
@@ -449,11 +464,13 @@ itch hides the screenshots and trailer of a page with a game.
 Unit (`deno task test`, assertions from the built-in `node:assert/strict`):
 
 - core: puzzle number (month and year boundaries, leap years, DST dates), grid diff, attempt state
-  machine (a wrong submit yields only the wrong count; an unchanged grid can't be resubmitted),
-  share text (exact), stats and streaks (missed day still open or closed, catching up, failed day,
-  today unplayed, win % rounding, nothing played), the looping schedule (specials, Feb 29, a pool
-  that grows or shrinks after launch), open puzzles and play retention, storage load, migration,
-  corrupted and newer-version data.
+  machine (a wrong submit yields only the wrong count; an unchanged grid can't be resubmitted), dots
+  (painting 0 leaves one, another color or a second tap takes it off, never a change for Submit, a
+  puzzle with dots isn't untouched), share text (exact), stats and streaks (missed day still open or
+  closed, catching up, failed day, today unplayed, win % rounding, nothing played), the looping
+  schedule (specials, Feb 29, a pool that grows or shrinks after launch), open puzzles and play
+  retention, storage load, migration (version 1 to 2), dots read leniently, corrupted and
+  newer-version data.
 - ui: the local-date and next-midnight helpers, under several time zones; the highlighter tokenizer.
 - tools: the stylesheet uses its tokens (no raw color or size outside `:root`); every rejection case
   with fixtures (format, forbidden constructs, out of range, UB overflow, compile error, timeout,
@@ -466,6 +483,10 @@ browser build, whose text metrics match real devices; time zone and locale pinne
 - First visit → tutorial → skip → daily puzzle.
 - Painting: tap, drag (mouse, and touch via pointer events with `pointerType: "touch"`), keyboard,
   keys 0–7. Dragging never scrolls the page.
+- Dots: painting 0 leaves one (click, touch, Space), a second tap takes it off, a drag adds and
+  never removes, another color removes it; they survive a reload, stay after a wrong submit without
+  enabling Submit, keep a puzzle in progress at midnight, and never show once a daily or tutorial
+  level is over.
 - Wrong submit → count line and no per-cell indication on the grid; Submit disabled until the grid
   changes, keyboard focus kept; painting keeps the count line; solve → result panel, stats, the
   follow link, the daily reminder's two calendars (Google's form from today, the .ics served as
