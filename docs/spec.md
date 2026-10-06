@@ -104,10 +104,11 @@ The "?" button toggles the info panel of `design/spec_screenshot_tooltip_info.pn
     iPhone offers to add it. It starts on launch day, shown as free, with an alert at its start. An
     iOS app's own browser (Instagram's, Facebook's) can't hand the file to Calendar: there, a line
     replaces the link, `For Apple Calendar, open drawmycode.lonebee.games/reminder.ics in Safari.`
-  - The event: `Draw my code`, `Today's puzzle is ready.`, daily, 9:00 to 9:15 in floating time (no
-    time zone: 9:00 wherever the player is, through DST changes). No link to the game: from an
-    iPhone's installed app it would open Safari, whose save is separate. No server, nothing stored,
-    no analytics event.
+  - The event: `Draw my code`, `Today's puzzle is ready: https://drawmycode.lonebee.games/` (the
+    site URL), daily, 9:00 to 9:15 in floating time (no time zone: 9:00 wherever the player is,
+    through DST changes). On an iPhone with the game installed, the link opens Safari, whose save is
+    separate from the app's: accepted, for every other player's sake. No server, nothing stored, no
+    analytics event.
 
 ## Share
 
@@ -411,7 +412,8 @@ Level design. The generator can't check these; they apply when a level is writte
 - Base path and site URL come from the GitHub Pages configuration at build time, never hard-coded,
   so a custom domain later needs no code change. Local builds default to
   `http://127.0.0.1:4173/draw-my-code/`, so they also run under a sub-path. The site URL is used in
-  the share text, the reminder's calendar file and the analytics host check.
+  the share text, the reminder (its link, and the address of its calendar file) and the analytics
+  host check.
 
 ## itch.io build
 

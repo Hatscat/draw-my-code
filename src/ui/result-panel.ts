@@ -114,7 +114,7 @@ export function createResultPanel(
     el(
       "div",
       { class: "reminder-links" },
-      calendar(googleCalendarUrl(today), "Google Calendar"),
+      calendar(googleCalendarUrl(today, siteUrl), "Google Calendar"),
       ...(inApp ? [] : [calendar(file.href, "Apple, Outlook, others (.ics)")]),
     ),
     inApp ? el("p", {}, `For Apple Calendar, open ${file.host}${file.pathname} in Safari.`) : "",

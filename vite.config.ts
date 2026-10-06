@@ -39,7 +39,11 @@ export default defineConfig(({ command, isPreview, mode }) => {
         // The daily reminder's calendar file: the same event as its Google link, from one source.
         name: "draw-my-code:reminder",
         generateBundle() {
-          this.emitFile({ type: "asset", fileName: "reminder.ics", source: reminderIcs() });
+          this.emitFile({
+            type: "asset",
+            fileName: "reminder.ics",
+            source: reminderIcs(site.href),
+          });
         },
       },
     ],

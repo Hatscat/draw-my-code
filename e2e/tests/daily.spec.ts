@@ -153,7 +153,7 @@ test("the result offers a daily reminder in the player's own calendar", async ({
     recur: "RRULE:FREQ=DAILY",
     // Shown as free, like the file's event: Google's form defaults to busy.
     crm: "AVAILABLE",
-    details: "Today's puzzle is ready.",
+    details: `Today's puzzle is ready: ${SITE_URL}`,
   });
 
   // The same event as a file for every other calendar: the website's, which serves it as a
@@ -166,9 +166,11 @@ test("the result offers a daily reminder in the player's own calendar", async ({
   for (const line of ["DTSTART:20261005T090000", "RRULE:FREQ=DAILY", "TRANSP:TRANSPARENT"]) {
     expect(ics).toContain(`\r\n${line}\r\n`);
   }
-  // No link to the game: from an iPhone's installed app it would open Safari, whose save is
-  // separate.
-  expect(ics).not.toContain("http");
+  // With the game's link, though on an iPhone with the game installed it opens Safari, whose save
+  // is separate from the app's. Unfolded: a line longer than 75 octets goes on in the next one.
+  expect(ics.replaceAll("\r\n ", "")).toContain(
+    `\r\nDESCRIPTION:Today's puzzle is ready: ${SITE_URL}\r\n`,
+  );
 
   // Opened, it still fits a 320 px screen.
   await page.setViewportSize({ width: 320, height: 568 });
