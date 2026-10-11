@@ -15,11 +15,8 @@ import {
 
 const SOLUTION = solutionOf(1);
 const COLORED = SOLUTION.join("").replaceAll("0", "").length;
-// The share text's picture of a grid: its top half, each color as its own square, from 0 black
-// to 7 purple.
-const SQUARES = ["⬛", "⬜", "🟥", "🟧", "🟨", "🟩", "🟦", "🟪"];
-const picture = (rows: readonly string[]) =>
-  rows.slice(0, 4).map((row) => [...row].map((digit) => SQUARES[Number(digit)]).join(""));
+// The share text's middle line: the palette's eight colors, the same every day.
+const PALETTE_LINE = "⬛⬜🟥🟧🟨🟩🟦🟪";
 
 test("a wrong submit only tells the count; Submit waits for a change", async ({ page }) => {
   await openPuzzle(page, 1);
@@ -115,8 +112,8 @@ test("solving shows the result, the stats and the exact share text", async ({ pa
   await expect(follow).toHaveAttribute("href", "https://lone-bee.itch.io/");
   await expect(follow).toHaveAttribute("target", "_blank");
 
-  // The solution's picture, whatever the attempts were (a blank one here).
-  const expected = ["Draw my code #1 2/3", ...picture(SOLUTION), SITE_URL].join("\n");
+  // Nothing of the solution: the score, the palette and the link.
+  const expected = ["Draw my code #1 2/3", PALETTE_LINE, SITE_URL].join("\n");
   await page.getByRole("button", { name: "Share" }).click();
   if (isMobile) {
     await expect.poll(async () => (await sharedTexts(page)).shared).toEqual([expected]);
@@ -259,9 +256,8 @@ test("3 wrong attempts fail: X/3, the solution, and a toggle to your drawing", a
   expect(await page.locator(".toggle").evaluate((group) => getComputedStyle(group).overflow))
     .toBe("visible");
 
-  // Failed, the share text still shows the solution's picture, never the last drawing.
   await page.getByRole("button", { name: "Share" }).click();
-  const expected = ["Draw my code #1 X/3", ...picture(SOLUTION), SITE_URL].join("\n");
+  const expected = ["Draw my code #1 X/3", PALETTE_LINE, SITE_URL].join("\n");
   await expect.poll(async () => {
     const { shared, copied } = await sharedTexts(page);
     return [...shared, ...copied];
